@@ -63,7 +63,7 @@ abstract class BaseMojo extends SurefirePlugin implements StartsConstants {
      * Path to directory that contains the result of running jdeps on third-party
      * and standard library jars that an application may need, e.g., those in M2_REPO.
      */
-    @Parameter(property = "gCache", defaultValue = "${basedir}/does-not-exist")
+    @Parameter(property = "gCache", defaultValue = "${basedir}/jdeps-cache")
     protected String graphCache;
 
     /**

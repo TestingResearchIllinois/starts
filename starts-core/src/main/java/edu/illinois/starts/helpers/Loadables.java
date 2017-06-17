@@ -6,8 +6,6 @@ package edu.illinois.starts.helpers;
 
 
 import java.io.File;
-import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -17,7 +15,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 
-import com.sun.tools.jdeps.Main;
 import edu.illinois.starts.util.ChecksumUtil;
 import edu.illinois.starts.util.Logger;
 import edu.illinois.yasgl.DirectedGraph;
@@ -198,7 +195,7 @@ public class Loadables {
             throw new IllegalArgumentException("JDEPS cannot run with an empty classpath.");
         }
         String jdepsClassPath;
-        if (!cache.exists()) {
+        if (!cache.exists() || (cache.isDirectory() && cache.list().length == 0)) {
             //There is no cache of jdeps graphs, so we want to run jdeps recursively with the entire surefire classpath
             args.add("-R");
             jdepsClassPath = pathToUse;
@@ -208,16 +205,9 @@ public class Loadables {
         args.addAll(Arrays.asList("-cp", jdepsClassPath));
         args.addAll(localPaths);
         LOGGER.log(Level.FINEST, "JDEPS CMD: " + args);
-        Map<String, Set<String>> depMap = null;
-        try {
-            StringWriter output = new StringWriter();
-            Main.run(args.toArray(new String[0]), new PrintWriter(output));
-            depMap = RTSUtil.getDepsFromJdepsOutput(output);
-            if (LOGGER.getLoggingLevel().intValue() == Level.FINEST.intValue()) {
-                Writer.writeMapToFile(depMap, artifactsDir + File.separator + "jdeps-out");
-            }
-        } catch (Exception ioe) {
-            ioe.printStackTrace();
+        Map<String, Set<String>> depMap = RTSUtil.runJdeps(args);
+        if (LOGGER.getLoggingLevel().intValue() == Level.FINEST.intValue()) {
+            Writer.writeMapToFile(depMap, artifactsDir + File.separator + "jdeps-out");
         }
         return depMap;
     }

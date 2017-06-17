@@ -5,6 +5,7 @@
 package edu.illinois.starts.helpers;
 
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -14,6 +15,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 
+import com.sun.tools.jdeps.Main;
 import edu.illinois.starts.util.ChecksumUtil;
 import edu.illinois.starts.util.Logger;
 import edu.illinois.yasgl.DirectedGraph;
@@ -71,6 +73,13 @@ public class RTSUtil {
         } catch (InterruptedException ie) {
             ie.printStackTrace();
         }
+    }
+
+    public static Map<String, Set<String>> runJdeps(List<String> args) {
+        StringWriter output = new StringWriter();
+        LOGGER.log(Level.FINE, "JDEPS ARGS:" + args);
+        Main.run(args.toArray(new String[0]), new PrintWriter(output));
+        return getDepsFromJdepsOutput(output);
     }
 
     public static Map<String, Set<String>> getDepsFromJdepsOutput(StringWriter jdepsOutput) {

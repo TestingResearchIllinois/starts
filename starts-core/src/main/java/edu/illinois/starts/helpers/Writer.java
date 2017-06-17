@@ -99,6 +99,18 @@ public class Writer {
         }
     }
 
+    public static void writeDepsToFile(Map<String, Set<String>> deps, String fileName) {
+        try (BufferedWriter writer = getWriter(fileName)) {
+            for (String key : deps.keySet()) {
+                for (String value : deps.get(key)) {
+                    writer.write(key + " " + value + System.lineSeparator());
+                }
+            }
+        } catch (IOException ioe) {
+            ioe.printStackTrace();
+        }
+    }
+
     public static void writeTCSimple(Map<String, Set<String>> testDeps, String artifactsDir, String tcFile) {
         String outFilename = artifactsDir + File.separator + tcFile;
         try (BufferedWriter writer = getWriter(outFilename)) {
