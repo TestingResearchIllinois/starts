@@ -35,28 +35,16 @@ public class StartsMojo extends RunMojo {
 
     public void execute() throws MojoExecutionException {
         long endOfRunMojo = Long.parseLong(System.getProperty("[PROFILE] END-OF-RUN-MOJO: "));
+        long startRestore = System.currentTimeMillis();
         Logger.getGlobal().setLoggingLevel(Level.parse(loggingLevel));
         logger = Logger.getGlobal();
-        long updateTime;
-        long start = System.currentTimeMillis();
-        if (updateRunChecksums) {
-            File nonAffectedFile = new File(getArtifactsDir(), "non-affected-tests");
-            try {
-                updateForNextRun(new HashSet(FileUtil.readLinesFromFile(nonAffectedFile)));
-            } catch (IOException ioe) {
-                ioe.printStackTrace();
-            }
-            updateTime = System.currentTimeMillis();
-            logger.log(Level.FINE, "[PROFILE] STARTS-MOJO-UPDATE-TIME: " + Writer.millsToSeconds(updateTime - start));
-        }
-        long startRestore = System.currentTimeMillis();
         if (restoreExcludes) {
             Plugin sfPlugin = PomUtil.getSfPlugin(getProject());
             PomUtil.restoreExcludesFile(sfPlugin, getWorkingDirectory());
         }
         long endRestore = System.currentTimeMillis();
-        logger.log(Level.FINE, "[PROFILE] TEST-RUNNING-TIME: " + Writer.millsToSeconds(start - endOfRunMojo));
+        logger.log(Level.FINE, "[PROFILE] TEST-RUNNING-TIME: " + Writer.millsToSeconds(startRestore - endOfRunMojo));
         logger.log(Level.FINE, "[PROFILE] STARTS-MOJO-RESTORE-TIME: " + Writer.millsToSeconds(endRestore - startRestore));
-        logger.log(Level.FINE, "[PROFILE] STARTS-MOJO-TOTAL: " + Writer.millsToSeconds(endRestore - start));
+        logger.log(Level.FINE, "[PROFILE] STARTS-MOJO-TOTAL: " + Writer.millsToSeconds(endRestore - startRestore));
     }
 }
