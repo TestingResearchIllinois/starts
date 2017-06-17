@@ -1,0 +1,11 @@
+**/target/*
+starts-core/target/
+starts-plugin/target/
+.classpath
+.project
+.settings/
+.idea
+**/*.iml
+**/*~
+**/.DS_Store
+**/dependency-reduced-pom.xml

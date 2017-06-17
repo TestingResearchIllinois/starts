@@ -1,0 +1,38 @@
+<?xml version="1.0"?>
+<!--
+  ~ Copyright (c) 2015 - Present. The STARTS Team. All Rights Reserved.
+  -->
+
+<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns="http://maven.apache.org/POM/4.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <modelVersion>4.0.0</modelVersion>
+  <packaging>jar</packaging>
+  <parent>
+    <groupId>edu.illinois</groupId>
+    <artifactId>starts</artifactId>
+    <version>1.0-SNAPSHOT</version>
+  </parent>
+  <groupId>edu.illinois</groupId>
+  <artifactId>starts-core</artifactId>
+  <name>starts-core</name>
+  <url>http://mir.cs.illinois.edu/</url>
+  <dependencies>
+    <dependency>
+      <groupId>com.sun</groupId>
+      <artifactId>tools</artifactId>
+      <version>1.8</version>
+      <scope>system</scope>
+      <systemPath>${java.home}/../lib/tools.jar</systemPath>
+    </dependency>
+    <dependency>
+      <groupId>org.ekstazi</groupId>
+      <artifactId>org.ekstazi.core</artifactId>
+      <version>4.6.2</version>
+    </dependency>
+    <dependency>
+      <groupId>edu.illinois</groupId>
+      <artifactId>yasgl</artifactId>
+      <version>1.0-SNAPSHOT</version>
+    </dependency>
+  </dependencies>
+</project>

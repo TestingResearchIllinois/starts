@@ -1,0 +1,27 @@
+-- Implement force-failing option like in Ekstazi
+
+-- make JDeps incremental
+
+-- make updating of zlc file inremental
+
+-- support ZLC
+
+-- implement impacted goal: report all classes impacted by a change,
+   and not just the tests
+
+-- fix CLZ
+
+-- hide options from surefire
+
+-- implement ZLCJ and CLZJ
+
+-- make starts build it's own jdeps graph over time
+
+-- Gradle Plugin
+
+-- Support TestNG
+
+-- Find how to depend on Jars in dynamic analysis so we don't have to
+   inline ASM or use a different logger there.
+
+-- Use some shared constant for the filters that we pass to jdeps

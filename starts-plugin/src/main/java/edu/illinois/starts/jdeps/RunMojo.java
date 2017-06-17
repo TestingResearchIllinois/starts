@@ -1,0 +1,81 @@
+/*
+ * Copyright (c) 2015 - Present. The STARTS Team. All Rights Reserved.
+ */
+
+package edu.illinois.starts.jdeps;
+
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.logging.Level;
+
+import edu.illinois.starts.helpers.PomUtil;
+import edu.illinois.starts.helpers.Writer;
+import edu.illinois.starts.util.Logger;
+import edu.illinois.starts.util.Pair;
+import org.apache.maven.model.Plugin;
+import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugins.annotations.Mojo;
+import org.apache.maven.plugins.annotations.Parameter;
+import org.apache.maven.plugins.annotations.ResolutionScope;
+
+/**
+ * Prepares for test runs by writing non-affected tests in the excludesFile.
+ */
+@Mojo(name = "run", requiresDependencyResolution = ResolutionScope.TEST)
+public class RunMojo extends DiffMojo {
+
+    /**
+     * Set this to "false" to prevent checksums from being persisted to disk. This
+     * is useful for "dry runs" where one may want to see the non-affected tests that
+     * STARTS writes to the Surefire excludesFile, without updating test dependencies.
+     */
+    @Parameter(property = "updateRunChecksums", defaultValue = "true")
+    protected boolean updateRunChecksums;
+
+    protected Set<String> nonAffectedTests;
+    protected Set<String> changedClasses;
+    private Logger logger;
+
+
+    public void execute() throws MojoExecutionException {
+        Logger.getGlobal().setLoggingLevel(Level.parse(loggingLevel));
+        logger = Logger.getGlobal();
+        long start = System.currentTimeMillis();
+        setChangedAndNonaffected();
+        List<String> excludePaths = Writer.fqnsToExcludePath(nonAffectedTests);
+        setIncludesExcludes();
+        if (logger.getLoggingLevel().intValue() <= Level.FINEST.intValue()) {
+            Writer.writeToFile(nonAffectedTests, "non-affected-tests", getArtifactsDir());
+        }
+        run(excludePaths);
+        Set<String> allTests = new HashSet<>(getTestClasses("checkIfAllAffected"));
+        if (allTests.equals(nonAffectedTests)) {
+            logger.log(Level.INFO, "********** Run **********");
+            logger.log(Level.INFO, "No tests are selected to run.");
+        }
+        long end = System.currentTimeMillis();
+        System.setProperty("[PROFILE] END-OF-RUN-MOJO: ", Long.toString(end));
+        logger.log(Level.FINE, "[PROFILE] RUN-MOJO-TOTAL: " + Writer.millsToSeconds(end - start));
+    }
+
+    protected void run(List<String> excludePaths) throws MojoExecutionException {
+        Plugin sfPlugin = PomUtil.getSfPlugin(getProject());
+        PomUtil.appendExcludesListToExcludesFile(sfPlugin, getExcludes(), excludePaths, getWorkingDirectory());
+        long startUpdateTime = System.currentTimeMillis();
+        if (updateRunChecksums) {
+            updateForNextRun(nonAffectedTests);
+        }
+        long endUpdateTime = System.currentTimeMillis();
+        logger.log(Level.FINE, "[PROFILE] STARTS-MOJO-UPDATE-TIME: "
+                + Writer.millsToSeconds(endUpdateTime - startUpdateTime));
+    }
+
+    protected void setChangedAndNonaffected() throws MojoExecutionException {
+        nonAffectedTests = new HashSet<>();
+        changedClasses = new HashSet<>();
+        Pair<Set<String>, Set<String>> data = computeChangeData();
+        nonAffectedTests = data == null ? new HashSet<String>() : data.getKey();
+        changedClasses  = data == null ? new HashSet<String>() : data.getValue();
+    }
+}
