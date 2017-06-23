@@ -197,6 +197,7 @@ public class Loadables {
         String jdepsClassPath;
         if (!cache.exists() || (cache.isDirectory() && cache.list().length == 0)) {
             //There is no cache of jdeps graphs, so we want to run jdeps recursively with the entire surefire classpath
+            LOGGER.log(Level.WARNING, "Should jdeps cache really be empty? Running in recursive mode.");
             args.add("-R");
             jdepsClassPath = pathToUse;
         } else {
