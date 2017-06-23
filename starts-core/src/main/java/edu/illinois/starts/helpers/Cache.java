@@ -75,7 +75,7 @@ public class Cache {
         for (String jar : notFound) {
             //1. parse with jdeps and store in the cache
             List<String> args = new ArrayList<>(Arrays.asList("-v", jar));
-            Writer.writeDepsToFile(RTSUtil.runJdeps(args), createCacheFile(jar).getAbsolutePath() );
+            Writer.writeDepsToFile(RTSUtil.runJdeps(args), createCacheFile(jar).getAbsolutePath());
             newlyCreated.add(jar);
         }
         //2. add newly-created graphs to list of jars that were previously found in cache
