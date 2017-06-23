@@ -121,9 +121,7 @@ public class DiffMojo extends BaseMojo {
                 RTSUtil.computeAndSaveNewCheckSums(getArtifactsDir(), affectedTests, testDeps, loader);
             }
         }
-        if (Logger.getGlobal().getLoggingLevel().intValue() <= Level.FINEST.intValue()) {
-            save(getArtifactsDir(), affectedTests, allTests, sfPathString, graph);
-        }
+        save(getArtifactsDir(), affectedTests, allTests, sfPathString, graph);
         printToTerminal(allTests, affectedTests);
         long end = System.currentTimeMillis();
         Logger.getGlobal().log(Level.FINE, "[PROFILE] updateForNextRun(total): " + Writer.millsToSeconds(end - start));
@@ -136,9 +134,14 @@ public class DiffMojo extends BaseMojo {
 
     public void save(String artifactsDir, Set<String> affectedTests, List<String> testClasses,
                      String sfPathString, DirectedGraph<String> graph) {
-        RTSUtil.saveForNextRun(artifactsDir, graph, printGraph, graphFile);
-        Writer.writeToFile(testClasses, "all-tests", artifactsDir);
-        Writer.writeToFile(affectedTests, "selected-tests", artifactsDir);
-        Writer.writeClassPath(sfPathString, artifactsDir);
+        int globalLogLevel = Logger.getGlobal().getLoggingLevel().intValue();
+        if (globalLogLevel <= Level.FINER.intValue()) {
+            Writer.writeToFile(testClasses, "all-tests", artifactsDir);
+            Writer.writeToFile(affectedTests, "selected-tests", artifactsDir);
+        }
+        if (globalLogLevel <= Level.FINEST.intValue()) {
+            RTSUtil.saveForNextRun(artifactsDir, graph, printGraph, graphFile);
+            Writer.writeClassPath(sfPathString, artifactsDir);
+        }
     }
 }
