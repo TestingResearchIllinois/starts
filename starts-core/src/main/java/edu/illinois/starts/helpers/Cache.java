@@ -9,13 +9,13 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
 
 import edu.illinois.starts.util.Logger;
-import org.apache.maven.plugin.MojoExecutionException;
 
 /** Utility methods for dealing with cached files. */
 
@@ -33,17 +33,20 @@ public class Cache {
     }
 
     public void loadM2EdgesFromCache(List<String> moreEdges, String pathString) {
-        if (jdepsCache.exists()) {
-            //1. get jars from sfClassPath
-            cpJars = getJarsFromCP(pathString);
-            //2. get the edges for the jars from jdepsCache (if they are in jdepsCache and add them to moreEdges
-            Set<String> jarsInCache = getJarsInGraphCache(cpJars);
-            HashSet<String> missing = getJarsMissingFromCache(jarsInCache);
-            // Some projects depend directly on jars in the standard library, so
-            // we want to check there as well
-            jarsInCache.addAll(checkMissingJarsInJDKCache(missing));
-            moreEdges.addAll(loadCachedEdges(jarsInCache));
+        if (!jdepsCache.exists()) {
+            if (!jdepsCache.mkdir()) {
+                throw new RuntimeException("I could not create the jdeps cache: " + jdepsCache.getAbsolutePath());
+            }
         }
+        //1. get jars from sfClassPath
+        cpJars = getJarsFromCP(pathString);
+        //2. get the edges for the jars from jdepsCache (if they are in jdepsCache and add them to moreEdges
+        Set<String> jarsInCache = getJarsInGraphCache(cpJars);
+        HashSet<String> missing = getJarsMissingFromCache(jarsInCache);
+        // Some projects depend directly on jars in the standard library, so
+        // we want to check there as well
+        jarsInCache.addAll(checkMissingJarsInJDKCache(missing));
+        moreEdges.addAll(loadCachedEdges(jarsInCache));
     }
 
     private HashSet<String> getJarsMissingFromCache(Set<String> jarsInCache) {
@@ -68,8 +71,19 @@ public class Cache {
                 notFound.add(jar);
             }
         }
+        List<String> newlyCreated = new ArrayList<>();
+        for (String jar : notFound) {
+            //1. parse with jdeps and store in the cache
+            List<String> args = new ArrayList<>(Arrays.asList("-v", jar));
+            Writer.writeDepsToFile(RTSUtil.runJdeps(args), createCacheFile(jar).getAbsolutePath());
+            newlyCreated.add(jar);
+        }
+        //2. add newly-created graphs to list of jars that were previously found in cache
+        found.addAll(newlyCreated);
+        //3. remove newly-created graphs from list of jars that were not found
+        notFound.removeAll(newlyCreated);
         if (notFound.size() > 0) {
-            throw new RuntimeException("I could not find some jars in any cache: " + notFound);
+            throw new RuntimeException("I could not find or create jdeps graphs in any cache: " + notFound);
         }
         return found;
     }
