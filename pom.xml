@@ -106,7 +106,7 @@
           <failOnViolation>true</failOnViolation>
           <includeTestSourceDirectory>true</includeTestSourceDirectory>
           <linkXRef>false</linkXRef>
-          <excludes>com/sun/**/*,org/apache/maven/**/*,edu/illinois/starts/reflect/dynamic/asm/**/*</excludes>
+          <excludes>com/sun/**/*,org/apache/maven/**/*</excludes>
         </configuration>
         <dependencies>
           <dependency>

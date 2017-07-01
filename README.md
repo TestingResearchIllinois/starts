@@ -77,13 +77,16 @@ filesystem. See the FAQ Section below for more information.
 1. To see the **types** that changed since the last time STARTS was run:
 `mvn starts:diff`
 
-2. To see the **tests** that are affected by the most recent changes:
+2. To see the **types** that may be impacted by changes since the last
+time STARTS was run: `mvn starts:impacted`
+
+3. To see the **tests** that are affected by the most recent changes:
 `mvn starts:select`
 
-3. To perform RTS using STARTS (i.e., select tests and run the
+4. To perform RTS using STARTS (i.e., select tests and run the
 selected tests): `mvn starts:starts`
 
-4. To remove all artifacts that STARTS stores between versions
+5. To remove all artifacts that STARTS stores between versions
 (i.e. in the .starts directories): `mvn starts:clean`
 
 __NOTE:__ By default, commands (1) and (2) *will not* update the
@@ -101,11 +104,3 @@ diff, run `mvn starts:diff -DupdateDiffChecksums=true`.
    **Solution:** Make sure that the file `myExcludes`, which is
    specified in the Surefire `<excludesFile>` tag exists on the
    filesystem.
-
-- **I got the following error after integrating STARTS and running
-`mvn starts:asm-impacted` or `mvn starts:asm-starts`:**
-`NullPointerException`.
-
-   **Solution:** This happens on the first run when `-DgraphVersion` is
-   set to `OLD`. The reason is that there is no graph that is
-   previously serialized IRG, so an exception is thrown.
