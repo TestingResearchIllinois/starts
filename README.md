@@ -108,4 +108,5 @@ diff, run `mvn starts:diff -DupdateDiffChecksums=true`.
    filesystem. If you must run `mvn test` with STARTS integrated with
    the `pom.xml` file, either run STARTS in a Maven profile, or make
    sure that the file `myExcludes`, which is specified in the Surefire
-   `<excludesFile>` tag exists on the filesystem.
+   `<excludesFile>` tag exists on the filesystem for every Maven
+   module in your project.
