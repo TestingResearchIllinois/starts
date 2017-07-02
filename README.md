@@ -101,6 +101,11 @@ diff, run `mvn starts:diff -DupdateDiffChecksums=true`.
 - **I got the following error after integrating STARTS and running
 `mvn test`:** `Failed to load list from file: myExcludes`.
 
-   **Solution:** Make sure that the file `myExcludes`, which is
-   specified in the Surefire `<excludesFile>` tag exists on the
-   filesystem.
+   **Solution:** Once the `pom.xml` file is modified as described
+   above, it is assumed that the user is only interested to run STARTS
+   goals. Unfortunately, this currently breaks the usual `mvn test`
+   invocation which expects the `<excludesFile>` to exist on the
+   filesystem. If you must run `mvn test` with STARTS integrated with
+   the `pom.xml` file, either run STARTS in a Maven profile, or make
+   sure that the file `myExcludes`, which is specified in the Surefire
+   `<excludesFile>` tag exists on the filesystem.
