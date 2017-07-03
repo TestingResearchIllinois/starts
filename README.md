@@ -11,9 +11,9 @@ for Maven-based Java programs.
 
 ## Installing STARTS from source
 
-1. `git clone <URL> starts`
+1. `git clone https://github.com/TestingResearchIllinois/starts starts`
 2. `cd starts`
-3. `./scripts/prepare.sh`
+3. `scripts/prepare.sh`
 4. `mvn install`
 
 __NOTE:__ Step 3 is __required__ to install the
