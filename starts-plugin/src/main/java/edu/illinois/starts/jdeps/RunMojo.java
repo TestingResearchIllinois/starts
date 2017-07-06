@@ -4,6 +4,7 @@
 
 package edu.illinois.starts.jdeps;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -33,6 +34,18 @@ public class RunMojo extends DiffMojo {
     @Parameter(property = "updateRunChecksums", defaultValue = "true")
     protected boolean updateRunChecksums;
 
+    /**
+     * Set this option to "true" to run all tests, not just the affected ones. This option is useful
+     * in cases where one is interested to measure the time to run all tests, while at the
+     * same time measuring the times for analyzing what tests to select and reporting the number of
+     * tests it would select.
+     * Note: Run with "-DstartsLogging=FINER" or "-DstartsLogging=FINEST" so that the "selected-tests"
+     * file, which contains the list of tests that would be run if this option is set to false, will
+     * be written to disk.
+     */
+    @Parameter(property = "retestAll", defaultValue = "false")
+    protected boolean retestAll;
+
     protected Set<String> nonAffectedTests;
     protected Set<String> changedClasses;
     private Logger logger;
@@ -61,7 +74,11 @@ public class RunMojo extends DiffMojo {
 
     protected void run(List<String> excludePaths) throws MojoExecutionException {
         Plugin sfPlugin = PomUtil.getSfPlugin(getProject());
-        PomUtil.appendExcludesListToExcludesFile(sfPlugin, getExcludes(), excludePaths, getWorkingDirectory());
+        if (retestAll) {
+            PomUtil.appendExcludesListToExcludesFile(sfPlugin, getExcludes(), new ArrayList<String>(), getWorkingDirectory());
+        } else {
+            PomUtil.appendExcludesListToExcludesFile(sfPlugin, getExcludes(), excludePaths, getWorkingDirectory());
+        }
         long startUpdateTime = System.currentTimeMillis();
         if (updateRunChecksums) {
             updateForNextRun(nonAffectedTests);
