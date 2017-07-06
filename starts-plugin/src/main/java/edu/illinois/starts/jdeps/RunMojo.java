@@ -35,12 +35,13 @@ public class RunMojo extends DiffMojo {
     protected boolean updateRunChecksums;
 
     /**
-     * Set this to "true" to run all tests, not just the affected ones. This is useful
+     * Set this option to "true" to run all tests, not just the affected ones. This option is useful
      * in cases where one is interested to measure the time to run all tests, while at the
-     * same time measuring the times for RTS and the number of tests that it selects.
-     * Note: Run with "-DstartsLogging=FINER" or "-DstartsLogging=FINEST" so that the
-     * "selected-tests" file, which contains the list of tests that would be run if this option
-     * is set to false, will be written to file.
+     * same time measuring the times for analyzing what tests to select and reporting the number of
+     * tests it would select.
+     * Note: Run with "-DstartsLogging=FINER" or "-DstartsLogging=FINEST" so that the "selected-tests"
+     * file, which contains the list of tests that would be run if this option is set to false, will
+     * be written to disk.
      */
     @Parameter(property = "retestAll", defaultValue = "false")
     protected boolean retestAll;
