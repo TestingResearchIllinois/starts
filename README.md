@@ -69,8 +69,8 @@ filesystem. See the FAQ Section below for more information.
 ### Available Options
 
 1. To see all the goals that STARTS provides, run `mvn starts:help`
-2. To see the details for any of the goals, run `mvn starts:help -Ddetail=true -Dgoal=<goal>`,
- where `<goal>` is replaced by the name of the goal.
+2. To see the details for any of the goals, run `mvn starts:help -Ddetail=true -Dgoal=<goal>`;
+ replace `<goal>` with the goal of interest.
 
 ### Major Functionality
 
