@@ -79,7 +79,7 @@ public class RTSUtil {
         StringWriter output = new StringWriter();
         LOGGER.log(Level.FINE, "JDEPS ARGS:" + args);
         Main.run(args.toArray(new String[0]), new PrintWriter(output));
-        return getDepsFromJdepsOutput(output);
+        return output.getBuffer().length() != 0 ? getDepsFromJdepsOutput(output): new HashMap<String, Set<String>>();
     }
 
     public static Map<String, Set<String>> getDepsFromJdepsOutput(StringWriter jdepsOutput) {
