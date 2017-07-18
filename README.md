@@ -91,8 +91,8 @@ selected tests): `mvn starts:starts`
 5. To remove all artifacts that STARTS stores between versions
 (i.e. in the .starts directories): `mvn starts:clean`
 
-__NOTE:__ By default, commands (1) and (2) *will not* update the
-checksums of files in the latest version, while the command in (3)
+__NOTE:__ By default, commands (1) - (3) *will not* update the
+checksums of files in the latest version, while the command in (4)
 *will* update the checksums of the files. Each command has a
 `update**Checksums` option that can be used to change the default
 behavior. For example, to update the checksums while checking the
