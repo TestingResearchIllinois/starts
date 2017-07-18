@@ -1,5 +1,7 @@
 # STARTS (*STA*tic *R*egression *T*est *S*election) Overview
 
+[![Build Status](https://travis-ci.org/TestingResearchIllinois/starts.svg?branch=master)](https://travis-ci.org/TestingResearchIllinois/starts)
+
 STARTS is a tool for static class-level regression test selection tool
 for Maven-based Java programs.
 
@@ -69,8 +71,8 @@ filesystem. See the FAQ Section below for more information.
 ### Available Options
 
 1. To see all the goals that STARTS provides, run `mvn starts:help`
-2. To see the details for any of the goals, run `mvn starts:help -Ddetail=true -Dgoal=<goal>`,
- where `<goal>` is replaced by the name of the goal.
+2. To see the details for any of the goals, run `mvn starts:help -Ddetail=true -Dgoal=<goal>`;
+ replace `<goal>` with the goal of interest.
 
 ### Major Functionality
 
@@ -89,8 +91,8 @@ selected tests): `mvn starts:starts`
 5. To remove all artifacts that STARTS stores between versions
 (i.e. in the .starts directories): `mvn starts:clean`
 
-__NOTE:__ By default, commands (1) and (2) *will not* update the
-checksums of files in the latest version, while the command in (3)
+__NOTE:__ By default, commands (1) - (3) *will not* update the
+checksums of files in the latest version, while the command in (4)
 *will* update the checksums of the files. Each command has a
 `update**Checksums` option that can be used to change the default
 behavior. For example, to update the checksums while checking the
