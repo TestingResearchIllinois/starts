@@ -1,4 +1,4 @@
 language: java
 
 before_install:
-    - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then scripts/prepare.sh; fi
+    - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then jdk_switcher use oraclejdk8; scripts/prepare.sh; fi
