@@ -75,7 +75,8 @@ public class RunMojo extends DiffMojo {
     protected void run(List<String> excludePaths) throws MojoExecutionException {
         Plugin sfPlugin = PomUtil.getSfPlugin(getProject());
         if (retestAll) {
-            PomUtil.appendExcludesListToExcludesFile(sfPlugin, getExcludes(), new ArrayList<String>(), getWorkingDirectory());
+            PomUtil.appendExcludesListToExcludesFile(sfPlugin, getExcludes(), new ArrayList<String>(),
+                getWorkingDirectory());
         } else {
             PomUtil.appendExcludesListToExcludesFile(sfPlugin, getExcludes(), excludePaths, getWorkingDirectory());
         }
