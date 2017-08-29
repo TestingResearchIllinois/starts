@@ -13,6 +13,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -65,7 +67,7 @@ public class ChecksumUtil {
                 }
             }
             long end = System.currentTimeMillis();
-            LOGGER.log(Level.INFO, "LOADED RESOURCES: " + (end - start) + "ms");
+            LOGGER.log(Level.FINEST, "LOADED RESOURCES: " + (end - start) + "ms");
         }
         return checksums;
     }
@@ -130,7 +132,9 @@ public class ChecksumUtil {
         }
 
         public void save(FileOutputStream fos, Set<RegData> data) {
-            super.extendedSave(fos, data);
+            SortedSet<RegData> sortedData = new TreeSet<>(new RegData.RegComparator());
+            sortedData.addAll(data);
+            super.extendedSave(fos, sortedData);
         }
     }
 }
