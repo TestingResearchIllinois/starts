@@ -91,9 +91,13 @@ abstract class BaseMojo extends SurefirePlugin implements StartsConstants {
         Writer.writeToLog(set, title, Logger.getGlobal());
     }
 
-    public String getArtifactsDir() {
+    public String getArtifactsDir() throws MojoExecutionException {
         if (artifactsDir == null) {
             artifactsDir = basedir.getAbsolutePath() + File.separator + STARTS_DIRECTORY_PATH;
+            File file = new File(artifactsDir);
+            if (!file.mkdirs() && !file.exists()) {
+                throw new MojoExecutionException("I could not create artifacts dir: " + artifactsDir);
+            }
         }
         return artifactsDir;
     }
