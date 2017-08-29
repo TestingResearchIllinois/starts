@@ -10,7 +10,7 @@
   <parent>
     <groupId>edu.illinois</groupId>
     <artifactId>starts</artifactId>
-    <version>1.2</version>
+    <version>1.0-SNAPSHOT</version>
   </parent>
   <groupId>edu.illinois</groupId>
   <artifactId>starts-core</artifactId>
@@ -32,7 +32,7 @@
     <dependency>
       <groupId>edu.illinois</groupId>
       <artifactId>yasgl</artifactId>
-      <version>1.0-SNAPSHOT</version>
+      <version>1.2</version>
     </dependency>
   </dependencies>
 </project>
