@@ -15,8 +15,7 @@ for Maven-based Java programs.
 
 1. `git clone https://github.com/TestingResearchIllinois/starts`
 2. `cd starts`
-3. `scripts/prepare.sh`
-4. `mvn install`
+3. `mvn install`
 
 __NOTE:__ Step 3 is __required__ to install the
 [YASGL](https://github.com/TestingResearchIllinois/yasgl) graph
