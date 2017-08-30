@@ -76,7 +76,7 @@ public class DiffMojo extends BaseMojo {
             ZLCHelper zlcHelper = new ZLCHelper();
             data = zlcHelper.getChangedData(getArtifactsDir(), cleanBytes);
         } else if (depFormat == DependencyFormat.CLZ) {
-            data = EkstaziHelper.getNonAffectedTests(getBasedir());
+            data = EkstaziHelper.getNonAffectedTests(getArtifactsDir());
         }
         Set<String> changed = data == null ? new HashSet<String>() : data.getValue();
         if (Logger.getGlobal().getLoggingLevel().intValue() <= Level.FINEST.intValue()) {
