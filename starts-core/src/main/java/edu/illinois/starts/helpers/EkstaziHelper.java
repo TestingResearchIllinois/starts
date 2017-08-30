@@ -25,6 +25,7 @@ import org.ekstazi.check.AffectedChecker;
 public class EkstaziHelper {
     public static final Logger LOGGER = Logger.getGlobal();
     public static String notFirstRunMarker = "not-first-run.clz";
+    public static String lineSeparator = System.getProperty("line.separator");
 
     public static Pair<Set<String>, Set<String>> getNonAffectedTests(String artifactsDir) {
         long start = System.currentTimeMillis();
@@ -44,12 +45,10 @@ public class EkstaziHelper {
         System.err.flush();
         System.setOut(oldOut);
         System.setErr(olderr);
-        writeEkstaziDebugInfo(baosErr, artifactsDir);
+        Set<String> changed = writeEkstaziDebugInfo(baosErr, artifactsDir);
+        Set<String> nonAffected = new HashSet<>(Arrays.asList(baosOut.toString().split(lineSeparator)));
         long end = System.currentTimeMillis();
         LOGGER.log(Level.FINEST, "[TIME]COMPUTING NON-AFFECTED: " + (end - start) + "ms");
-        Set<String> nonAffected = new HashSet<>(Arrays.asList(baosOut.toString().split("\n")));
-        //TODO: parse .clz files to find what changed in the same pass as finding nonaffected tests
-        Set<String> changed = new HashSet<>();
         return new Pair<>(nonAffected, changed);
     }
 
@@ -66,27 +65,26 @@ public class EkstaziHelper {
         return toFQN(new HashSet<>(nonAffected));
     }
 
-    private static void writeEkstaziDebugInfo(ByteArrayOutputStream baosErr, String artifactsDir) {
+    private static Set<String> writeEkstaziDebugInfo(ByteArrayOutputStream baosErr, String artifactsDir) {
+        Set<String> changed = new HashSet<>();
         if (LOGGER.getLoggingLevel().intValue() > Level.FINEST.intValue()) {
-            return;
+            return changed;
         }
         String outFilename = artifactsDir + File.separator + "changed-classes";
-        Set<String> changed = new HashSet<>();
-        for (String line : Arrays.asList(baosErr.toString().split("\n"))) {
-            if (line.contains("::Diff::")) {
-                // This assumes that only classes in the application can
-                // change, and not classes in jars
-                String fqn = Writer.toFQN(line);
-                changed.add(fqn);
+        for (String line : Arrays.asList(baosErr.toString().split(lineSeparator))) {
+            String ekstaziDiffMarker = "::Diff:: ";
+            if (line.contains(ekstaziDiffMarker)) {
+                changed.add(line.split(ekstaziDiffMarker)[1]);
             }
         }
         try (BufferedWriter writer = Writer.getWriter(outFilename)) {
-            for (String fqn : changed) {
-                writer.write(fqn + "\n");
+            for (String file : changed) {
+                writer.write(file + lineSeparator);
             }
         } catch (IOException ioe) {
             ioe.printStackTrace();
         }
+        return changed;
     }
 
     private static String getRootDirOption(File basedir) {
