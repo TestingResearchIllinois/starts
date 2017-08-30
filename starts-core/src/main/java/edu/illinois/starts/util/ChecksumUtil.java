@@ -62,7 +62,10 @@ public class ChecksumUtil {
                             checksums.get(test).add(checksumUtil.computeChecksumRegData(url));
                         }
                     } else {
-                        LOGGER.log(Level.INFO, "@@LoadedNullURLForDep: " + dep);
+                        // Known benign cases where this can happen: (i) dep is from a shaded jar which is itself on
+                        // the classpath; (ii) dep is from an optional jar dependency of a direct jar dependency (e.g.,
+                        // users of joda-time-*.jar do not necessarily depend on classes from joda-convert-8.jar
+                        LOGGER.log(Level.FINEST, "@@LoadedNullURLForDep: " + dep);
                     }
                 }
             }
