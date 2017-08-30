@@ -16,16 +16,21 @@ import java.util.Set;
 import java.util.logging.Level;
 
 import edu.illinois.starts.util.Logger;
+import edu.illinois.starts.util.Pair;
 import org.ekstazi.check.AffectedChecker;
 
 /**
  * Utility methods for interacting with Ekstazi.
  */
 public class EkstaziHelper {
-    private static final Logger LOGGER = Logger.getGlobal();
+    public static final Logger LOGGER = Logger.getGlobal();
+    public static String notFirstRunMarker = "not-first-run.clz";
 
-    public static Set<String> getNonAffectedTests(String artifactsDir) {
+    public static Pair<Set<String>, Set<String>> getNonAffectedTests(String artifactsDir) {
         long start = System.currentTimeMillis();
+        if (isFirstRun(artifactsDir)) {
+            return null;
+        }
         ByteArrayOutputStream baosOut = new ByteArrayOutputStream();
         ByteArrayOutputStream baosErr = new ByteArrayOutputStream();
         PrintStream psOut = new PrintStream(baosOut);
@@ -42,7 +47,15 @@ public class EkstaziHelper {
         writeEkstaziDebugInfo(baosErr, artifactsDir);
         long end = System.currentTimeMillis();
         LOGGER.log(Level.FINEST, "[TIME]COMPUTING NON-AFFECTED: " + (end - start) + "ms");
-        return new HashSet<>(Arrays.asList(baosOut.toString().split("\n")));
+        Set<String> nonAffected = new HashSet<>(Arrays.asList(baosOut.toString().split("\n")));
+        //TODO: parse .clz files to find what changed in the same pass as finding nonaffected tests
+        Set<String> changed = new HashSet<>();
+        return new Pair<>(nonAffected, changed);
+    }
+
+    private static boolean isFirstRun(String artifactsDir) {
+        // If the notFirstRunMarker file does not exist, this is a first run
+        return !(new File(artifactsDir, notFirstRunMarker).exists());
     }
 
     public static Set<String> getNonAffectedTests(File basedir) {
