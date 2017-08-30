@@ -1,12 +1,4 @@
 language: java
 
-os:
-    - linux
-
-before_install:
-    - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then jdk_switcher use oraclejdk8; fi
-
-env:
-    - CMD="mvn clean verify -B"
-
-script: eval $CMD
+script:
+    - mvn clean verify -B
