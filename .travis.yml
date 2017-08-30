@@ -7,6 +7,6 @@ before_install:
     - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then jdk_switcher use oraclejdk8; fi
 
 env:
-    - CMD="mvn verify -B"
+    - CMD="mvn clean verify -B"
 
 script: eval $CMD
