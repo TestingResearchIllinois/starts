@@ -51,8 +51,8 @@ public class RTSUtil {
         ChecksumUtil.saveCheckSums(newCheckSums, artifactsDir);
         try {
             new File(artifactsDir, EkstaziHelper.notFirstRunMarker).createNewFile();
-        } catch (IOException e) {
-            throw new MojoExecutionException(e.getMessage());
+        } catch (IOException ioe) {
+            throw new MojoExecutionException(ioe.getMessage());
         }
         end = System.currentTimeMillis();
         LOGGER.log(Level.FINEST, "[TIME]RE-SAVING CHECKSUMS: " + (end - start) + "ms");

@@ -52,11 +52,6 @@ public class EkstaziHelper {
         return new Pair<>(nonAffected, changed);
     }
 
-    private static boolean isFirstRun(String artifactsDir) {
-        // If the notFirstRunMarker file does not exist, this is a first run
-        return !(new File(artifactsDir, notFirstRunMarker).exists());
-    }
-
     public static Pair<Set<String>, Set<String>> getNonAffectedTests(File basedir) {
         long start = System.currentTimeMillis();
         List<String> nonAffectedFiles = AffectedChecker.findNonAffectedClasses(basedir, getRootDirOption(basedir));
@@ -65,6 +60,11 @@ public class EkstaziHelper {
         Set<String> changed = new HashSet<>();
         LOGGER.log(Level.FINEST, "[TIME]COMPUTING NON-AFFECTED(2): " + (end - start) + "ms");
         return new Pair<>(nonAffectedTests, changed);
+    }
+
+    private static boolean isFirstRun(String artifactsDir) {
+        // If the notFirstRunMarker file does not exist, this is a first run
+        return !(new File(artifactsDir, notFirstRunMarker).exists());
     }
 
     private static Set<String> writeEkstaziDebugInfo(ByteArrayOutputStream baosErr, String artifactsDir) {
