@@ -57,12 +57,14 @@ public class EkstaziHelper {
         return !(new File(artifactsDir, notFirstRunMarker).exists());
     }
 
-    public static Set<String> getNonAffectedTests(File basedir) {
+    public static Pair<Set<String>, Set<String>> getNonAffectedTests(File basedir) {
         long start = System.currentTimeMillis();
-        List<String> nonAffected = AffectedChecker.findNonAffectedClasses(basedir, getRootDirOption(basedir));
+        List<String> nonAffectedFiles = AffectedChecker.findNonAffectedClasses(basedir, getRootDirOption(basedir));
         long end = System.currentTimeMillis();
+        Set<String> nonAffectedTests = toFQN(new HashSet<>(nonAffectedFiles));
+        Set<String> changed = new HashSet<>();
         LOGGER.log(Level.FINEST, "[TIME]COMPUTING NON-AFFECTED(2): " + (end - start) + "ms");
-        return toFQN(new HashSet<>(nonAffected));
+        return new Pair<>(nonAffectedTests, changed);
     }
 
     private static Set<String> writeEkstaziDebugInfo(ByteArrayOutputStream baosErr, String artifactsDir) {
