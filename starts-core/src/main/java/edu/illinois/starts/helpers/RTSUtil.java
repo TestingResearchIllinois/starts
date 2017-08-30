@@ -4,6 +4,7 @@
 
 package edu.illinois.starts.helpers;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -19,6 +20,7 @@ import com.sun.tools.jdeps.Main;
 import edu.illinois.starts.util.ChecksumUtil;
 import edu.illinois.starts.util.Logger;
 import edu.illinois.yasgl.DirectedGraph;
+import org.apache.maven.plugin.MojoExecutionException;
 import org.ekstazi.data.RegData;
 
 /**
@@ -35,8 +37,10 @@ public class RTSUtil {
         LOGGER.log(Level.FINEST, "[TIME]WRITING FILES: " + (end - start) + "ms");
     }
 
-    public static void computeAndSaveNewCheckSums(String artifactsDir, Set<String> affectedTests,
-                                                  Map<String, Set<String>> testDeps, ClassLoader loader) {
+    public static void computeAndSaveNewCheckSums(String artifactsDir,
+                                                  Set<String> affectedTests,
+                                                  Map<String, Set<String>> testDeps,
+                                                  ClassLoader loader) throws MojoExecutionException {
         long start;
         long end;
         start = System.currentTimeMillis();
@@ -45,6 +49,11 @@ public class RTSUtil {
         LOGGER.log(Level.FINEST, "[TIME]UPDATING CHECKSUMS: " + (end - start) + "ms");
         start = System.currentTimeMillis();
         ChecksumUtil.saveCheckSums(newCheckSums, artifactsDir);
+        try {
+            new File(artifactsDir, EkstaziHelper.notFirstRunMarker).createNewFile();
+        } catch (IOException e) {
+            throw new MojoExecutionException(e.getMessage());
+        }
         end = System.currentTimeMillis();
         LOGGER.log(Level.FINEST, "[TIME]RE-SAVING CHECKSUMS: " + (end - start) + "ms");
     }
