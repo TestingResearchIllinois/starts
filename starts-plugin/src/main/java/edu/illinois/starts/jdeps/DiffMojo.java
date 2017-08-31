@@ -96,16 +96,14 @@ public class DiffMojo extends BaseMojo {
         Set<String> affectedTests = new HashSet<>(allTests);
         affectedTests.removeAll(nonAffected);
         DirectedGraph<String> graph = null;
-        Map<String, Set<String>> testDeps;
-        Set<String> unreached;
         if (!affectedTests.isEmpty()) {
             ClassLoader loader = createClassLoader(sfClassPath);
             //TODO: set this boolean to true only for static reflectionAnalyses with * (border, string, naive)?
             boolean computeUnreached = true;
             Result result = prepareForNextRun(sfPathString, sfClassPath, allTests, nonAffected, computeUnreached);
-            testDeps = result.getTestDeps();
+            Map<String, Set<String>> testDeps = result.getTestDeps();
             graph = result.getGraph();
-            unreached = computeUnreached ? result.getUnreachedDeps() : new HashSet<String>();
+            Set<String> unreached = computeUnreached ? result.getUnreachedDeps() : new HashSet<String>();
             if (depFormat == DependencyFormat.ZLC) {
                 ZLCHelper zlcHelper = new ZLCHelper();
                 zlcHelper.updateZLCFile(testDeps, loader, getArtifactsDir(), unreached);
