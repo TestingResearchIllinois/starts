@@ -1,0 +1,4 @@
+Premain-Class: edu.illinois.starts.maven.JavaAgent
+Can-Retransform-Classes: true
+Can-Redefine-Classes: true
+Agent-Class: edu.illinois.starts.maven.JavaAgent
