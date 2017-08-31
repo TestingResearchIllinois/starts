@@ -17,10 +17,6 @@ for Maven-based Java programs.
 2. `cd starts`
 3. `mvn install`
 
-__NOTE:__ Step 3 is __required__ to install the
-[YASGL](https://github.com/TestingResearchIllinois/yasgl) graph
-library.
-
 ## Integrating the STARTS Maven Plugin
 
 To integrate STARTS Maven plugin into your project, change the pom.xml
