@@ -20,11 +20,6 @@
   <dependencies>
     <dependency>
       <groupId>edu.illinois</groupId>
-      <artifactId>yasgl</artifactId>
-      <version>1.2</version>
-    </dependency>
-    <dependency>
-      <groupId>edu.illinois</groupId>
       <artifactId>starts-core</artifactId>
       <version>${project.version}</version>
     </dependency>
