@@ -29,10 +29,5 @@
       <artifactId>org.ekstazi.core</artifactId>
       <version>4.6.2</version>
     </dependency>
-    <dependency>
-      <groupId>edu.illinois</groupId>
-      <artifactId>yasgl</artifactId>
-      <version>1.2</version>
-    </dependency>
   </dependencies>
 </project>

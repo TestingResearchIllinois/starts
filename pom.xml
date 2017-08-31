@@ -62,6 +62,11 @@
       <artifactId>jgrapht-core</artifactId>
       <version>0.9.2</version>
     </dependency>
+    <dependency>
+      <groupId>edu.illinois</groupId>
+      <artifactId>yasgl</artifactId>
+      <version>1.2</version>
+    </dependency>
   </dependencies>
 
   <build>
