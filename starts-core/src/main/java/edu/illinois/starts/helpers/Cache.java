@@ -125,7 +125,7 @@ public class Cache {
             return cpJars;
         }
         Set<String> jars = new HashSet<>();
-        String[] splitCP = sfPathString.split(":");
+        String[] splitCP = sfPathString.split(File.pathSeparator);
         for (int i = 0; i < splitCP.length; i++) {
             if (splitCP[i].endsWith(".jar")) {
                 jars.add(splitCP[i]);

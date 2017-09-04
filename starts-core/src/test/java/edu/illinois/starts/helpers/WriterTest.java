@@ -127,10 +127,10 @@ public class WriterTest {
 
     @Test
     public void testMultipleClassPath() throws IOException {
-        String classPath = "1.jar;2.jar";
+        String classPath = "1.jar" + File.pathSeparator + "2.jar";
         writer.writeClassPath(classPath, ARTIFACTDIR);
         lines = Files.readAllLines(sfpath, charset);
-        assertTrue(lines.contains("1.jar;2.jar"));
+        assertTrue(lines.contains(classPath));
         assertEquals(1, lines.size());
     }
 
@@ -139,13 +139,7 @@ public class WriterTest {
         List<String> list = new ArrayList<String>();
         list.add("a");
         list.add("b");
-        String sys = System.getProperty("os.name");
-        String result;
-        if (sys.equals("Windows")) {
-            result = "a;b";
-        } else {
-            result = "a:b";
-        }
+        String result = "a" + File.pathSeparator + "b";
         assertEquals(result, writer.pathToString(list));
     }
 
