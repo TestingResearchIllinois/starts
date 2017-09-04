@@ -171,7 +171,7 @@ public class Writer {
 
     public static List<String> fqnsToExcludePath(Collection<String> fqns) {
         List<String> paths = new ArrayList<>();
-        for (String fqn : fqns ) {
+        for (String fqn : fqns) {
             if (fqn.isEmpty()) {
                 continue;
             }

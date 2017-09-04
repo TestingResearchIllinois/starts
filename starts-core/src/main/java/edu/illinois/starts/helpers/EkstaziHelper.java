@@ -45,7 +45,7 @@ public class EkstaziHelper {
         System.err.flush();
         System.setOut(oldOut);
         System.setErr(olderr);
-        Set<String> changed = writeEkstaziDebugInfo(baosErr, artifactsDir);
+        Set<String> changed = processEkstaziDebugInfo(baosErr, artifactsDir);
         Set<String> nonAffected = new HashSet<>(Arrays.asList(baosOut.toString().split(lineSeparator)));
         long end = System.currentTimeMillis();
         LOGGER.log(Level.FINEST, "[TIME]COMPUTING NON-AFFECTED: " + (end - start) + "ms");
@@ -67,7 +67,15 @@ public class EkstaziHelper {
         return !(new File(artifactsDir, notFirstRunMarker).exists());
     }
 
-    private static Set<String> writeEkstaziDebugInfo(ByteArrayOutputStream baosErr, String artifactsDir) {
+    /**
+     * Process the Ekstazi debug output to get what classes Ekstazi thinks changed, and write those changed classes
+     * to file.
+     *
+     * @param baosErr      Ekstazi Debug Output
+     * @param artifactsDir Directory in which we store STARTS artifacts (i.e., ".starts")
+     * @return             The (possibly empty) list of changed classes
+     */
+    private static Set<String> processEkstaziDebugInfo(ByteArrayOutputStream baosErr, String artifactsDir) {
         Set<String> changed = new HashSet<>();
         if (LOGGER.getLoggingLevel().intValue() > Level.FINEST.intValue()) {
             return changed;
