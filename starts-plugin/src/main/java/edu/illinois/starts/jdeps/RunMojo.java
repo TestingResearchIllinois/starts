@@ -4,6 +4,7 @@
 
 package edu.illinois.starts.jdeps;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
@@ -72,7 +73,11 @@ public class RunMojo extends DiffMojo {
     }
 
     protected void run(List<String> excludePaths) throws MojoExecutionException {
-        dynamicallyUpdateExcludes(excludePaths);
+        if (retestAll) {
+            dynamicallyUpdateExcludes(new ArrayList<String>());
+        } else {
+            dynamicallyUpdateExcludes(excludePaths);
+        }
         long startUpdateTime = System.currentTimeMillis();
         if (updateRunChecksums) {
             updateForNextRun(nonAffectedTests);

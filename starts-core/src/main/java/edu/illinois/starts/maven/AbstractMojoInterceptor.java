@@ -4,6 +4,7 @@
 
 package edu.illinois.starts.maven;
 
+import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
@@ -28,7 +29,7 @@ public abstract class AbstractMojoInterceptor implements StartsConstants {
     }
 
     public static URL getResource(Class<?> clz) {
-        URL resource = clz.getResource("/" + clz.getName().replace('.', '/') + ".class");
+        URL resource = clz.getResource("/" + clz.getName().replace('.', File.separatorChar) + ".class");
         return resource;
     }
 

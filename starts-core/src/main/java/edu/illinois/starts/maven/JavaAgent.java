@@ -11,18 +11,6 @@ import edu.illinois.starts.constants.StartsConstants;
 
 public class JavaAgent implements StartsConstants {
     /**
-     * JVM hook to statically load the javaagent at startup.
-     * After the Java Virtual Machine (JVM) has initialized, the premain method
-     * will be called. Then the real application main method will be called.
-     *
-     * @param args Arguments to pass to the jvm
-     * @param inst The instrumentation instance
-     * @throws Exception If the class cannot the modified
-     */
-    public static void premain(String args, Instrumentation inst) throws Exception {
-    }
-
-    /**
      * This method is invoked if we start the agent after the VM already started.
      * We use this method to hijack the surefire instance being run, so that we
      * can set its argLine correctly all the time.

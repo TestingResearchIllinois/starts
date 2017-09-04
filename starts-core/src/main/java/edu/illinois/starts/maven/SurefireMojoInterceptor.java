@@ -43,7 +43,7 @@ public final class SurefireMojoInterceptor extends AbstractMojoInterceptor imple
             getField(EXCLUDES_FIELD, mojo);
         } catch (NoSuchMethodException ex) {
             throwMojoExecutionException(mojo, "Unsupported surefire version. "
-                     + "Try set excludesFile in the surefire configuration.", ex);
+                     + "Try setting excludesFile in the surefire configuration.", ex);
         }
     }
 
