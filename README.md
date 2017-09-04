@@ -10,6 +10,7 @@ for Maven-based Java programs.
 1. Java 1.8 and above
 2. Maven 3.2.5 and above
 3. Maven Surefire 2.14 and above
+4. Operating System: Linux or OSX
 
 ## Installing STARTS from source
 
