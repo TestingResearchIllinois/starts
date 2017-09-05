@@ -24,20 +24,15 @@ To integrate STARTS Maven plugin into your project, change the pom.xml
 to add the configuration for the STARTS plugin:
 
 ```xml
-<project>
-  ...
-  <build>
-    ...
-    <plugins>
-      ...
-      <plugin>
-        <groupId>edu.illinois</groupId>
-        <artifactId>starts-maven-plugin</artifactId>
-        <version>1.2-SNAPSHOT</version>
-      </plugin>
-    </plugins>
-  </build>
-</project>
+<build>
+  <plugins>
+    <plugin>
+      <groupId>edu.illinois</groupId>
+      <artifactId>starts-maven-plugin</artifactId>
+      <version>1.2-SNAPSHOT</version>
+    </plugin>
+  </plugins>
+</build>
 ```
 
 ## Using the STARTS Maven Plugin
