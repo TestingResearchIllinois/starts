@@ -9,7 +9,7 @@
   <parent>
     <groupId>edu.illinois</groupId>
     <artifactId>starts</artifactId>
-    <version>1.3-SNAPSHOT</version>
+    <version>1.3</version>
   </parent>
 
   <groupId>edu.illinois</groupId>
