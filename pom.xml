@@ -4,7 +4,7 @@
 
   <groupId>edu.illinois</groupId>
   <artifactId>starts</artifactId>
-  <version>1.3</version>
+  <version>1.4-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <name>STARTS</name>
@@ -22,7 +22,7 @@
     <connection>scm:git:git@github.com:TestingResearchIllinois/starts.git</connection>
     <developerConnection>scm:git:git@github.com:TestingResearchIllinois/starts.git</developerConnection>
     <url>git@github.com:TestingResearchIllinois/starts.git</url>
-    <tag>starts-1.3</tag>
+    <tag>HEAD</tag>
   </scm>
 
   <distributionManagement>
