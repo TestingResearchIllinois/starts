@@ -9,12 +9,12 @@
   <parent>
     <groupId>edu.illinois</groupId>
     <artifactId>starts</artifactId>
-    <version>1.1-SNAPSHOT</version>
+    <version>1.1</version>
   </parent>
 
   <groupId>edu.illinois</groupId>
   <artifactId>starts-maven-plugin</artifactId>
-  <version>1.1-SNAPSHOT</version>
+  <version>1.1</version>
 
   <packaging>maven-plugin</packaging>
   <name>STARTS Maven Plugin</name>
