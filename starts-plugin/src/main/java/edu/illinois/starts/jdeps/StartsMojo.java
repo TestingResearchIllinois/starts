@@ -26,7 +26,7 @@ public class StartsMojo extends RunMojo {
         long endOfRunMojo = Long.parseLong(System.getProperty("[PROFILE] END-OF-RUN-MOJO: "));
         Logger.getGlobal().setLoggingLevel(Level.parse(loggingLevel));
         logger = Logger.getGlobal();
-        long end= System.currentTimeMillis();
+        long end = System.currentTimeMillis();
         logger.log(Level.FINE, "[PROFILE] TEST-RUNNING-TIME: " + Writer.millsToSeconds(end - endOfRunMojo));
         logger.log(Level.FINE, "[PROFILE] STARTS-MOJO-TOTAL: " + Writer.millsToSeconds(end - endOfRunMojo));
     }
