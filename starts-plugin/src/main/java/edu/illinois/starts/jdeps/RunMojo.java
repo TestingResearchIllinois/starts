@@ -5,16 +5,16 @@
 package edu.illinois.starts.jdeps;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
 
-import edu.illinois.starts.helpers.PomUtil;
 import edu.illinois.starts.helpers.Writer;
+import edu.illinois.starts.maven.AgentLoader;
 import edu.illinois.starts.util.Logger;
 import edu.illinois.starts.util.Pair;
-import org.apache.maven.model.Plugin;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
@@ -73,12 +73,10 @@ public class RunMojo extends DiffMojo {
     }
 
     protected void run(List<String> excludePaths) throws MojoExecutionException {
-        Plugin sfPlugin = PomUtil.getSfPlugin(getProject());
         if (retestAll) {
-            PomUtil.appendExcludesListToExcludesFile(sfPlugin, getExcludes(), new ArrayList<String>(),
-                getWorkingDirectory());
+            dynamicallyUpdateExcludes(new ArrayList<String>());
         } else {
-            PomUtil.appendExcludesListToExcludesFile(sfPlugin, getExcludes(), excludePaths, getWorkingDirectory());
+            dynamicallyUpdateExcludes(excludePaths);
         }
         long startUpdateTime = System.currentTimeMillis();
         if (updateRunChecksums) {
@@ -87,6 +85,15 @@ public class RunMojo extends DiffMojo {
         long endUpdateTime = System.currentTimeMillis();
         logger.log(Level.FINE, "[PROFILE] STARTS-MOJO-UPDATE-TIME: "
                 + Writer.millsToSeconds(endUpdateTime - startUpdateTime));
+    }
+
+    private void dynamicallyUpdateExcludes(List<String> excludePaths) throws MojoExecutionException {
+        if (AgentLoader.loadDynamicAgent()) {
+            logger.log(Level.FINEST, "AGENT LOADED!!!");
+            System.setProperty(STARTS_EXCLUDE_PROPERTY, Arrays.toString(excludePaths.toArray(new String[0])));
+        } else {
+            throw new MojoExecutionException("I COULD NOT ATTACH THE AGENT");
+        }
     }
 
     protected void setChangedAndNonaffected() throws MojoExecutionException {
