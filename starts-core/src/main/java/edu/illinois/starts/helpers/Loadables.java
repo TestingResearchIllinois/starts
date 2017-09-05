@@ -70,7 +70,7 @@ public class Loadables {
         List<String> localPaths = new ArrayList<>();
         if (surefireClasspath != null) {
             for (String path : surefireClasspath.getClassPath()) {
-                if (!path.endsWith(".jar")) {
+                if (!path.endsWith(".jar") && new File(path).exists()) {
                     localPaths.add(path);
                 }
             }

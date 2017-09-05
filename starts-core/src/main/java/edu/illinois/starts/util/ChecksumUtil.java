@@ -13,6 +13,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -60,12 +62,15 @@ public class ChecksumUtil {
                             checksums.get(test).add(checksumUtil.computeChecksumRegData(url));
                         }
                     } else {
-                        LOGGER.log(Level.INFO, "@@LoadedNullURLForDep: " + dep);
+                        // Known benign cases where this can happen: (i) dep is from a shaded jar which is itself on
+                        // the classpath; (ii) dep is from an optional jar dependency of a direct jar dependency (e.g.,
+                        // users of joda-time-*.jar do not necessarily depend on classes from joda-convert-8.jar
+                        LOGGER.log(Level.FINEST, "@@LoadedNullURLForDep: " + dep);
                     }
                 }
             }
             long end = System.currentTimeMillis();
-            LOGGER.log(Level.INFO, "LOADED RESOURCES: " + (end - start) + "ms");
+            LOGGER.log(Level.FINEST, "LOADED RESOURCES: " + (end - start) + "ms");
         }
         return checksums;
     }
@@ -130,7 +135,9 @@ public class ChecksumUtil {
         }
 
         public void save(FileOutputStream fos, Set<RegData> data) {
-            super.extendedSave(fos, data);
+            SortedSet<RegData> sortedData = new TreeSet<>(new RegData.RegComparator());
+            sortedData.addAll(data);
+            super.extendedSave(fos, sortedData);
         }
     }
 }

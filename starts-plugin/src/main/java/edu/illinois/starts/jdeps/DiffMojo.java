@@ -4,6 +4,7 @@
 
 package edu.illinois.starts.jdeps;
 
+import java.io.File;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -69,25 +70,21 @@ public class DiffMojo extends BaseMojo {
     }
 
     protected Pair<Set<String>, Set<String>> computeChangeData() throws MojoExecutionException {
+        long start = System.currentTimeMillis();
+        Pair<Set<String>, Set<String>> data = null;
         if (depFormat == DependencyFormat.ZLC) {
-            long start = System.currentTimeMillis();
             ZLCHelper zlcHelper = new ZLCHelper();
-            Pair<Set<String>, Set<String>> data = zlcHelper.getChangedData(getArtifactsDir(), cleanBytes);
-            Set<String> changed = data == null ? new HashSet<String>() : data.getValue();
-            if (Logger.getGlobal().getLoggingLevel().intValue() <= Level.FINEST.intValue()) {
-                Writer.writeToFile(changed, "changed-classes", getArtifactsDir());
-            }
-            long end = System.currentTimeMillis();
-            Logger.getGlobal().log(Level.FINE, "[PROFILE] COMPUTING CHANGES: " + Writer.millsToSeconds(end - start));
-            return data;
+            data = zlcHelper.getChangedData(getArtifactsDir(), cleanBytes);
         } else if (depFormat == DependencyFormat.CLZ) {
-            Set<String> nonAffected = EkstaziHelper.getNonAffectedTests(getArtifactsDir());
-            //TODO: parse .clz files to find what changed in the same pass as finding nonaffected tests
-            Set<String> changed = new HashSet<>();
-            //TODO: updateForNextRun, depending on updateChecksums
-            return new Pair<>(nonAffected, changed);
+            data = EkstaziHelper.getNonAffectedTests(getArtifactsDir());
         }
-        return null;
+        Set<String> changed = data == null ? new HashSet<String>() : data.getValue();
+        if (Logger.getGlobal().getLoggingLevel().intValue() <= Level.FINEST.intValue()) {
+            Writer.writeToFile(changed, "changed-classes", getArtifactsDir());
+        }
+        long end = System.currentTimeMillis();
+        Logger.getGlobal().log(Level.FINE, "[PROFILE] COMPUTING CHANGES: " + Writer.millsToSeconds(end - start));
+        return data;
     }
 
     protected void updateForNextRun(Set<String> nonAffected) throws MojoExecutionException {
@@ -99,16 +96,14 @@ public class DiffMojo extends BaseMojo {
         Set<String> affectedTests = new HashSet<>(allTests);
         affectedTests.removeAll(nonAffected);
         DirectedGraph<String> graph = null;
-        Map<String, Set<String>> testDeps = null;
-        Set<String> unreached = null;
         if (!affectedTests.isEmpty()) {
             ClassLoader loader = createClassLoader(sfClassPath);
             //TODO: set this boolean to true only for static reflectionAnalyses with * (border, string, naive)?
             boolean computeUnreached = true;
             Result result = prepareForNextRun(sfPathString, sfClassPath, allTests, nonAffected, computeUnreached);
-            testDeps = result.getTestDeps();
+            Map<String, Set<String>> testDeps = result.getTestDeps();
             graph = result.getGraph();
-            unreached = computeUnreached ? result.getUnreachedDeps() : new HashSet<String>();
+            Set<String> unreached = computeUnreached ? result.getUnreachedDeps() : new HashSet<String>();
             if (depFormat == DependencyFormat.ZLC) {
                 ZLCHelper zlcHelper = new ZLCHelper();
                 zlcHelper.updateZLCFile(testDeps, loader, getArtifactsDir(), unreached);

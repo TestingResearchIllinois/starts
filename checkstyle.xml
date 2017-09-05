@@ -229,5 +229,6 @@ Authors: Max Vetrenko, Ruslan Diachenko, Roman Ivanov.
       <property name="exceptionVariableName" value="expected"/>
     </module>
     <module name="SuppressWarningsHolder" />
+    <module name="ParenPad" />
   </module>
 </module>

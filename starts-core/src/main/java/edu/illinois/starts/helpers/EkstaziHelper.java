@@ -16,16 +16,22 @@ import java.util.Set;
 import java.util.logging.Level;
 
 import edu.illinois.starts.util.Logger;
+import edu.illinois.starts.util.Pair;
 import org.ekstazi.check.AffectedChecker;
 
 /**
  * Utility methods for interacting with Ekstazi.
  */
 public class EkstaziHelper {
-    private static final Logger LOGGER = Logger.getGlobal();
+    public static final Logger LOGGER = Logger.getGlobal();
+    public static String notFirstRunMarker = "not-first-run.clz";
+    public static String lineSeparator = System.getProperty("line.separator");
 
-    public static Set<String> getNonAffectedTests(String artifactsDir) {
+    public static Pair<Set<String>, Set<String>> getNonAffectedTests(String artifactsDir) {
         long start = System.currentTimeMillis();
+        if (isFirstRun(artifactsDir)) {
+            return null;
+        }
         ByteArrayOutputStream baosOut = new ByteArrayOutputStream();
         ByteArrayOutputStream baosErr = new ByteArrayOutputStream();
         PrintStream psOut = new PrintStream(baosOut);
@@ -39,41 +45,56 @@ public class EkstaziHelper {
         System.err.flush();
         System.setOut(oldOut);
         System.setErr(olderr);
-        writeEkstaziDebugInfo(baosErr, artifactsDir);
+        Set<String> changed = processEkstaziDebugInfo(baosErr, artifactsDir);
+        Set<String> nonAffected = new HashSet<>(Arrays.asList(baosOut.toString().split(lineSeparator)));
         long end = System.currentTimeMillis();
         LOGGER.log(Level.FINEST, "[TIME]COMPUTING NON-AFFECTED: " + (end - start) + "ms");
-        return new HashSet<>(Arrays.asList(baosOut.toString().split("\n")));
+        return new Pair<>(nonAffected, changed);
     }
 
-    public static Set<String> getNonAffectedTests(File basedir) {
+    public static Pair<Set<String>, Set<String>> getNonAffectedTests(File basedir) {
         long start = System.currentTimeMillis();
-        List<String> nonAffected = AffectedChecker.findNonAffectedClasses(basedir, getRootDirOption(basedir));
+        List<String> nonAffectedFiles = AffectedChecker.findNonAffectedClasses(basedir, getRootDirOption(basedir));
         long end = System.currentTimeMillis();
+        Set<String> nonAffectedTests = toFQN(new HashSet<>(nonAffectedFiles));
+        Set<String> changed = new HashSet<>();
         LOGGER.log(Level.FINEST, "[TIME]COMPUTING NON-AFFECTED(2): " + (end - start) + "ms");
-        return toFQN(new HashSet<>(nonAffected));
+        return new Pair<>(nonAffectedTests, changed);
     }
 
-    private static void writeEkstaziDebugInfo(ByteArrayOutputStream baosErr, String artifactsDir) {
+    private static boolean isFirstRun(String artifactsDir) {
+        // If the notFirstRunMarker file does not exist, this is a first run
+        return !(new File(artifactsDir, notFirstRunMarker).exists());
+    }
+
+    /**
+     * Process the Ekstazi debug output to get what classes Ekstazi thinks changed, and write those changed classes
+     * to file.
+     *
+     * @param baosErr      Ekstazi Debug Output
+     * @param artifactsDir Directory in which we store STARTS artifacts (i.e., ".starts")
+     * @return             The (possibly empty) set of changed classes
+     */
+    private static Set<String> processEkstaziDebugInfo(ByteArrayOutputStream baosErr, String artifactsDir) {
+        Set<String> changed = new HashSet<>();
         if (LOGGER.getLoggingLevel().intValue() > Level.FINEST.intValue()) {
-            return;
+            return changed;
         }
         String outFilename = artifactsDir + File.separator + "changed-classes";
-        Set<String> changed = new HashSet<>();
-        for (String line : Arrays.asList(baosErr.toString().split("\n"))) {
-            if (line.contains("::Diff::")) {
-                // This assumes that only classes in the application can
-                // change, and not classes in jars
-                String fqn = Writer.toFQN(line);
-                changed.add(fqn);
+        for (String line : Arrays.asList(baosErr.toString().split(lineSeparator))) {
+            String ekstaziDiffMarker = "::Diff:: ";
+            if (line.contains(ekstaziDiffMarker)) {
+                changed.add(line.split(ekstaziDiffMarker)[1]);
             }
         }
         try (BufferedWriter writer = Writer.getWriter(outFilename)) {
-            for (String fqn : changed) {
-                writer.write(fqn + "\n");
+            for (String file : changed) {
+                writer.write(file + lineSeparator);
             }
         } catch (IOException ioe) {
             ioe.printStackTrace();
         }
+        return changed;
     }
 
     private static String getRootDirOption(File basedir) {
