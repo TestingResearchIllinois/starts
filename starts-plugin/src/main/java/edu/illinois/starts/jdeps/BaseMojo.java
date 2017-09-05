@@ -215,8 +215,7 @@ abstract class BaseMojo extends SurefirePlugin implements StartsConstants {
         // library jars.
         File libraryFile = new File(jdepsCache, "jdk.graph");
         // Create the Loadables object early so we can use its helpers
-        Loadables loadables = new Loadables(classesToAnalyze, artifactsDir, sfPathString,
-                filterLib, libraryFile, jdepsCache);
+        Loadables loadables = new Loadables(classesToAnalyze, artifactsDir, sfPathString, filterLib, jdepsCache);
         // Surefire Classpath object is easier to iterate over without de-constructing
         // sfPathString (which we use in a number of other places)
         loadables.setSurefireClasspath(sfClassPath);

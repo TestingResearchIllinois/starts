@@ -156,19 +156,6 @@ public class Writer {
         return sb.toString();
     }
 
-    public static String toFQN(String line) {
-        String[] parts = line.split("classes" + File.separator, 2);
-        String fqn = parts[1].replace(".class", "").replace(File.separator, ".");
-        fqn = (fqn.endsWith(".")) ? fqn.substring(0, fqn.lastIndexOf(".")) : fqn;
-        return fqn;
-    }
-
-    public static String toFQNPlain(String line) {
-        String fqn = line.replace(".class", "").replace(File.separator, ".");
-        fqn = (fqn.endsWith(".")) ? fqn.substring(0, fqn.lastIndexOf(".")) : fqn;
-        return fqn;
-    }
-
     public static List<String> fqnsToExcludePath(Collection<String> fqns) {
         List<String> paths = new ArrayList<>();
         for (String fqn : fqns) {

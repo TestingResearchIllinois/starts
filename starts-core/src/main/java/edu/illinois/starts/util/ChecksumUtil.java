@@ -76,7 +76,11 @@ public class ChecksumUtil {
     }
 
     /**
+     * Check for so-called "well-known" classes that we don't track for RTS purposes.
      * Copied from Ekstazi.
+     *
+     * @param klas The class we want to check
+     * @return true if klas is a well-known class
      */
     public static boolean isWellKnownUrl(String klas) {
         return klas.contains("!/org/junit") || klas.contains("!/junit") || klas.contains("!/org/hamcrest")

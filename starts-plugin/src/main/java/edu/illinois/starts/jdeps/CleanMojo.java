@@ -15,12 +15,10 @@ import org.apache.maven.plugins.annotations.Mojo;
  */
 @Mojo(name = "clean", requiresDirectInvocation = true)
 public class CleanMojo extends BaseMojo {
-
     public void execute() throws MojoExecutionException {
         File directory = new File(getArtifactsDir());
         if (directory.exists()) {
             FileUtil.delete(directory);
         }
     }
-
 }

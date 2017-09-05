@@ -72,18 +72,6 @@ public class RTSUtil {
         return affectedTests;
     }
 
-    public static void startProcess(ProcessBuilder pb) {
-        Process process;
-        try {
-            process = pb.start();
-            process.waitFor();
-        } catch (IOException ioe) {
-            ioe.printStackTrace();
-        } catch (InterruptedException ie) {
-            ie.printStackTrace();
-        }
-    }
-
     public static Map<String, Set<String>> runJdeps(List<String> args) {
         StringWriter output = new StringWriter();
         LOGGER.log(Level.FINE, "JDEPS ARGS:" + args);

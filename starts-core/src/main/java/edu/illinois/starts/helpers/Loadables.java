@@ -29,10 +29,8 @@ public class Loadables {
     private static final Logger LOGGER = Logger.getGlobal();
 
     Map<String, Set<String>> deps;
-    YasglHelper helper;
     List<String> extraEdges;
     private List<String> classesToAnalyze;
-    private File libraryFile;
     private File cache;
     private String sfPathString;
     private DirectedGraph<String> graph;
@@ -43,12 +41,11 @@ public class Loadables {
     private String artifactsDir;
 
     public Loadables(List<String> classesToAnalyze, String artifactsDir, String sfPathString,
-                     boolean filterLib, File libraryFile, File cache) {
+                     boolean filterLib, File cache) {
         this.classesToAnalyze = classesToAnalyze;
         this.artifactsDir = artifactsDir;
         this.sfPathString = sfPathString;
         this.filterLib = filterLib;
-        this.libraryFile = libraryFile;
         this.cache = cache;
     }
 
@@ -143,13 +140,6 @@ public class Loadables {
         return allClasses;
     }
 
-    private DirectedGraph<String> updateGraph(Map<String, Set<String>> deps) {
-        DirectedGraphBuilder<String> builder = getBuilderFromDeps(deps);
-        addEdgesToGraphBuilder(builder, extraEdges);
-        addEdgesToGraphBuilder(builder, helper.getLines());
-        return builder.build();
-    }
-
     private DirectedGraph<String> makeGraph(Map<String, Set<String>> deps,
                                             List<String> moreEdges) {
         DirectedGraphBuilder<String> builder = getBuilderFromDeps(deps);
@@ -163,18 +153,6 @@ public class Loadables {
             for (String dep : deps.get(key)) {
                 builder.addEdge(key, dep);
             }
-        }
-        return builder;
-    }
-
-    private DirectedGraphBuilder<String> addJDKEdges(DirectedGraphBuilder<String> builder) {
-        if (libraryFile != null) {
-            LOGGER.log(Level.FINEST, "I am loading JDK classes from " + libraryFile.getAbsolutePath());
-            long start = System.currentTimeMillis();
-            helper = new YasglHelper();
-            builder = helper.addEdgesToBuilder(libraryFile, builder);
-            long end = System.currentTimeMillis();
-            LOGGER.log(Level.FINEST, "[TIME]Loading JDK edges: " + (end - start) + "ms");
         }
         return builder;
     }

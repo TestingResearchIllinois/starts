@@ -45,11 +45,11 @@ public class ImpactedMojo extends DiffMojo {
         // 0. Find all classes in program
         List<String> allClasses = getAllClasses();
         Set<String>  impacted = new HashSet<>(allClasses);
-        // 1. Find what changed and what is non-affected
+        // 1a. Find what changed and what is non-affected
         Set<String> nonAffected = data == null ? new HashSet<String>() : data.getKey();
         Set<String> changed = data == null ? new HashSet<String>() : data.getValue();
 
-        // 1a. Remove nonAffected from all classes to get classes impacted by the change
+        // 1b. Remove nonAffected from all classes to get classes impacted by the change
         impacted.removeAll(nonAffected);
 
         logger.log(Level.FINEST, "CHANGED: " + changed.toString());
@@ -82,5 +82,4 @@ public class ImpactedMojo extends DiffMojo {
         RTSUtil.saveForNextRun(artifactsDir, graph, printGraph, graphFile);
         Writer.writeClassPath(sfPathString, artifactsDir);
     }
-
 }

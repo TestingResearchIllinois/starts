@@ -5,10 +5,6 @@
 package edu.illinois.starts.helpers;
 
 import java.io.File;
-import java.io.IOException;
-import java.nio.charset.Charset;
-import java.nio.file.Files;
-import java.util.List;
 
 /**
  * File handling utility methods.
@@ -21,9 +17,5 @@ public class FileUtil {
             }
         }
         file.delete();
-    }
-
-    public static List<String> readLinesFromFile(File inputFile) throws IOException {
-        return Files.readAllLines(inputFile.toPath(), Charset.defaultCharset());
     }
 }

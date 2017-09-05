@@ -4,12 +4,7 @@
 
 package edu.illinois.starts.helpers;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.FileReader;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -99,86 +94,5 @@ public class PomUtil implements StartsConstants {
             }
         }
         return values;
-    }
-
-    /**
-     * Copied from Ekstazi.
-     */
-    public static void appendExcludesListToExcludesFile(Plugin plugin, List<String> originalExcludes, List<String> excludes,
-                                                        File baseDir) throws MojoExecutionException {
-        String excludesParam = PomUtil.extractParamValue(plugin, "excludesFile");
-        File excludesFile = new File(baseDir.getAbsolutePath() + File.separator + excludesParam);
-        PrintWriter writer = null;
-
-        try {
-            writer = new PrintWriter(new FileOutputStream(excludesFile, true), true);
-            writer.println(STARTS_EXCLUDE_MARKER);
-            for (String e : excludes) {
-                writer.println(e);
-            }
-            //TODO: we need to confirm that this is really expected behavior from surefire
-            //If surefire already declares <excludes>, then we should *not* use the default excludes regex.
-            if (originalExcludes.isEmpty()) {
-                writer.println("**/*$*");
-            }
-        } catch (IOException ioe) {
-            throw new MojoExecutionException("Could not access excludesFile", ioe);
-        } finally {
-            if (writer != null) {
-                writer.close();
-            }
-        }
-    }
-
-    public static File getExcludesFile(Plugin plugin, File baseDir) throws MojoExecutionException {
-        String excludesFileName = PomUtil.extractParamValue(plugin, "excludesFile");
-        return new File(baseDir.getAbsolutePath() + File.separator + excludesFileName);
-    }
-
-    /**
-     * The following three methods are replicated from Ekstazi because the ones
-     * in Ekstazi has "Ekstazi" hard-coded or are private.
-     * TODO: Use reflection for the private ones and remove from here.
-     */
-    public static void restoreExcludesFile(Plugin plugin, File baseDir) throws MojoExecutionException {
-        File excludesFile = getExcludesFile(plugin, baseDir);
-        restoreExcludeFile(excludesFile, STARTS_EXCLUDE_MARKER);
-        removeExcludesFileIfEmpty(excludesFile);
-    }
-
-    public static void restoreExcludeFile(File excludesFile, String marker) throws MojoExecutionException {
-        if (excludesFile.exists()) {
-            try {
-                String[] oldLines = org.ekstazi.util.FileUtil.readLines(excludesFile);
-                ArrayList newLines = new ArrayList();
-                String[] temp = oldLines;
-                int len = oldLines.length;
-
-                for (int i = 0; i < len; ++i) {
-                    String line = temp[i];
-                    if (line.equals(marker)) {
-                        break;
-                    }
-
-                    newLines.add(line);
-                }
-                org.ekstazi.util.FileUtil.writeLines(excludesFile, newLines);
-            } catch (IOException ioe) {
-                throw new MojoExecutionException("Could not restore \'excludesFile\'", ioe);
-            }
-        }
-    }
-
-    public static void removeExcludesFileIfEmpty(File file) throws MojoExecutionException {
-        if (file.exists()) {
-            try {
-                BufferedReader br = new BufferedReader(new FileReader(file));
-                if (br.readLine() == null) {
-                    file.delete();
-                }
-            } catch (IOException ioe) {
-                throw new MojoExecutionException("Could not remove \'excludesFile\'", ioe);
-            }
-        }
     }
 }

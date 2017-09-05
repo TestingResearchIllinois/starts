@@ -105,8 +105,4 @@ public class YasglHelper {
 
         return builder;
     }
-
-    public List<String> getLines() {
-        return lines;
-    }
 }

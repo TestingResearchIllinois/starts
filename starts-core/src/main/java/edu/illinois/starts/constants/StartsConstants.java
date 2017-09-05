@@ -10,7 +10,6 @@ import java.io.File;
  * Some constants used throughout the STARTS codebase.
  */
 public interface StartsConstants {
-    String STARTS_EXCLUDE_MARKER = "# STARTS excluded";
     String STARTS_DIRECTORY_PATH = ".starts" + File.separator;
     String MIN_SUREFIRE_VERSION = "2.13";
 

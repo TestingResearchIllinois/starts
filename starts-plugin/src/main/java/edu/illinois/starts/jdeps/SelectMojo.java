@@ -24,7 +24,6 @@ import org.apache.maven.plugins.annotations.ResolutionScope;
 @Mojo(name = "select", requiresDirectInvocation = true, requiresDependencyResolution = ResolutionScope.TEST)
 @Execute(phase = LifecyclePhase.TEST_COMPILE)
 public class SelectMojo extends DiffMojo {
-
     /**
      * Set this to "true" to update test dependencies on disk. The default value of
      * "false" is useful for "dry runs" where one may want to see the affected
