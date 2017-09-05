@@ -73,7 +73,7 @@ public class EkstaziHelper {
      *
      * @param baosErr      Ekstazi Debug Output
      * @param artifactsDir Directory in which we store STARTS artifacts (i.e., ".starts")
-     * @return             The (possibly empty) list of changed classes
+     * @return             The (possibly empty) set of changed classes
      */
     private static Set<String> processEkstaziDebugInfo(ByteArrayOutputStream baosErr, String artifactsDir) {
         Set<String> changed = new HashSet<>();
