@@ -58,7 +58,7 @@ time STARTS was run: `mvn starts:impacted`
 selected tests): `mvn starts:starts`
 
 5. To remove all artifacts that STARTS stores between versions
-(i.e. in the .starts directories): `mvn starts:clean`
+(i.e. in the `.starts` directories): `mvn starts:clean`
 
 __NOTE:__ By default, commands (1) - (3) *will not* update the
 checksums of files in the latest version, while the command in (4)
