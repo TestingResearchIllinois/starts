@@ -8,8 +8,23 @@
   <packaging>pom</packaging>
 
   <name>STARTS</name>
+  <description>A tool for performing STAtic Regression Test Selection</description>
+  <url>https://github.com/TestingResearchIllinois/starts</url>
 
-  <url>http://mir.cs.illinois.edu/</url>
+  <licenses>
+    <license>
+      <name>University of Illinois/NCSA Open Source License</name>
+      <url>https://opensource.org/licenses/NCSA</url>
+    </license>
+  </licenses>
+
+  <scm>
+    <connection>scm:git:git@github.com:TestingResearchIllinois/starts.git</connection>
+    <developerConnection>scm:git:git@github.com:TestingResearchIllinois/starts.git</developerConnection>
+    <url>git@github.com:TestingResearchIllinois/starts.git</url>
+    <tag>HEAD</tag>
+  </scm>
+
 
   <contributors>
     <contributor>
