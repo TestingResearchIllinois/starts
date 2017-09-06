@@ -12,16 +12,9 @@ for Maven-based Java programs.
 3. Maven Surefire 2.14 and above
 4. Operating System: Linux or OSX
 
-## Installing STARTS from source
+## Integrating STARTS Plugin from Maven Central
 
-1. `git clone https://github.com/TestingResearchIllinois/starts`
-2. `cd starts`
-3. `mvn install`
-
-## Integrating the STARTS Maven Plugin
-
-To integrate STARTS Maven plugin into your project, change the pom.xml
-to add the configuration for the STARTS plugin:
+Change the pom.xml to add the configuration for the STARTS plugin:
 
 ```xml
 <build>
@@ -29,11 +22,17 @@ to add the configuration for the STARTS plugin:
     <plugin>
       <groupId>edu.illinois</groupId>
       <artifactId>starts-maven-plugin</artifactId>
-      <version>1.2-SNAPSHOT</version>
+      <version>1.3</version>
     </plugin>
   </plugins>
 </build>
 ```
+
+## Building STARTS from source
+
+1. `git clone https://github.com/TestingResearchIllinois/starts`
+2. `cd starts`
+3. `mvn install`
 
 ## Using the STARTS Maven Plugin
 
