@@ -4,10 +4,20 @@
 
 package edu.illinois.starts.jdeps;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 
@@ -71,8 +81,11 @@ public class RunMojo extends DiffMojo {
     }
 
     protected void run(List<String> excludePaths) throws MojoExecutionException {
-        if (retestAll) {
+        String sfPathString = cleanClassPath(Writer.pathToString(getSureFireClassPath().getClassPath()));
+        if (retestAll || !compareClassPaths(sfPathString) || !checkJarChecksums(sfPathString)) {
             dynamicallyUpdateExcludes(new ArrayList<String>());
+            Writer.writeClassPath(sfPathString, artifactsDir);
+            Writer.writeJarChecksums(cleanClassPath(sfPathString), artifactsDir);
         } else {
             dynamicallyUpdateExcludes(excludePaths);
         }
@@ -100,5 +113,59 @@ public class RunMojo extends DiffMojo {
         Pair<Set<String>, Set<String>> data = computeChangeData();
         nonAffectedTests = data == null ? new HashSet<String>() : data.getKey();
         changedClasses  = data == null ? new HashSet<String>() : data.getValue();
+    }
+
+    private boolean compareClassPaths(String sfPathString) throws MojoExecutionException {
+        String oldSfPathFileName = getArtifactsDir() + "sf-classpath";
+        try {
+            String cleanOldSfPathFileName = cleanClassPath(Files.readAllLines(Paths.get(oldSfPathFileName)).get(0));
+            if (!sfPathString.equals(cleanOldSfPathFileName)) {
+                return false;
+            }
+        } catch (IOException ioe) {
+            ioe.printStackTrace();
+        }
+        return true;
+    }
+
+    private boolean checkJarChecksums(String cleanSfClassPath) throws MojoExecutionException {
+        String oldChecksumPathFileName = getArtifactsDir() + "jar-checksums";
+        Map<String, String> checksumMap = new HashMap<>();
+        try (BufferedReader fileReader = new BufferedReader(new FileReader(oldChecksumPathFileName))) {
+            String line;
+            while ((line = fileReader.readLine()) != null) {
+                String[] elems = line.split(",");
+                checksumMap.put(elems[0], elems[1]);
+            }
+            String[] jars = cleanSfClassPath.split(":");
+            for (int i = 0; i < jars.length; i++) {
+                String[] elems = Writer.getJarToChecksumMapping(jars[i]).split(",");
+                String oldCS = checksumMap.get(elems[0]);
+                if (!elems[1].equals(oldCS)) {
+                    return false;
+                }
+            }
+        } catch (IOException ioe) {
+            // log that the file doesn't exist, typically on the first run or after clean
+            ioe.printStackTrace();
+        }
+        return true;
+    }
+
+    private String cleanClassPath(String cp) {
+        String[] paths = cp.split(":");
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < paths.length; i++) {
+            if (paths[i].contains("/target/classes") || paths[i].contains("/target/test-classes")
+                || paths[i].contains("-SNAPSHOT.jar")) {
+                continue;
+            }
+            if (sb.length() == 0) {
+                sb.append(paths[i]);
+            } else {
+                sb.append(":" + paths[i]);
+            }
+        }
+        return sb.toString();
     }
 }

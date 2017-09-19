@@ -6,11 +6,16 @@ package edu.illinois.starts.helpers;
 
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.security.DigestInputStream;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -67,6 +72,22 @@ public class Writer {
         String outFilename = artifactsDir + File.separator + "sf-classpath";
         try (BufferedWriter writer = getWriter(outFilename)) {
             writer.write(sfPathString + System.lineSeparator());
+        } catch (IOException ioe) {
+            ioe.printStackTrace();
+        }
+    }
+
+    public static void writeJarChecksums(String sfPathString, String artifactsDir) {
+        String outFilename = artifactsDir + File.separator + "jar-checksums";
+        try (BufferedWriter writer = getWriter(outFilename)) {
+            String[] jarsList = sfPathString.split(":");
+            for (int i = 0; i < jarsList.length; i++) {
+                if (jarsList[i].isEmpty()) {
+                    continue;
+                }
+                String mapping = getJarToChecksumMapping(jarsList[i]);
+                writer.write(mapping + "\n");
+            }
         } catch (IOException ioe) {
             ioe.printStackTrace();
         }
@@ -189,5 +210,28 @@ public class Writer {
 
     public static String millsToSeconds(long value) {
         return String.format("%.03f", (double) value / 1000.0);
+    }
+
+    public static String getJarToChecksumMapping(String jar) {
+        StringBuilder sb = new StringBuilder();
+        byte[] bytes = new byte[8192];
+        try {
+            MessageDigest md = MessageDigest.getInstance("MD5");
+            InputStream is = Files.newInputStream(Paths.get(jar));
+            DigestInputStream dis = new DigestInputStream(is, md);
+            while (dis.read(bytes) != -1) {
+                ;
+            }
+
+            byte[] mdbytes = md.digest();
+            for (int i = 0; i < mdbytes.length; i++) {
+                sb.append(Integer.toString((mdbytes[i] & 0xff) + 0x100 , 16).substring(1));
+            }
+        } catch (IOException ioe) {
+            ioe.printStackTrace();
+        } catch (NoSuchAlgorithmException nsae) {
+            nsae.printStackTrace();
+        }
+        return jar + "," + sb.toString();
     }
 }
