@@ -86,7 +86,10 @@ public class Writer {
                     continue;
                 }
                 String mapping = getJarToChecksumMapping(jarsList[i]);
-                writer.write(mapping + "\n");
+                if (mapping.split(",").length < 2) {
+                    continue;
+                }
+                writer.write(mapping + System.lineSeparator());
             }
         } catch (IOException ioe) {
             ioe.printStackTrace();
@@ -212,8 +215,16 @@ public class Writer {
         return String.format("%.03f", (double) value / 1000.0);
     }
 
+    /**
+     * Compute the checksum for the given map and return the jar
+     * and the checksum as a string.
+     *
+     * @param jar         The jar whose checksum we need to compute.
+     */
     public static String getJarToChecksumMapping(String jar) {
         StringBuilder sb = new StringBuilder();
+        sb.append(jar);
+        sb.append(",");
         byte[] bytes = new byte[8192];
         try {
             MessageDigest md = MessageDigest.getInstance("MD5");
@@ -232,6 +243,6 @@ public class Writer {
         } catch (NoSuchAlgorithmException nsae) {
             nsae.printStackTrace();
         }
-        return jar + "," + sb.toString();
+        return sb.toString();
     }
 }

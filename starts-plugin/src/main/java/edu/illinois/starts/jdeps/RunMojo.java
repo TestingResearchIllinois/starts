@@ -82,7 +82,7 @@ public class RunMojo extends DiffMojo {
 
     protected void run(List<String> excludePaths) throws MojoExecutionException {
         String sfPathString = cleanClassPath(Writer.pathToString(getSureFireClassPath().getClassPath()));
-        if (retestAll || !compareClassPaths(sfPathString) || !checkJarChecksums(sfPathString)) {
+        if (retestAll || !checkIfSameClassPath(sfPathString) || !checkIfSameJarChecksums(sfPathString)) {
             dynamicallyUpdateExcludes(new ArrayList<String>());
             Writer.writeClassPath(sfPathString, artifactsDir);
             Writer.writeJarChecksums(cleanClassPath(sfPathString), artifactsDir);
@@ -115,22 +115,26 @@ public class RunMojo extends DiffMojo {
         changedClasses  = data == null ? new HashSet<String>() : data.getValue();
     }
 
-    private boolean compareClassPaths(String sfPathString) throws MojoExecutionException {
+    private boolean checkIfSameClassPath(String sfPathString) throws MojoExecutionException {
         String oldSfPathFileName = getArtifactsDir() + "sf-classpath";
+        Set<String> sfClassPathSet = new HashSet<>(Arrays.asList(sfPathString.split(":")));
         try {
             String cleanOldSfPathFileName = cleanClassPath(Files.readAllLines(Paths.get(oldSfPathFileName)).get(0));
-            if (!sfPathString.equals(cleanOldSfPathFileName)) {
-                return false;
+            Set<String> oldSfClassPathSet = new HashSet<>(Arrays.asList(cleanOldSfPathFileName.split(":")));
+            if (oldSfClassPathSet.size() == sfClassPathSet.size()
+                && sfClassPathSet.containsAll(oldSfClassPathSet)) {
+                return true;
             }
         } catch (IOException ioe) {
             ioe.printStackTrace();
         }
-        return true;
+        return false;
     }
 
-    private boolean checkJarChecksums(String cleanSfClassPath) throws MojoExecutionException {
+    private boolean checkIfSameJarChecksums(String cleanSfClassPath) throws MojoExecutionException {
         String oldChecksumPathFileName = getArtifactsDir() + "jar-checksums";
         Map<String, String> checksumMap = new HashMap<>();
+        boolean noException = true;
         try (BufferedReader fileReader = new BufferedReader(new FileReader(oldChecksumPathFileName))) {
             String line;
             while ((line = fileReader.readLine()) != null) {
@@ -147,9 +151,10 @@ public class RunMojo extends DiffMojo {
             }
         } catch (IOException ioe) {
             // log that the file doesn't exist, typically on the first run or after clean
+            noException = false;
             ioe.printStackTrace();
         }
-        return true;
+        return noException;
     }
 
     private String cleanClassPath(String cp) {
@@ -163,7 +168,8 @@ public class RunMojo extends DiffMojo {
             if (sb.length() == 0) {
                 sb.append(paths[i]);
             } else {
-                sb.append(":" + paths[i]);
+                sb.append(":");
+                sb.append(paths[i]);
             }
         }
         return sb.toString();
