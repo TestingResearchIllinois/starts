@@ -117,12 +117,14 @@ public class RunMojo extends DiffMojo {
 
     private boolean checkIfSameClassPath(String sfPathString) throws MojoExecutionException {
         String oldSfPathFileName = getArtifactsDir() + "sf-classpath";
-        Set<String> sfClassPathSet = new HashSet<>(Arrays.asList(sfPathString.split(":")));
+        Set<String> sfClassPathSet = new HashSet<>(Arrays.asList(sfPathString.split(File.pathSeparator)));
+        if (!new File(oldSfPathFileName).exists()) {
+            return false;
+        }
         try {
             String cleanOldSfPathFileName = cleanClassPath(Files.readAllLines(Paths.get(oldSfPathFileName)).get(0));
             Set<String> oldSfClassPathSet = new HashSet<>(Arrays.asList(cleanOldSfPathFileName.split(":")));
-            if (oldSfClassPathSet.size() == sfClassPathSet.size()
-                && sfClassPathSet.containsAll(oldSfClassPathSet)) {
+            if (oldSfClassPathSet.equals(oldSfClassPathSet)) {
                 return true;
             }
         } catch (IOException ioe) {
@@ -135,13 +137,16 @@ public class RunMojo extends DiffMojo {
         String oldChecksumPathFileName = getArtifactsDir() + "jar-checksums";
         Map<String, String> checksumMap = new HashMap<>();
         boolean noException = true;
+        if (!new File(oldChecksumPathFileName).exists()) {
+            return false;
+        }
         try (BufferedReader fileReader = new BufferedReader(new FileReader(oldChecksumPathFileName))) {
             String line;
             while ((line = fileReader.readLine()) != null) {
                 String[] elems = line.split(",");
                 checksumMap.put(elems[0], elems[1]);
             }
-            String[] jars = cleanSfClassPath.split(":");
+            String[] jars = cleanSfClassPath.split(File.pathSeparator);
             for (int i = 0; i < jars.length; i++) {
                 String[] elems = Writer.getJarToChecksumMapping(jars[i]).split(",");
                 String oldCS = checksumMap.get(elems[0]);
@@ -158,7 +163,7 @@ public class RunMojo extends DiffMojo {
     }
 
     private String cleanClassPath(String cp) {
-        String[] paths = cp.split(":");
+        String[] paths = cp.split(File.pathSeparator);
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < paths.length; i++) {
             if (paths[i].contains("/target/classes") || paths[i].contains("/target/test-classes")
@@ -168,7 +173,7 @@ public class RunMojo extends DiffMojo {
             if (sb.length() == 0) {
                 sb.append(paths[i]);
             } else {
-                sb.append(":");
+                sb.append(File.pathSeparator);
                 sb.append(paths[i]);
             }
         }
