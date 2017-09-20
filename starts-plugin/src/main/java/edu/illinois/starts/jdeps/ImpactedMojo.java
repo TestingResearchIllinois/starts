@@ -44,6 +44,10 @@ public class ImpactedMojo extends DiffMojo {
         Pair<Set<String>, Set<String>> data = computeChangeData();
         // 0. Find all classes in program
         List<String> allClasses = getAllClasses();
+        if (allClasses.isEmpty()) {
+            logger.log(Level.INFO, "There are no .class files in this module.");
+            return;
+        }
         Set<String>  impacted = new HashSet<>(allClasses);
         // 1a. Find what changed and what is non-affected
         Set<String> nonAffected = data == null ? new HashSet<String>() : data.getKey();
