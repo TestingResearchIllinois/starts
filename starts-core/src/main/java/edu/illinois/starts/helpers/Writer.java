@@ -80,7 +80,7 @@ public class Writer {
     public static void writeJarChecksums(String sfPathString, String artifactsDir) {
         String outFilename = artifactsDir + File.separator + "jar-checksums";
         try (BufferedWriter writer = getWriter(outFilename)) {
-            String[] jarsList = sfPathString.split(":");
+            String[] jarsList = sfPathString.split(File.pathSeparator);
             for (int i = 0; i < jarsList.length; i++) {
                 if (jarsList[i].isEmpty()) {
                     continue;

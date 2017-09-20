@@ -116,7 +116,7 @@ public class RunMojo extends DiffMojo {
     }
 
     private boolean checkIfSameClassPath(String sfPathString) throws MojoExecutionException {
-        String oldSfPathFileName = getArtifactsDir() + "sf-classpath";
+        String oldSfPathFileName = getArtifactsDir() + File.separator + "sf-classpath";
         Set<String> sfClassPathSet = new HashSet<>(Arrays.asList(sfPathString.split(File.pathSeparator)));
         if (!new File(oldSfPathFileName).exists()) {
             return false;
@@ -134,7 +134,7 @@ public class RunMojo extends DiffMojo {
     }
 
     private boolean checkIfSameJarChecksums(String cleanSfClassPath) throws MojoExecutionException {
-        String oldChecksumPathFileName = getArtifactsDir() + "jar-checksums";
+        String oldChecksumPathFileName = getArtifactsDir() + File.separator + "jar-checksums";
         Map<String, String> checksumMap = new HashMap<>();
         boolean noException = true;
         if (!new File(oldChecksumPathFileName).exists()) {
@@ -155,7 +155,6 @@ public class RunMojo extends DiffMojo {
                 }
             }
         } catch (IOException ioe) {
-            // log that the file doesn't exist, typically on the first run or after clean
             noException = false;
             ioe.printStackTrace();
         }
@@ -166,7 +165,8 @@ public class RunMojo extends DiffMojo {
         String[] paths = cp.split(File.pathSeparator);
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < paths.length; i++) {
-            if (paths[i].contains("/target/classes") || paths[i].contains("/target/test-classes")
+            if (paths[i].contains(File.separator + "target" +  File.separator + "classes")
+                || paths[i].contains(File.separator + "target" + File.separator + "test-classes")
                 || paths[i].contains("-SNAPSHOT.jar")) {
                 continue;
             }
