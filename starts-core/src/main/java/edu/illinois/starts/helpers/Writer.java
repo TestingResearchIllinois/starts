@@ -89,7 +89,8 @@ public class Writer {
                 if (mapping.split(",").length < 2) {
                     continue;
                 }
-                writer.write(mapping + System.lineSeparator());
+                writer.write(mapping);
+                writer.write(System.lineSeparator());
             }
         } catch (IOException ioe) {
             ioe.printStackTrace();
