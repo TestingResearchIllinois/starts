@@ -197,6 +197,7 @@ public class Writer {
      * @return A fully-qualified name of the URL
      */
     public static String urlToFQN(String url) {
+        //ASSUMPTION: "classes/" rarely occurs in the rest of the path
         return url.split("classes" + File.separator)[1].replace(".class", "").replace(File.separator, ".");
     }
 }

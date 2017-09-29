@@ -68,9 +68,7 @@ public class ImpactedMojo extends DiffMojo {
         if (trackNewClasses) {
             Set<String> newClasses = new HashSet<>(allClasses);
             Set<String> oldClasses = ZLCHelper.getExistingClasses(getArtifactsDir());
-            if (oldClasses != null) {
-                newClasses.removeAll(oldClasses);
-            }
+            newClasses.removeAll(oldClasses);
             logger.log(Level.FINEST, "NEWLY-ADDED: " + newClasses.toString());
             Writer.writeToFile(newClasses, "new-classes", getArtifactsDir());
         }

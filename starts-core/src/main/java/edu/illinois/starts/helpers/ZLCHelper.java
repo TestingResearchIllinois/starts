@@ -187,7 +187,7 @@ public class ZLCHelper {
         File zlc = new File(artifactsDir, zlcFile);
         if (!zlc.exists()) {
             LOGGER.log(Level.FINEST, "@NoExistingZLCFile. First Run?");
-            return null;
+            return existingClasses;
         }
         try {
             List<String> zlcLines = Files.readAllLines(zlc.toPath(), Charset.defaultCharset());
@@ -200,7 +200,7 @@ public class ZLCHelper {
             ioe.printStackTrace();
         }
         long end = System.currentTimeMillis();
-        LOGGER.log(Level.FINEST, "[TIME]COMPUTING NEWLY-ADDED CLASSES: " + (end - start) + "ms");
+        LOGGER.log(Level.FINEST, "[TIME]COMPUTING EXISTING CLASSES: " + (end - start) + "ms");
         return existingClasses;
     }
 }
