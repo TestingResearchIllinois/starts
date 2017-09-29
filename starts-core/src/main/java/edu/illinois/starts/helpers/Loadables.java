@@ -186,7 +186,7 @@ public class Loadables {
         LOGGER.log(Level.FINEST, "JDEPS CMD: " + args);
         Map<String, Set<String>> depMap = RTSUtil.runJdeps(args);
         if (LOGGER.getLoggingLevel().intValue() == Level.FINEST.intValue()) {
-            Writer.writeMapToFile(depMap, artifactsDir + File.separator + "jdeps-out");
+            Writer.writeMapToFile(depMap, artifactsDir + File.separator + "jdeps-out", false);
         }
         return depMap;
     }

@@ -14,15 +14,18 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 
+import edu.illinois.starts.util.ChecksumUtil;
 import edu.illinois.starts.util.Logger;
 import edu.illinois.yasgl.DirectedGraph;
 import edu.illinois.yasgl.Edge;
+import org.ekstazi.util.Types;
 
 /**
  * Utility methods for writing various data to file.
@@ -49,18 +52,31 @@ public class Writer {
         }
     }
 
-    public static void writeMapToFile(Map map, String filename) {
+    public static void writeMapToFile(Map<String, Set<String>> map, String filename, boolean doFilter) {
         try (BufferedWriter writer = getWriter(filename)) {
             if (map.isEmpty()) {
                 writer.write("");
                 return;
             }
             for (Object key : map.keySet()) {
-                writer.write(key.toString() + "," + map.get(key) + System.lineSeparator());
+                writer.write(key.toString() + "," + removeWellKnown(map.get(key), doFilter) + System.lineSeparator());
             }
         } catch (IOException ioe) {
             ioe.printStackTrace();
         }
+    }
+
+    private static String removeWellKnown(Set<String> classes, boolean doFilter) {
+        if (!doFilter) {
+            return classes.toString();
+        }
+        Set<String> filtered = new HashSet<>();
+        for (String klas : classes) {
+            if (!Types.isIgnorableBinName(klas)) {
+                filtered.add(klas);
+            }
+        }
+        return filtered.toString();
     }
 
     public static void writeClassPath(String sfPathString, String artifactsDir) {

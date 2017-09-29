@@ -4,6 +4,7 @@
 
 package edu.illinois.starts.jdeps;
 
+import java.io.File;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -79,6 +80,7 @@ public class ImpactedMojo extends DiffMojo {
         if (logger.getLoggingLevel().intValue() <= Level.FINEST.intValue()) {
             save(getArtifactsDir(), sfPathString, result.getGraph());
         }
+        Writer.writeMapToFile(result.getTestDeps(), new File(getArtifactsDir(), "forward-deps").getAbsolutePath(), true);
         Logger.getGlobal().log(Level.FINE, "[PROFILE] updateForNextRun(total): " + Writer.millsToSeconds(end - start));
     }
 
