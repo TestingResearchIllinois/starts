@@ -91,7 +91,7 @@ public class ImpactedMojo extends DiffMojo {
         zlcHelper.updateZLCFile(result.getTestDeps(), loader, getArtifactsDir(), new HashSet<String>());
         long end = System.currentTimeMillis();
         if (logger.getLoggingLevel().intValue() == Level.FINER.intValue()) {
-            Writer.writeClassPath(sfPathString, artifactsDir);
+            Writer.writeClassPath(sfPathString, getArtifactsDir());
         }
         if (logger.getLoggingLevel().intValue() <= Level.FINEST.intValue()) {
             save(getArtifactsDir(), result.getGraph());
