@@ -36,6 +36,12 @@ public class ImpactedMojo extends DiffMojo {
      */
     @Parameter(property = "updateImpactedChecksums", defaultValue = "false")
     private boolean updateImpactedChecksums;
+
+    /**
+     * Set to "true" to print newly-added classes: classes in the program that were not in the previous version.
+     */
+    @Parameter(property = "trackNewClasses", defaultValue = "false")
+    private boolean trackNewClasses;
     private Logger logger;
 
     public void execute() throws MojoExecutionException {
@@ -58,11 +64,19 @@ public class ImpactedMojo extends DiffMojo {
 
         logger.log(Level.FINEST, "CHANGED: " + changed.toString());
         logger.log(Level.FINEST, "IMPACTED: " + impacted.toString());
-        // 2. Optionally update ZLC file for next run, using all classes in the SUT
+        // 2. Optionally find newly-added classes
+        if (trackNewClasses) {
+            Set<String> newClasses = new HashSet<>(allClasses);
+            Set<String> oldClasses = ZLCHelper.getExistingClasses(getArtifactsDir());
+            newClasses.removeAll(oldClasses);
+            logger.log(Level.FINEST, "NEWLY-ADDED: " + newClasses.toString());
+            Writer.writeToFile(newClasses, "new-classes", getArtifactsDir());
+        }
+        // 3. Optionally update ZLC file for next run, using all classes in the SUT
         if (updateImpactedChecksums) {
             updateForNextRun(allClasses);
         }
-        // 3. Print impacted and/or write to file
+        // 4. Print impacted and/or write to file
         Writer.writeToFile(changed, "changed-classes", getArtifactsDir());
         Writer.writeToFile(impacted, "impacted-classes", getArtifactsDir());
     }
@@ -76,14 +90,16 @@ public class ImpactedMojo extends DiffMojo {
         ZLCHelper zlcHelper = new ZLCHelper();
         zlcHelper.updateZLCFile(result.getTestDeps(), loader, getArtifactsDir(), new HashSet<String>());
         long end = System.currentTimeMillis();
+        if (logger.getLoggingLevel().intValue() == Level.FINER.intValue()) {
+            Writer.writeClassPath(sfPathString, getArtifactsDir());
+        }
         if (logger.getLoggingLevel().intValue() <= Level.FINEST.intValue()) {
-            save(getArtifactsDir(), sfPathString, result.getGraph());
+            save(getArtifactsDir(), result.getGraph());
         }
         Logger.getGlobal().log(Level.FINE, "[PROFILE] updateForNextRun(total): " + Writer.millsToSeconds(end - start));
     }
 
-    private void save(String artifactsDir, String sfPathString, DirectedGraph<String> graph) {
+    private void save(String artifactsDir, DirectedGraph<String> graph) {
         RTSUtil.saveForNextRun(artifactsDir, graph, printGraph, graphFile);
-        Writer.writeClassPath(sfPathString, artifactsDir);
     }
 }
