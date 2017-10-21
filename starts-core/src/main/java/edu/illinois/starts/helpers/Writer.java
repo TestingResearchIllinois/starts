@@ -28,6 +28,7 @@ import java.util.logging.Level;
 import edu.illinois.starts.util.Logger;
 import edu.illinois.yasgl.DirectedGraph;
 import edu.illinois.yasgl.Edge;
+import org.apache.commons.codec.binary.Hex;
 
 /**
  * Utility methods for writing various data to file.
@@ -226,19 +227,19 @@ public class Writer {
         StringBuilder sb = new StringBuilder();
         sb.append(jar);
         sb.append(",");
-        byte[] bytes = new byte[8192];
+        byte[] bytes;
+        int bufSize = 65536 * 2;
         try {
             MessageDigest md = MessageDigest.getInstance("MD5");
             InputStream is = Files.newInputStream(Paths.get(jar));
-            DigestInputStream dis = new DigestInputStream(is, md);
-            while (dis.read(bytes) != -1) {
-                ;
+            bytes = new byte[bufSize];
+            int size = is.read(bytes, 0, bufSize);
+            while (size >= 0) {
+                md.update(bytes, 0, size);
+                size = is.read(bytes, 0, bufSize);
             }
-
-            byte[] mdbytes = md.digest();
-            for (int i = 0; i < mdbytes.length; i++) {
-                sb.append(Integer.toString((mdbytes[i] & 0xff) + 0x100 , 16).substring(1));
-            }
+            String hex = Hex.encodeHexString(md.digest());
+            sb.append(hex);
         } catch (IOException ioe) {
             ioe.printStackTrace();
         } catch (NoSuchAlgorithmException nsae) {
