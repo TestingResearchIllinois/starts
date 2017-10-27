@@ -51,6 +51,7 @@ public class SelectMojo extends DiffMojo {
         Set<String> affectedTests = new HashSet<>(allTests);
         Pair<Set<String>, Set<String>> data = computeChangeData();
         Set<String> nonAffectedTests = data == null ? new HashSet<String>() : data.getKey();
+        Set<String> changedClasses  = data == null ? new HashSet<String>() : data.getValue();
         affectedTests.removeAll(nonAffectedTests);
         if (allTests.equals(nonAffectedTests)) {
             logger.log(Level.INFO, "********** Run **********");
@@ -58,7 +59,7 @@ public class SelectMojo extends DiffMojo {
         }
         long startUpdate = System.currentTimeMillis();
         if (updateSelectChecksums) {
-            updateForNextRun(nonAffectedTests);
+            updateForNextRun(nonAffectedTests, changedClasses);
         }
         long endUpdate = System.currentTimeMillis();
         logger.log(Level.FINE, "[PROFILE] STARTS-MOJO-UPDATE-TIME: " + Writer.millsToSeconds(endUpdate - startUpdate));

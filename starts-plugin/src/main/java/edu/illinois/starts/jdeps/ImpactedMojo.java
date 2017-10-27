@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
 
+import edu.illinois.starts.helpers.Cache;
 import edu.illinois.starts.helpers.RTSUtil;
 import edu.illinois.starts.helpers.Writer;
 import edu.illinois.starts.helpers.ZLCHelper;
@@ -86,9 +87,13 @@ public class ImpactedMojo extends DiffMojo {
         Classpath sfClassPath = getSureFireClassPath();
         String sfPathString = Writer.pathToString(sfClassPath.getClassPath());
         ClassLoader loader = createClassLoader(sfClassPath);
-        Result result = prepareForNextRun(sfPathString, sfClassPath, allClasses, new HashSet<String>(), false);
-        ZLCHelper zlcHelper = new ZLCHelper();
-        zlcHelper.updateZLCFile(result.getTestDeps(), loader, getArtifactsDir(), new HashSet<String>());
+        List<String> allTests = getTestClasses("updateForNextRun");
+        Result result = prepareForNextRun(sfPathString, sfClassPath, allClasses,
+                new HashSet<>(allTests), new HashSet<String>(), false);
+        //ZLCHelper zlcHelper = new ZLCHelper();// call this would clear zlcDataMap
+        Set<String> newClasses = new HashSet<>(allClasses);
+        newClasses.addAll(Cache.getNewJarClasses());// contain new classes and new jar classes
+        ZLCHelper.updateZLCFile(result.getTestDeps(), loader, getArtifactsDir(), new HashSet<String>(), newClasses);
         long end = System.currentTimeMillis();
         if (logger.getLoggingLevel().intValue() == Level.FINER.intValue()) {
             Writer.writeClassPath(sfPathString, getArtifactsDir());

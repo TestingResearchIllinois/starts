@@ -193,6 +193,7 @@ abstract class BaseMojo extends SurefirePlugin implements StartsConstants {
         long start = System.currentTimeMillis();
         if (sureFireClassPath == null) {
             try {
+                //get All dependencies that this project has, including the project itself
                 sureFireClassPath = new Classpath(getProject().getTestClasspathElements());
             } catch (DependencyResolutionRequiredException drre) {
                 drre.printStackTrace();
@@ -206,7 +207,8 @@ abstract class BaseMojo extends SurefirePlugin implements StartsConstants {
     }
 
     public Result prepareForNextRun(String sfPathString, Classpath sfClassPath, List<String> classesToAnalyze,
-                                    Set<String> nonAffected, boolean computeUnreached) throws MojoExecutionException {
+                                    Set<String> affectedTests, Set<String> nonAffected, boolean computeUnreached)
+            throws MojoExecutionException {
         long start = System.currentTimeMillis();
         String m2Repo = getLocalRepository().getBasedir();
         File jdepsCache = new File(graphCache);
@@ -219,6 +221,8 @@ abstract class BaseMojo extends SurefirePlugin implements StartsConstants {
         // Surefire Classpath object is easier to iterate over without de-constructing
         // sfPathString (which we use in a number of other places)
         loadables.setSurefireClasspath(sfClassPath);
+        // explicitly pass affectedTests to loadables so we can find transitive closure only for affected
+        loadables.setAffectedTests(affectedTests);
 
         List<String> moreEdges = new ArrayList<String>();
         long loadMoreEdges = System.currentTimeMillis();

@@ -53,9 +53,9 @@ public class RunMojo extends DiffMojo {
         Logger.getGlobal().setLoggingLevel(Level.parse(loggingLevel));
         logger = Logger.getGlobal();
         long start = System.currentTimeMillis();
-        setChangedAndNonaffected();
+        setChangedAndNonaffected();//get changed/deleted classes (in project and in jar)
         List<String> excludePaths = Writer.fqnsToExcludePath(nonAffectedTests);
-        setIncludesExcludes();
+        setIncludesExcludes();//set non affected tests in surefire
         if (logger.getLoggingLevel().intValue() <= Level.FINEST.intValue()) {
             Writer.writeToFile(nonAffectedTests, "non-affected-tests", getArtifactsDir());
         }
@@ -78,7 +78,8 @@ public class RunMojo extends DiffMojo {
         }
         long startUpdateTime = System.currentTimeMillis();
         if (updateRunChecksums) {
-            updateForNextRun(nonAffectedTests);
+            //update dependency graph and zlc mapping for run usage in next revision
+            updateForNextRun(nonAffectedTests, changedClasses);
         }
         long endUpdateTime = System.currentTimeMillis();
         logger.log(Level.FINE, "[PROFILE] STARTS-MOJO-UPDATE-TIME: "

@@ -38,53 +38,84 @@ public class ZLCHelper {
     }
 
 // TODO: Uncomment and fix this method. The problem is that it does not track newly added tests correctly
+    public static void updateZLCFile(Map<String, Set<String>> testDeps, ClassLoader loader,
+                                     String artifactsDir, Set<String> changed, Set<String> newClasses) {
+        long start = System.currentTimeMillis();
+        File file = new File(artifactsDir, zlcFile);
+        if (! file.exists()) {
+            List<ZLCData> zlc = createZLCData(testDeps, loader);
+            Writer.writeToFile(zlc, zlcFile, artifactsDir);
+        } else {
+            List<ZLCData> zlcData = new ArrayList<>();
+            if (zlcDataMap != null) {
+                // handle changed data
+                for (ZLCData data : zlcDataMap.values()) {
+                    String extForm = data.getUrl().toExternalForm();
+                    if (changed.contains(extForm)) {
+                        String fqn = Writer.urlToFQN(extForm);
+                        Set<String> tests = new HashSet<>();
+                        if (testDeps.keySet().contains(fqn)) {
+                            tests.add(fqn);
+                        }
+                        for (String test : testDeps.keySet()) {
+                            if (testDeps.get(test).contains(fqn)) {
+                                tests.add(test);
+                            }
+                        }
+                        if (tests.isEmpty()) {
+                            continue;
+                        }
+                        data.setTests(tests);
+                    }
+                    zlcData.add(data);
+                }
+
+                //handle new data
+                ChecksumUtil checksumUtil = new ChecksumUtil(true);
+                for (String dep : newClasses) {
+                    String klas = ChecksumUtil.toClassName(dep);
+                    if (Types.isIgnorableInternalName(klas)) {
+                        continue;
+                    }
+                    URL url = loader.getResource(klas);
+                    if (url == null || ChecksumUtil.isWellKnownUrl(url.toExternalForm())) {
+                        continue;
+                    }
+                    String checksum = checksumUtil.computeSingleCheckSum(url);
+                    Set<String> tests = new HashSet<>();
+                    for (String test : testDeps.keySet()) {
+                        if (testDeps.get(test).contains(dep)) {
+                            tests.add(test);
+                        }
+                    }
+                    zlcData.add(new ZLCData(url, checksum, tests));
+                }
+            }
+            Writer.writeToFile(zlcData, zlcFile, artifactsDir);
+        }
+        long end = System.currentTimeMillis();
+        LOGGER.log(Level.FINE, "[TIME]UPDATING CHECKSUMS: " + Writer.millsToSeconds(end - start));
+    }
+
 //    public static void updateZLCFile(Map<String, Set<String>> testDeps, ClassLoader loader,
-//                                     String artifactsDir, Set<String> changed) {
+//                                     String artifactsDir, Set<String> unreached) {
+//        // TODO: Optimize this by only recomputing the checksum+tests for changed classes and newly added tests
 //        long start = System.currentTimeMillis();
-//        File file = new File(artifactsDir, zlcFile);
-//        if (! file.exists()) {
-//            Set<ZLCData> zlc = createZLCData(testDeps, loader);
-//            Writer.writeToFile(zlc, zlcFile, artifactsDir);
-//        } else {
-//            Set<ZLCData> zlcData = new HashSet<>();
-//            if (zlcDataMap != null) {
-//                for (ZLCData data : zlcDataMap.values()) {
-//                    String extForm = data.getUrl().toExternalForm();
-//                    if (changed.contains(extForm)) {
-//                         we need to update tests for this zlcData before adding
-//                        String fqn = Writer.toFQN(extForm);
-//                        Set<String> tests = new HashSet<>();
-//                        if (testDeps.keySet().contains(fqn)) {
-//                             a test class changed, it affects on itself
-//                            tests.add(fqn);
-//                        }
-//                        for (String test : testDeps.keySet()) {
-//                            if (testDeps.get(test).contains(fqn)) tests.add(test);
-//                        }
-//                        if (tests.isEmpty()) {
-//                             this dep no longer has ant tests depending on it???
-//                            continue;
-//                        }
-//                        data.setTests(tests);
-//                    }
-//                    zlcData.add(data);
-//                }
-//            }
-//            Writer.writeToFile(zlcData, zlcFile, artifactsDir);
-//        }
+//        List<ZLCData> zlc = createZLCData(testDeps, loader);
+//        Writer.writeToFile(zlc, zlcFile, artifactsDir);
 //        long end = System.currentTimeMillis();
-//        System.out.println("[TIME]UPDATING CHECKSUMS: " + (end - start) + "ms");
+//        LOGGER.log(Level.FINE, "[TIME]UPDATING CHECKSUMS: " + Writer.millsToSeconds(end - start));
 //    }
 
-    public static void updateZLCFile(Map<String, Set<String>> testDeps, ClassLoader loader,
-                                     String artifactsDir, Set<String> unreached) {
-        // TODO: Optimize this by only recomputing the checksum+tests for changed classes and newly added tests
-        long start = System.currentTimeMillis();
-        List<ZLCData> zlc = createZLCData(testDeps, loader);
-        Writer.writeToFile(zlc, zlcFile, artifactsDir);
-        long end = System.currentTimeMillis();
-        LOGGER.log(Level.FINE, "[PROFILE] updateForNextRun(updateZLCFile): " + Writer.millsToSeconds(end - start));
-    }
+//    public static void updateZLCFile(Map<String, Set<String>> testDeps, ClassLoader loader,
+//                                     String artifactsDir, Set<String> unreached) {
+//        // TODO: Optimize this by only recomputing the checksum+tests for changed classes and newly added tests
+//        long start = System.currentTimeMillis();
+//        List<ZLCData> zlc = createZLCData(testDeps, loader);
+//        Writer.writeToFile(zlc, zlcFile, artifactsDir);
+//        long end = System.currentTimeMillis();
+//        LOGGER.log(Level.FINE, "[PROFILE] updateForNextRun(updateZLCFile): " + Writer.millsToSeconds(end - start));
+//    }
 
     public static List<ZLCData> createZLCData(Map<String, Set<String>> testDeps, ClassLoader loader) {
         long start = System.currentTimeMillis();
@@ -154,7 +185,7 @@ public class ZLCHelper {
                 String newCheckSum = checksumUtil.computeSingleCheckSum(url);
                 if (!newCheckSum.equals(oldCheckSum)) {
                     affected.addAll(tests);
-                    changedClasses.add(stringURL);
+                    changedClasses.add(stringURL);//contain changed/deleted classes and jars
                 }
                 if (newCheckSum.equals("-1")) {
                     // a class was deleted or auto-generated, no need to track it in zlc
@@ -179,6 +210,20 @@ public class ZLCHelper {
 
     private static Set<String> fromCSV(String tests) {
         return new HashSet<>(Arrays.asList(tests.split(",")));
+    }
+
+    // get changed classes (not from jar) from given changed data (may contain jar)
+    public static Set<String> getChangedClasses(Set<String> changedData) {
+        Set<String> changedClasses = new HashSet<>();
+        if (changedData == null || changedData.isEmpty()) {
+            return changedClasses;
+        }
+        for (String changed : changedData) {
+            if (changed.startsWith("file")) {
+                changedClasses.add(Writer.urlToFQN(changed));
+            }
+        }
+        return changedClasses;
     }
 
     public static Set<String> getExistingClasses(String artifactsDir) {
