@@ -36,6 +36,7 @@ public class Loadables {
     private DirectedGraph<String> graph;
     private Map<String, Set<String>> transitiveClosure;
     private Set<String> unreached;
+    private Set<String> affectedTests;
     private boolean filterLib;
     private Classpath surefireClasspath;
     private String artifactsDir;
@@ -85,9 +86,10 @@ public class Loadables {
         long jdepsTime = System.currentTimeMillis();
         graph = makeGraph(deps, extraEdges);
         long graphBuildingTime = System.currentTimeMillis();
-        transitiveClosure = getTransitiveClosurePerClass(graph, classesToAnalyze);
+        transitiveClosure = getTransitiveClosurePerClass(graph, new ArrayList<>(affectedTests));
         long transitiveClosureTime = System.currentTimeMillis();
         if (computeUnreached) {
+            //Todo: findUnreached may be affected by incrementally finding test dependencies
             unreached = findUnreached(deps, transitiveClosure);
             LOGGER.log(Level.INFO, "UNREACHED(count): " + unreached.size());
         }
@@ -182,12 +184,17 @@ public class Loadables {
             jdepsClassPath = Writer.pathToString(localPaths);
         }
         args.addAll(Arrays.asList("-cp", jdepsClassPath));
-        args.addAll(localPaths);
+        args.addAll(classes); // only let jdeps analyze dependencies for changed/new classes
+        //args.addAll(localPaths);
         LOGGER.log(Level.FINEST, "JDEPS CMD: " + args);
         Map<String, Set<String>> depMap = RTSUtil.runJdeps(args);
-        if (LOGGER.getLoggingLevel().intValue() == Level.FINEST.intValue()) {
-            Writer.writeMapToFile(depMap, artifactsDir + File.separator + "jdeps-out");
-        }
+        // load jdeps dependencies from last revision
+        RTSUtil.addDepsFromJdepsFile(depMap, new HashSet<>(classes),
+                artifactsDir + File.separator + "jdeps-out");
+        //if (LOGGER.getLoggingLevel().intValue() == Level.FINEST.intValue()) {
+        // store jdeps dependencies in this revision for future use
+        Writer.writeDepsToFile(depMap, artifactsDir + File.separator + "jdeps-out");
+        //}
         return depMap;
     }
 
@@ -218,5 +225,9 @@ public class Loadables {
 
     public void setSurefireClasspath(Classpath surefireClasspath) {
         this.surefireClasspath = surefireClasspath;
+    }
+
+    public void setAffectedTests(Set<String> affectedTests) {
+        this.affectedTests = affectedTests;
     }
 }

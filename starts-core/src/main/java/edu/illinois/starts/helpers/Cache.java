@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 
@@ -21,6 +22,7 @@ import edu.illinois.starts.util.Logger;
 
 public class Cache {
     private static final Logger LOGGER = Logger.getGlobal();
+    private static Set<String> newJarClasses;
 
     File jdepsCache;
     String m2Repo;
@@ -30,6 +32,7 @@ public class Cache {
     public Cache(File jdepsCache, String m2Repo) {
         this.jdepsCache = jdepsCache;
         this.m2Repo = m2Repo;
+        newJarClasses = new HashSet<>();// only place to clear new jar classes. carefully call this
     }
 
     public void loadM2EdgesFromCache(List<String> moreEdges, String pathString) {
@@ -47,6 +50,10 @@ public class Cache {
         // we want to check there as well
         jarsInCache.addAll(checkMissingJarsInJDKCache(missing));
         moreEdges.addAll(loadCachedEdges(jarsInCache));
+    }
+
+    public static Set<String> getNewJarClasses() {
+        return newJarClasses;
     }
 
     private HashSet<String> getJarsMissingFromCache(Set<String> jarsInCache) {
@@ -75,7 +82,10 @@ public class Cache {
         for (String jar : notFound) {
             //1. parse with jdeps and store in the cache
             List<String> args = new ArrayList<>(Arrays.asList("-v", jar));
-            Writer.writeDepsToFile(RTSUtil.runJdeps(args), createCacheFile(jar).getAbsolutePath());
+            Map<String, Set<String>> jdepsOutput = RTSUtil.runJdeps(args);
+            // add new jar classes
+            newJarClasses.addAll(jdepsOutput.keySet());
+            Writer.writeDepsToFile(jdepsOutput, createCacheFile(jar).getAbsolutePath());
             newlyCreated.add(jar);
         }
         //2. add newly-created graphs to list of jars that were previously found in cache

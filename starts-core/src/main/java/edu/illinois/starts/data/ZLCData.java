@@ -57,6 +57,10 @@ public class ZLCData {
         return checksum.equals(zlcData.checksum);
     }
 
+    public URL getUrl() {
+        return url;
+    }
+
     public void setTests(Set<String> tests) {
         this.tests = tests;
     }

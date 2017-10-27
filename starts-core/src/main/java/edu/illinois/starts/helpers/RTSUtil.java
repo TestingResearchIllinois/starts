@@ -4,11 +4,16 @@
 
 package edu.illinois.starts.helpers;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -80,6 +85,33 @@ public class RTSUtil {
         return output.getBuffer().length() != 0 ? getDepsFromJdepsOutput(output) : new HashMap<String, Set<String>>();
     }
 
+    public static void addDepsFromJdepsFile(Map<String, Set<String>> deps, Set<String> classes, String jdepsFile) {
+        if (deps == null || !(new File(jdepsFile).exists())) {
+            return;
+        }
+
+        try (BufferedReader filescan = Files.newBufferedReader(Paths.get(jdepsFile), StandardCharsets.UTF_8)) {
+            String line;
+            while ((line = filescan.readLine()) != null) {
+                String[] parts = line.split(" ");
+                String left = parts[0].trim();
+                if (classes.contains(left) || left.startsWith("classes")
+                        || left.startsWith("test-classes") || left.endsWith(".jar")) {
+                    continue;
+                }
+                String right = parts[1].trim().split(" ")[0];
+                if (deps.keySet().contains(left)) {
+                    deps.get(left).add(right);
+                } else {
+                    deps.put(left, new HashSet<>(Collections.singletonList(right)));
+                }
+            }
+        } catch (IOException ioe) {
+            ioe.printStackTrace();
+        }
+
+    }
+
     public static Map<String, Set<String>> getDepsFromJdepsOutput(StringWriter jdepsOutput) {
         Map<String, Set<String>> deps = new HashMap<>();
         List<String> lines = Arrays.asList(jdepsOutput.toString().split(System.lineSeparator()));
@@ -93,7 +125,7 @@ public class RTSUtil {
             if (deps.keySet().contains(left)) {
                 deps.get(left).add(right);
             } else {
-                deps.put(left, new HashSet<>(Arrays.asList(right)));
+                deps.put(left, new HashSet<>(Collections.singletonList(right)));
             }
         }
         return deps;
