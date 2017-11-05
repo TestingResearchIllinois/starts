@@ -23,8 +23,6 @@ import org.apache.maven.plugins.annotations.ResolutionScope;
  * Update test dependencies on disk.
  */
 @Mojo(name = "update", requiresDirectInvocation = true, requiresDependencyResolution = ResolutionScope.TEST)
-//Assume the user always run (e) before running this goal
-//@Execute(phase = LifecyclePhase.TEST_COMPILE)
 public class UpdateMojo extends DiffMojo {
     public void execute() throws MojoExecutionException {
         Logger.getGlobal().setLoggingLevel(Level.parse(loggingLevel));
