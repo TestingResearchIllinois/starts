@@ -21,4 +21,19 @@
             </phase>
         </phases>
     </lifecycle>
+    <lifecycle>
+        <id>starts-graph</id>
+        <phases>
+            <phase>
+                <id>process-test-classes</id>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>update</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </phase>
+        </phases>
+    </lifecycle>
 </lifecycles>
