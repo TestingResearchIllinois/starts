@@ -78,8 +78,10 @@ public class DiffMojo extends BaseMojo {
         } else if (depFormat == DependencyFormat.CLZ) {
             data = EkstaziHelper.getNonAffectedTests(getArtifactsDir());
         }
+        //Try writing (a) to file by configuring log level
+        //Logger.getGlobal().setLoggingLevel(Level.FINEST);
         Set<String> changed = data == null ? new HashSet<String>() : data.getValue();
-        if (Logger.getGlobal().getLoggingLevel().intValue() <= Level.FINEST.intValue()) {
+        if (Logger.getGlobal().getLoggingLevel().intValue() <= Level.FINER.intValue()) {
             Writer.writeToFile(changed, "changed-classes", getArtifactsDir());
         }
         long end = System.currentTimeMillis();
