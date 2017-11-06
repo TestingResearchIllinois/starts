@@ -116,14 +116,14 @@ public class RunMojo extends DiffMojo {
     }
 
     private boolean checkIfSameClassPath(String sfPathString) throws MojoExecutionException {
-        String oldSfPathFileName = getArtifactsDir() + File.separator + "sf-classpath";
-        Set<String> sfClassPathSet = new HashSet<>(Arrays.asList(sfPathString.split(File.pathSeparator)));
+        String oldSfPathFileName = Paths.get(getArtifactsDir() + File.separator + "sf-classpath");
         if (!new File(oldSfPathFileName).exists()) {
             return false;
         }
         try {
             String cleanOldSfPathFileName = cleanClassPath(Files.readAllLines(Paths.get(oldSfPathFileName)).get(0));
-            Set<String> oldSfClassPathSet = new HashSet<>(Arrays.asList(cleanOldSfPathFileName.split(":")));
+            Set<String> sfClassPathSet = new HashSet<>(Arrays.asList(sfPathString.split(File.pathSeparator)));
+            Set<String> oldSfClassPathSet = new HashSet<>(Arrays.asList(cleanOldSfPathFileName.split(File.pathSeparator)));
             if (oldSfClassPathSet.equals(oldSfClassPathSet)) {
                 return true;
             }
@@ -135,12 +135,12 @@ public class RunMojo extends DiffMojo {
 
     private boolean checkIfSameJarChecksums(String cleanSfClassPath) throws MojoExecutionException {
         String oldChecksumPathFileName = getArtifactsDir() + File.separator + "jar-checksums";
-        Map<String, String> checksumMap = new HashMap<>();
         boolean noException = true;
         if (!new File(oldChecksumPathFileName).exists()) {
             return false;
         }
         try (BufferedReader fileReader = new BufferedReader(new FileReader(oldChecksumPathFileName))) {
+            Map<String, String> checksumMap = new HashMap<>();
             String line;
             while ((line = fileReader.readLine()) != null) {
                 String[] elems = line.split(",");
