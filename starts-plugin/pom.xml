@@ -65,6 +65,7 @@
           <addTestClassPath>true</addTestClassPath>
           <debug>false</debug>
           <cloneProjectsTo>${project.build.directory}/it</cloneProjectsTo>
+          <cloneClean>true</cloneClean>
           <pomIncludes>
             <pomInclude>*/pom.xml</pomInclude>
           </pomIncludes>

@@ -24,7 +24,7 @@ import org.apache.maven.plugin.MojoExecutionException;
 import org.ekstazi.data.RegData;
 
 /**
- * Some utility files that are needed for RTS itself.
+ * Some utility methods that are needed for RTS.
  */
 public class RTSUtil {
     private static final Logger LOGGER = Logger.getGlobal();

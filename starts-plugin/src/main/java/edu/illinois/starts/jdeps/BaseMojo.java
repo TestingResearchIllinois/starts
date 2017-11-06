@@ -148,7 +148,7 @@ abstract class BaseMojo extends SurefirePlugin implements StartsConstants {
         long start = System.currentTimeMillis();
         ClassLoader loader = null;
         try {
-            loader = sfClassPath.createClassLoader(null, false, false, "MyRole");
+            loader = sfClassPath.createClassLoader(false, false, "MyRole");
         } catch (SurefireExecutionException see) {
             see.printStackTrace();
         }

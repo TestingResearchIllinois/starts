@@ -180,4 +180,27 @@ public class ZLCHelper {
     private static Set<String> fromCSV(String tests) {
         return new HashSet<>(Arrays.asList(tests.split(",")));
     }
+
+    public static Set<String> getExistingClasses(String artifactsDir) {
+        Set<String> existingClasses = new HashSet<>();
+        long start = System.currentTimeMillis();
+        File zlc = new File(artifactsDir, zlcFile);
+        if (!zlc.exists()) {
+            LOGGER.log(Level.FINEST, "@NoExistingZLCFile. First Run?");
+            return existingClasses;
+        }
+        try {
+            List<String> zlcLines = Files.readAllLines(zlc.toPath(), Charset.defaultCharset());
+            for (String line : zlcLines) {
+                if (line.startsWith("file")) {
+                    existingClasses.add(Writer.urlToFQN(line.split(" ")[0]));
+                }
+            }
+        } catch (IOException ioe) {
+            ioe.printStackTrace();
+        }
+        long end = System.currentTimeMillis();
+        LOGGER.log(Level.FINEST, "[TIME]COMPUTING EXISTING CLASSES: " + (end - start) + "ms");
+        return existingClasses;
+    }
 }
