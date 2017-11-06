@@ -56,7 +56,7 @@ public class RunMojo extends DiffMojo {
         setChangedAndNonaffected();
         List<String> excludePaths = Writer.fqnsToExcludePath(nonAffectedTests);
         setIncludesExcludes();
-        if (logger.getLoggingLevel().intValue() <= Level.FINEST.intValue()) {
+        if (logger.getLoggingLevel().intValue() <= Level.FINER.intValue()) {
             Writer.writeToFile(nonAffectedTests, "non-affected-tests", getArtifactsDir());
         }
         run(excludePaths);
