@@ -82,7 +82,7 @@ public class RunMojo extends DiffMojo {
 
     protected void run(List<String> excludePaths) throws MojoExecutionException {
         String sfPathString = cleanClassPath(Writer.pathToString(getSureFireClassPath().getClassPath()));
-        if (retestAll || !checkIfSameClassPath(sfPathString) || !checkIfSameJarChecksums(sfPathString)) {
+        if (retestAll || !isSameClassPath(sfPathString) || !hasSameJarChecksum(sfPathString)) {
             dynamicallyUpdateExcludes(new ArrayList<String>());
             Writer.writeClassPath(sfPathString, artifactsDir);
             Writer.writeJarChecksums(cleanClassPath(sfPathString), artifactsDir);
@@ -115,8 +115,8 @@ public class RunMojo extends DiffMojo {
         changedClasses  = data == null ? new HashSet<String>() : data.getValue();
     }
 
-    private boolean checkIfSameClassPath(String sfPathString) throws MojoExecutionException {
-        String oldSfPathFileName = Paths.get(getArtifactsDir() + File.separator + "sf-classpath");
+    private boolean isSameClassPath(String sfPathString) throws MojoExecutionException {
+        String oldSfPathFileName = Paths.get(getArtifactsDir(), "sf-classpath").toString();
         if (!new File(oldSfPathFileName).exists()) {
             return false;
         }
@@ -124,7 +124,7 @@ public class RunMojo extends DiffMojo {
             String cleanOldSfPathFileName = cleanClassPath(Files.readAllLines(Paths.get(oldSfPathFileName)).get(0));
             Set<String> sfClassPathSet = new HashSet<>(Arrays.asList(sfPathString.split(File.pathSeparator)));
             Set<String> oldSfClassPathSet = new HashSet<>(Arrays.asList(cleanOldSfPathFileName.split(File.pathSeparator)));
-            if (oldSfClassPathSet.equals(oldSfClassPathSet)) {
+            if (sfClassPathSet.equals(oldSfClassPathSet)) {
                 return true;
             }
         } catch (IOException ioe) {
@@ -133,8 +133,8 @@ public class RunMojo extends DiffMojo {
         return false;
     }
 
-    private boolean checkIfSameJarChecksums(String cleanSfClassPath) throws MojoExecutionException {
-        String oldChecksumPathFileName = getArtifactsDir() + File.separator + "jar-checksums";
+    private boolean hasSameJarChecksum(String cleanSfClassPath) throws MojoExecutionException {
+        String oldChecksumPathFileName = Paths.get(getArtifactsDir(), "jar-checksums").toString();
         boolean noException = true;
         if (!new File(oldChecksumPathFileName).exists()) {
             return false;
