@@ -87,6 +87,7 @@ public class Writer {
                     continue;
                 }
                 String mapping = getJarToChecksumMapping(jarsList[i]);
+                // the formatting is "jar,checksum" which is why we compare with 2
                 if (mapping.split(",").length < 2) {
                     continue;
                 }
@@ -225,8 +226,7 @@ public class Writer {
      */
     public static String getJarToChecksumMapping(String jar) {
         StringBuilder sb = new StringBuilder();
-        sb.append(jar);
-        sb.append(",");
+        sb.append(jar).append(",");
         byte[] bytes;
         int bufSize = 65536 * 2;
         try {

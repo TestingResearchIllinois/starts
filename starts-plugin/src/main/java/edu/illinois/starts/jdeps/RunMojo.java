@@ -81,11 +81,11 @@ public class RunMojo extends DiffMojo {
     }
 
     protected void run(List<String> excludePaths) throws MojoExecutionException {
-        String sfPathString = cleanClassPath(Writer.pathToString(getSureFireClassPath().getClassPath()));
+        String sfPathString = getCleanClassPath(Writer.pathToString(getSureFireClassPath().getClassPath()));
         if (retestAll || !isSameClassPath(sfPathString) || !hasSameJarChecksum(sfPathString)) {
             dynamicallyUpdateExcludes(new ArrayList<String>());
             Writer.writeClassPath(sfPathString, artifactsDir);
-            Writer.writeJarChecksums(cleanClassPath(sfPathString), artifactsDir);
+            Writer.writeJarChecksums(getCleanClassPath(sfPathString), artifactsDir);
         } else {
             dynamicallyUpdateExcludes(excludePaths);
         }
@@ -121,7 +121,7 @@ public class RunMojo extends DiffMojo {
             return false;
         }
         try {
-            String cleanOldSfPathFileName = cleanClassPath(Files.readAllLines(Paths.get(oldSfPathFileName)).get(0));
+            String cleanOldSfPathFileName = getCleanClassPath(Files.readAllLines(Paths.get(oldSfPathFileName)).get(0));
             Set<String> sfClassPathSet = new HashSet<>(Arrays.asList(sfPathString.split(File.pathSeparator)));
             Set<String> oldSfClassPathSet = new HashSet<>(Arrays.asList(cleanOldSfPathFileName.split(File.pathSeparator)));
             if (sfClassPathSet.equals(oldSfClassPathSet)) {
@@ -161,20 +161,21 @@ public class RunMojo extends DiffMojo {
         return noException;
     }
 
-    private String cleanClassPath(String cp) {
+    private String getCleanClassPath(String cp) {
         String[] paths = cp.split(File.pathSeparator);
         StringBuilder sb = new StringBuilder();
+        String classes = File.separator + "target" +  File.separator + "classes";
+        String testClasses = File.separator + "target" + File.separator + "test-classes";
         for (int i = 0; i < paths.length; i++) {
-            if (paths[i].contains(File.separator + "target" +  File.separator + "classes")
-                || paths[i].contains(File.separator + "target" + File.separator + "test-classes")
+            if (paths[i].contains(classes)
+                || paths[i].contains(testClasses)
                 || paths[i].contains("-SNAPSHOT.jar")) {
                 continue;
             }
             if (sb.length() == 0) {
                 sb.append(paths[i]);
             } else {
-                sb.append(File.pathSeparator);
-                sb.append(paths[i]);
+                sb.append(File.pathSeparator).append(paths[i]);
             }
         }
         return sb.toString();
