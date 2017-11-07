@@ -86,12 +86,7 @@ public class Writer {
                 if (jarsList[i].isEmpty()) {
                     continue;
                 }
-                String mapping = getJarToChecksumMapping(jarsList[i]);
-                // the formatting is "jar,checksum" which is why we compare with 2
-                if (mapping.split(",").length < 2) {
-                    continue;
-                }
-                writer.write(mapping);
+                writer.write(getJarToChecksumMapping(jarsList[i]));
                 writer.write(System.lineSeparator());
             }
         } catch (IOException ioe) {
@@ -222,11 +217,11 @@ public class Writer {
      * Compute the checksum for the given map and return the jar
      * and the checksum as a string.
      *
-     * @param jar         The jar whose checksum we need to compute.
+     *
+     * @param jar  The jar whose checksum we need to compute.
      */
     public static String getJarToChecksumMapping(String jar) {
         StringBuilder sb = new StringBuilder();
-        sb.append(jar).append(",");
         byte[] bytes;
         int bufSize = 65536 * 2;
         try {
@@ -239,7 +234,7 @@ public class Writer {
                 size = is.read(bytes, 0, bufSize);
             }
             String hex = Hex.encodeHexString(md.digest());
-            sb.append(hex);
+            sb.append(jar).append(",").append(hex);
         } catch (IOException ioe) {
             ioe.printStackTrace();
         } catch (NoSuchAlgorithmException nsae) {
