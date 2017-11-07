@@ -6,11 +6,16 @@ package edu.illinois.starts.helpers;
 
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.security.DigestInputStream;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -23,6 +28,7 @@ import java.util.logging.Level;
 import edu.illinois.starts.util.Logger;
 import edu.illinois.yasgl.DirectedGraph;
 import edu.illinois.yasgl.Edge;
+import org.apache.commons.codec.binary.Hex;
 
 /**
  * Utility methods for writing various data to file.
@@ -64,9 +70,25 @@ public class Writer {
     }
 
     public static void writeClassPath(String sfPathString, String artifactsDir) {
-        String outFilename = artifactsDir + File.separator + "sf-classpath";
+        String outFilename = Paths.get(artifactsDir, "sf-classpath").toString();
         try (BufferedWriter writer = getWriter(outFilename)) {
             writer.write(sfPathString + System.lineSeparator());
+        } catch (IOException ioe) {
+            ioe.printStackTrace();
+        }
+    }
+
+    public static void writeJarChecksums(String sfPathString, String artifactsDir) {
+        String outFilename = Paths.get(artifactsDir, "jar-checksums").toString();
+        try (BufferedWriter writer = getWriter(outFilename)) {
+            String[] jarsList = sfPathString.split(File.pathSeparator);
+            for (int i = 0; i < jarsList.length; i++) {
+                if (jarsList[i].isEmpty()) {
+                    continue;
+                }
+                writer.write(getJarToChecksumMapping(jarsList[i]));
+                writer.write(System.lineSeparator());
+            }
         } catch (IOException ioe) {
             ioe.printStackTrace();
         }
@@ -189,6 +211,36 @@ public class Writer {
 
     public static String millsToSeconds(long value) {
         return String.format("%.03f", (double) value / 1000.0);
+    }
+
+    /**
+     * Compute the checksum for the given map and return the jar
+     * and the checksum as a string.
+     *
+     *
+     * @param jar  The jar whose checksum we need to compute.
+     */
+    public static String getJarToChecksumMapping(String jar) {
+        StringBuilder sb = new StringBuilder();
+        byte[] bytes;
+        int bufSize = 65536 * 2;
+        try {
+            MessageDigest md = MessageDigest.getInstance("MD5");
+            InputStream is = Files.newInputStream(Paths.get(jar));
+            bytes = new byte[bufSize];
+            int size = is.read(bytes, 0, bufSize);
+            while (size >= 0) {
+                md.update(bytes, 0, size);
+                size = is.read(bytes, 0, bufSize);
+            }
+            String hex = Hex.encodeHexString(md.digest());
+            sb.append(jar).append(",").append(hex);
+        } catch (IOException ioe) {
+            ioe.printStackTrace();
+        } catch (NoSuchAlgorithmException nsae) {
+            nsae.printStackTrace();
+        }
+        return sb.toString();
     }
 
     /**
