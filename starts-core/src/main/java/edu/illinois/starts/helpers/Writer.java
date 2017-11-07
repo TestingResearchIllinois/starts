@@ -70,7 +70,7 @@ public class Writer {
     }
 
     public static void writeClassPath(String sfPathString, String artifactsDir) {
-        String outFilename = artifactsDir + File.separator + "sf-classpath";
+        String outFilename = Paths.get(artifactsDir, "sf-classpath").toString();
         try (BufferedWriter writer = getWriter(outFilename)) {
             writer.write(sfPathString + System.lineSeparator());
         } catch (IOException ioe) {
@@ -79,7 +79,7 @@ public class Writer {
     }
 
     public static void writeJarChecksums(String sfPathString, String artifactsDir) {
-        String outFilename = artifactsDir + File.separator + "jar-checksums";
+        String outFilename = Paths.get(artifactsDir, "jar-checksums").toString();
         try (BufferedWriter writer = getWriter(outFilename)) {
             String[] jarsList = sfPathString.split(File.pathSeparator);
             for (int i = 0; i < jarsList.length; i++) {
