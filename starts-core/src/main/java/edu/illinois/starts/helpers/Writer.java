@@ -246,7 +246,9 @@ public class Writer {
             nsae.printStackTrace();
         }
         return sb.toString();
+    }
 
+    /**
      * Convert the result of URL.toExternalForm() on classes in the program to a fully-qualified name.
      * @param url External form of the URL to convert
      * @return A fully-qualified name of the URL
