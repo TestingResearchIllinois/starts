@@ -1,16 +1,11 @@
 package edu.illinois.starts.maven;
 
-
-
 import java.io.File;
 import java.lang.management.ManagementFactory;
 import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.util.logging.Level;
-
-import edu.illinois.starts.util.Logger;
 
 /**
  * This class is duplicated from Ekstazi, with minor changes.
@@ -20,7 +15,6 @@ public final class AgentLoader {
     private static final String TOOLS_JAR_NAME = "tools.jar";
     private static final String CLASSES_JAR_NAME = "classes.jar";
     private static final String AGENT_INIT = AgentLoader.class.getName() + " Initialized";
-    private static final Logger logger = Logger.getGlobal();
 
 
     public static boolean loadDynamicAgent() {
@@ -29,19 +23,15 @@ public final class AgentLoader {
                 return true;
             }
             System.setProperty(AGENT_INIT, "");
-            logger.log(Level.INFO, "jeff AGENT_INIT set to empty string");
-            logger.log(Level.INFO, "jeff " + JavaAgent.class.toString());
             URL agentJarURL = AbstractMojoInterceptor.class.getResource("JavaAgent.class");
             agentJarURL = AbstractMojoInterceptor.extractJarURL(agentJarURL);
             return loadAgent(agentJarURL);
         } catch (Exception ex) {
-            logger.log(Level.INFO, "jeff exception thrown: " + ex.getMessage());
             return false;
         }
     }
 
     public static boolean loadAgent(URL aju) throws Exception {
-        logger.log(Level.INFO, "jeff entered loadAgent ");
         URL toolsJarFile = findToolsJar();
         if (toolsJarFile == null) {
             return false;
