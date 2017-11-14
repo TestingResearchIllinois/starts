@@ -12,13 +12,13 @@ os:
 #builds on both JDK8 and JDK9 (for ease of future integration)
 jdk:
     - oraclejdk8
-    - oraclejdk9
+#    - oraclejdk9
 
 #allow jdk9 failures to not impact the build status
-matrix:
-    allow_failures:
-    - jdk: oraclejdk9
-    fast_finish: true
+#matrix:
+#    allow_failures:
+#    - jdk: oraclejdk9
+#    fast_finish: true
 
 #writes version of linux/macOS to log
 before_install:
