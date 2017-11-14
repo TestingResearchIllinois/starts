@@ -1,7 +1,12 @@
 language: java
 
+#default depth is 50, unnecessary
 git:
     depth: 1
+
+jdk:
+    - oraclejdk8
+    - oraclejdk9
 
 before_install:
     - jdk_switcher use oraclejdk8
