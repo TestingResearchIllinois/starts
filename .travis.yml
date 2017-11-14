@@ -3,22 +3,28 @@ language: java
 #default depth is 50, unnecessary
 git:
     depth: 1
+    
+#builds on both linux and macOS
 os:
     - linux
     - osx
 
+#builds on both JDK8 and JDK9 (for ease of future integration)
 jdk:
     - oraclejdk8
     - oraclejdk9
 
-#concurrently build on jdk8 and jdk9, but allow jdk9 failures to not impact the build status
+#allow jdk9 failures to not impact the build status
 matrix:
     allow_failures:
     - jdk: oraclejdk9
     fast_finish: true
 
-#before_install:
+#writes version of linux/macOS to log
+before_install:
 #   - jdk_switcher use oraclejdk8
+    - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then sw_vers -productVersion; fi
+    - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then uname -r; fi
 
 script:
     - mvn clean verify -B
