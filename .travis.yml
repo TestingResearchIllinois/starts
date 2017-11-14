@@ -8,12 +8,13 @@ jdk:
     - oraclejdk8
     - oraclejdk9
 
+#concurrently build on jdk8 and jdk9, but allow jdk9 failures to not impact the build status
 matrix:
     allow_failures:
     - jdk: oraclejdk9
 
-before_install:
-    - jdk_switcher use oraclejdk8
+#before_install:
+#   - jdk_switcher use oraclejdk8
 
 script:
     - mvn clean verify -B
