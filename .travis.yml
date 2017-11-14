@@ -1,5 +1,8 @@
 language: java
 
+git:
+    depth: 1
+
 before_install:
     - jdk_switcher use oraclejdk8
 
