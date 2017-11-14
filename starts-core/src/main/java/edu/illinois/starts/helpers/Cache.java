@@ -48,9 +48,8 @@ public class Cache {
         jarsInCache.addAll(checkMissingJarsInJDKCache(missing));
         if (moreEdges != null) {
             moreEdges.addAll(loadCachedEdges(jarsInCache));
-        }
-        else {
-            moreEdges = new ArrayList<String>(loadCachedEdges(jarsInCache));
+        } else {
+            moreEdges = new ArrayList<>(loadCachedEdges(jarsInCache));
         }
     }
 
