@@ -4,25 +4,27 @@ language: java
 git:
     depth: 1
     
-#builds on both linux and macOS
-os:
-    - linux
-    - osx
-
-#builds on both JDK8 and JDK9 (for ease of future integration)
-jdk:
-    - oraclejdk8
-#    - oraclejdk9
-
-#allow jdk9 failures to not impact the build status
-#matrix:
-#    allow_failures:
-#    - jdk: oraclejdk9
-#    fast_finish: true
+matrix:
+    include:
+        - os: linux
+          jdk: oraclejdk8
+          before_install:
+          - ./build-tools/src/main/resources/bash/travis-download-maven.sh
+          - export M2_HOME=$HOME/.binaries/apache-maven-3.3.9
+          - export PATH=$M2_HOME/bin:$PATH
+          - mvn -Xmx32m --version
+          - echo "MAVEN_OPTS=\"$MAVEN_OPTS -XX:+CMSClassUnloadingEnabled -Xmx1g\"" > $HOME/.mavenrc
+       - os: osx
+         osx_image: xcode8
+         before_install:
+         - ./build-tools/src/main/resources/bash/travis-download-maven.sh
+         - export M2_HOME=$HOME/.binaries/apache-maven-3.3.9
+         - export PATH=$M2_HOME/bin:$PATH
+         - mvn -Xmx32m --version
+         - echo "MAVEN_OPTS=\"$MAVEN_OPTS -XX:+CMSClassUnloadingEnabled -Xmx1g -Dmaven.test.skip=true -Dcheckstyle.skip=true\"" > $HOME/.mavenrc
 
 #writes version of linux/macOS to log
 before_install:
-#   - jdk_switcher use oraclejdk8
     - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then sw_vers -productVersion; fi
     - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then uname -r; fi
 
