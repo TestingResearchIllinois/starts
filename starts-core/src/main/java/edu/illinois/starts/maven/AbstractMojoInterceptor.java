@@ -37,7 +37,7 @@ public abstract class AbstractMojoInterceptor implements StartsConstants {
 
     public static URL getResource(Class<?> clz) {
         LOGGER.log(Level.INFO, "jeff entered getResource with fs char: " + File.separatorChar);
-        URL resource = clz.getResource("\\" + clz.getName().replace('.', File.separatorChar) + ".class");
+        URL resource = clz.getResource("JavaAgent.class");
         LOGGER.log(Level.INFO, "jeff got resource: ");
         return resource;
     }

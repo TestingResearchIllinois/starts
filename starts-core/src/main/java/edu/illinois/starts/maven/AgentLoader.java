@@ -31,7 +31,8 @@ public final class AgentLoader {
             System.setProperty(AGENT_INIT, "");
             logger.log(Level.INFO, "jeff AGENT_INIT set to empty string");
             logger.log(Level.INFO, "jeff " + JavaAgent.class.toString());
-            URL agentJarURL = AbstractMojoInterceptor.extractJarURL(JavaAgent.class);
+            URL agentJarURL = AbstractMojoInterceptor.class.getResource("JavaAgent.class");
+            agentJarURL = AbstractMojoInterceptor.extractJarURL(agentJarURL);
             return loadAgent(agentJarURL);
         } catch (Exception ex) {
             logger.log(Level.INFO, "jeff exception thrown: " + ex.getMessage());
