@@ -8,6 +8,10 @@ jdk:
     - oraclejdk8
     - oraclejdk9
 
+matrix:
+    allow_failures:
+    - jdk: oraclejdk9
+
 before_install:
     - jdk_switcher use oraclejdk8
 
