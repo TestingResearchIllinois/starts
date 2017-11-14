@@ -3,7 +3,9 @@ language: java
 #default depth is 50, unnecessary
 git:
     depth: 1
-    
+
+sudo: false
+
 matrix:
     include:
         - os: linux
