@@ -12,6 +12,7 @@ jdk:
 matrix:
     allow_failures:
     - jdk: oraclejdk9
+    fast_finish: true
 
 #before_install:
 #   - jdk_switcher use oraclejdk8
