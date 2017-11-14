@@ -25,6 +25,7 @@ matrix:
          - mvn -Xmx32m --version
          - echo "MAVEN_OPTS=\"$MAVEN_OPTS -XX:+CMSClassUnloadingEnabled -Xmx1g -Dmaven.test.skip=true -Dcheckstyle.skip=true\"" > $HOME/.mavenrc
 
+
 #writes version of linux/macOS to log
 before_install:
     - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then sw_vers -productVersion; fi
@@ -32,3 +33,8 @@ before_install:
 
 script:
     - mvn clean verify -B
+
+cache:
+    directories:
+    - $HOME/.m2
+    - $HOME/.binaries
