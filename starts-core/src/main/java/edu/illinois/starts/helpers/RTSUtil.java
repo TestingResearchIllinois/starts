@@ -85,7 +85,8 @@ public class RTSUtil {
         return output.getBuffer().length() != 0 ? getDepsFromJdepsOutput(output) : new HashMap<String, Set<String>>();
     }
 
-    public static void addDepsFromJdepsFile(Map<String, Set<String>> deps, Set<String> classes, String jdepsFile) {
+    public static void addDepsFromJdepsFile(Map<String, Set<String>> deps, Set<String> changedClasses,
+                                            Set<String> newClasses, String jdepsFile) {
         if (deps == null || !(new File(jdepsFile).exists())) {
             return;
         }
@@ -95,7 +96,7 @@ public class RTSUtil {
             while ((line = filescan.readLine()) != null) {
                 String[] parts = line.split(" ");
                 String left = parts[0].trim();
-                if (classes.contains(left) || left.startsWith("classes")
+                if (changedClasses.contains(left) || newClasses.contains(left) || left.startsWith("classes")
                         || left.startsWith("test-classes") || left.endsWith(".jar")) {
                     continue;
                 }

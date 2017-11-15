@@ -4,6 +4,7 @@
 
 package edu.illinois.starts.jdeps;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -88,12 +89,11 @@ public class ImpactedMojo extends DiffMojo {
         String sfPathString = Writer.pathToString(sfClassPath.getClassPath());
         ClassLoader loader = createClassLoader(sfClassPath);
         List<String> allTests = getTestClasses("updateForNextRun");
-        Result result = prepareForNextRun(sfPathString, sfClassPath, allClasses,
-                new HashSet<>(allTests), new HashSet<String>(), false);
+        Result result = prepareForNextRun(sfPathString, sfClassPath, new ArrayList<String>(), allClasses,
+                new HashSet<>(allClasses), new HashSet<String>(), false, incrementalUpdate);
         //ZLCHelper zlcHelper = new ZLCHelper();// call this would clear zlcDataMap
-        Set<String> newClasses = new HashSet<>(allClasses);
-        newClasses.addAll(Cache.getNewJarClasses());// contain new classes and new jar classes
-        ZLCHelper.updateZLCFile(result.getTestDeps(), loader, getArtifactsDir(), new HashSet<String>(), newClasses);
+        ZLCHelper.updateZLCFile(result.getTestDeps(), loader, getArtifactsDir(),
+                new HashSet<String>(), new HashSet<>(allClasses), incrementalUpdate);
         long end = System.currentTimeMillis();
         if (logger.getLoggingLevel().intValue() == Level.FINER.intValue()) {
             Writer.writeClassPath(sfPathString, getArtifactsDir());

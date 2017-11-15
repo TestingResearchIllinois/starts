@@ -43,6 +43,13 @@ public class DiffMojo extends BaseMojo {
     @Parameter(property = "cleanBytes", defaultValue = "true")
     protected boolean cleanBytes;
 
+    //TODO: set this boolean to true only for static reflectionAnalyses with * (border, string, naive)?
+    @Parameter(property = "computeUnreached", defaultValue = "false")
+    protected boolean computeUnreached;
+
+    @Parameter(property = "incrementalUpdate", defaultValue = "false")
+    protected boolean incrementalUpdate;
+
     /**
      * Set this to "true" to update test dependencies on disk. The default value of "false"
      * is useful for "dry runs" where one may want to see the diff without updating
@@ -96,29 +103,28 @@ public class DiffMojo extends BaseMojo {
         setIncludesExcludes();
         List<String> allTests = getTestClasses("updateForNextRun");
         Set<String> affectedTests = new HashSet<>(allTests);
-        affectedTests.removeAll(nonAffected);//affected tests
+        affectedTests.removeAll(nonAffected);
         DirectedGraph<String> graph = null;
         if (!affectedTests.isEmpty()) {
-            // get new classes
-            Set<String> newData = new HashSet<>(getAllClasses());
-            newData.removeAll(ZLCHelper.getExistingClasses(getArtifactsDir()));
-            // changed classes to be passed to prepareForNextRun contains both changed and new classes
-            Set<String> changedClasses = new HashSet<>(newData);
+            // get new classes in project
+            Set<String> newClasses = new HashSet<>(getAllClasses());
+            newClasses.removeAll(ZLCHelper.getExistingClasses(getArtifactsDir()));
+            // get changed classes in project
+            Set<String> changedClasses = new HashSet<>();
             changedClasses.addAll(ZLCHelper.getChangedClasses(changedData));
 
             ClassLoader loader = createClassLoader(sfClassPath);
-            //TODO: set this boolean to true only for static reflectionAnalyses with * (border, string, naive)?
-            boolean computeUnreached = false;//true;
             Result result = prepareForNextRun(sfPathString, sfClassPath, new ArrayList<>(changedClasses),
-                    affectedTests, nonAffected, computeUnreached);
-            // now the newData contains new classes and new jar classes
-            newData.addAll(Cache.getNewJarClasses());
+                    new ArrayList<>(newClasses), affectedTests, nonAffected, computeUnreached, incrementalUpdate);
+            // add new jar classes for ZLCHelper updateZLCFile
+            newClasses.addAll(Cache.getNewJarClasses());
             Map<String, Set<String>> testDeps = result.getTestDeps();
             graph = result.getGraph();
             Set<String> unreached = computeUnreached ? result.getUnreachedDeps() : new HashSet<String>();
             if (depFormat == DependencyFormat.ZLC) {
                 //ZLCHelper zlcHelper = new ZLCHelper();
-                ZLCHelper.updateZLCFile(testDeps, loader, getArtifactsDir(), changedData, newData);
+                ZLCHelper.updateZLCFile(testDeps, loader, getArtifactsDir(), changedData, newClasses,
+                        incrementalUpdate);
             } else if (depFormat == DependencyFormat.CLZ) {
                 // The next line is not needed with ZLC because '*' is explicitly tracked in ZLC
                 affectedTests = result.getAffectedTests();
