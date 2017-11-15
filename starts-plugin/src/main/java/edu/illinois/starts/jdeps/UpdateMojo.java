@@ -8,6 +8,8 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -19,35 +21,46 @@ import edu.illinois.starts.helpers.Writer;
 import edu.illinois.starts.util.Logger;
 import edu.illinois.starts.util.Pair;
 import org.apache.maven.plugin.MojoExecutionException;
-import org.apache.maven.plugins.annotations.Execute;
-import org.apache.maven.plugins.annotations.LifecyclePhase;
-import org.apache.maven.plugins.annotations.Mojo;
-import org.apache.maven.plugins.annotations.ResolutionScope;
+import org.apache.maven.plugins.annotations.*;
 
 /**
  * Update class and test dependencies.
  */
 @Mojo(name = "update", requiresDirectInvocation = true, requiresDependencyResolution = ResolutionScope.TEST)
 public class UpdateMojo extends DiffMojo {
+    /**
+     * Set this to "false" to prevent checksums from being persisted to disk. This
+     * is useful for "dry runs" where one may want to see the non-affected tests that
+     * STARTS writes to the Surefire excludesFile, without updating test dependencies.
+     */
+    @Parameter(property = "updateDiffChecksums", defaultValue = "true")
+    private boolean updateDiffChecksums;
+
     public void execute() throws MojoExecutionException {
         long start = System.currentTimeMillis();
-        Set<String> nonAffected = null;
-        String inFilename = getArtifactsDir() + File.separator + "non-affected-tests";
-        File inFile = new File(inFilename);
-        if (inFile.isFile()) {
-            nonAffected = readFromFile(inFile, getArtifactsDir());
+        Set<String> nonAffected = new HashSet<>();
+        String filenameNonAffected = getArtifactsDir() + File.separator + "non-affected-tests";
+        File fileNonAffected = new File(filenameNonAffected);
+        if (fileNonAffected.isFile()) {
+            try {
+                List<String> testNames = Files.readAllLines(fileNonAffected.toPath(), StandardCharsets.UTF_8);
+                nonAffected.addAll(testNames);
+            } catch (IOException ioe) {
+                ioe.printStackTrace();
+            }
             long end = System.currentTimeMillis();
-            Logger.getGlobal().log(Level.FINE, "[PROFILE] readFromFile " + inFilename + " : "
+            Logger.getGlobal().log(Level.FINE, "[PROFILE] readFromFile " + filenameNonAffected + " : "
                     + Writer.millsToSeconds(end - start));
         } else {
             Pair<Set<String>, Set<String>> data = computeChangeData();
-            nonAffected = data == null ? new HashSet<String>() : data.getKey();
+            if(data != null) nonAffected = data.getKey();
             long end = System.currentTimeMillis();
             Logger.getGlobal().log(Level.FINE, "[PROFILE] computeChangeData(): "
                             + Writer.millsToSeconds(end - start));
         }
-        //updateDiffChecksums is always true for this mojo
-        updateForNextRun(nonAffected);
+        if(updateDiffChecksums) {
+            updateForNextRun(nonAffected);
+        }
     }
 
     public Set<String> readFromFile(File inFile, String artifactsDir) {
