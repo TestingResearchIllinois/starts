@@ -35,11 +35,17 @@ public class UpdateMojo extends DiffMojo {
      * is useful for "dry runs" where one may want to see the non-affected tests that
      * STARTS writes to the Surefire excludesFile, without updating test dependencies.
      */
-    @Parameter(property = "updateDiffChecksums", defaultValue = "true")
-    private boolean updateDiffChecksums;
+    @Parameter(property = "updateUpdateChecksums", defaultValue = "true")
+    private boolean updateUpdateChecksums;
+
+    private Logger logger;
 
     public void execute() throws MojoExecutionException {
+        Logger.getGlobal().setLoggingLevel(Level.parse(loggingLevel));
         long start = System.currentTimeMillis();
+        logger = Logger.getGlobal();
+        logger.log(Level.INFO, "********** Update **********");
+
         Set<String> nonAffected = new HashSet<>();
         String filenameNonAffected = getArtifactsDir() + File.separator + "non-affected-tests";
         File fileNonAffected = new File(filenameNonAffected);
@@ -51,7 +57,7 @@ public class UpdateMojo extends DiffMojo {
                 ioe.printStackTrace();
             }
             long end = System.currentTimeMillis();
-            Logger.getGlobal().log(Level.FINE, "[PROFILE] readFromFile " + filenameNonAffected + " : "
+            logger.log(Level.FINE, "[PROFILE] readFromFile " + filenameNonAffected + " : "
                     + Writer.millsToSeconds(end - start));
         } else {
             Pair<Set<String>, Set<String>> data = computeChangeData();
@@ -59,12 +65,16 @@ public class UpdateMojo extends DiffMojo {
                 nonAffected = data.getKey();
             }
             long end = System.currentTimeMillis();
-            Logger.getGlobal().log(Level.FINE, "[PROFILE] computeChangeData(): "
+            logger.log(Level.FINE, "[PROFILE] computeChangeData(): "
                             + Writer.millsToSeconds(end - start));
         }
-        if (updateDiffChecksums) {
+        if (updateUpdateChecksums) {
             updateForNextRun(nonAffected);
         }
+
+        long end = System.currentTimeMillis();
+        System.setProperty("[PROFILE] END-OF-UPDATE-MOJO: ", Long.toString(end));
+        logger.log(Level.FINE, "[PROFILE] UPDATE-MOJO-TOTAL: " + Writer.millsToSeconds(end - start));
     }
 
     public Set<String> readFromFile(File inFile, String artifactsDir) {
