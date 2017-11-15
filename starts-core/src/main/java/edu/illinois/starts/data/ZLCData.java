@@ -13,7 +13,7 @@ import java.util.stream.Collectors;
 /**
  * This class creates objects that represent one row in the .zlc file.
  */
-public class ZLCData {
+public class ZLCData implements StartsConstants {
     private URL url;
     private String checksum;
     private Set<String> tests;
