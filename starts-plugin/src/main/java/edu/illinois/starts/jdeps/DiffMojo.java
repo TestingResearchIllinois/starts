@@ -32,14 +32,14 @@ import org.apache.maven.surefire.booter.Classpath;
  */
 @Mojo(name = "diff", requiresDirectInvocation = true, requiresDependencyResolution = ResolutionScope.TEST)
 @Execute(phase = LifecyclePhase.TEST_COMPILE)
-public class DiffMojo extends BaseMojo {
+public class DiffMojo extends BaseMojo implements StartsConstants {
     /**
      * Set this to "false" to disable smart hashing, i.e., to *not* strip
      * Bytecode files of debug info prior to computing checksums. See the "Smart
      * Checksums" Sections in the Ekstazi paper:
      * http://dl.acm.org/citation.cfm?id=2771784
      */
-    @Parameter(property = "cleanBytes", defaultValue = "true")
+    @Parameter(property = CLEAN_BYTES, defaultValue = TRUE)
     protected boolean cleanBytes;
 
     /**
@@ -47,7 +47,7 @@ public class DiffMojo extends BaseMojo {
      * is useful for "dry runs" where one may want to see the diff without updating
      * the test dependencies.
      */
-    @Parameter(property = "updateDiffChecksums", defaultValue = "false")
+    @Parameter(property = UPDATE_DIFF_CHECKSUMS, defaultValue = FALSE)
     private boolean updateDiffChecksums;
 
     public void execute() throws MojoExecutionException {
@@ -56,14 +56,14 @@ public class DiffMojo extends BaseMojo {
         Set<String> changed = new HashSet<>();
         Set<String> nonAffected = new HashSet<>();
         Pair<Set<String>, Set<String>> data = computeChangeData();
-        String extraText = "";
+        String extraText = BLANK;
         if (data != null) {
             nonAffected = data.getKey();
             changed = data.getValue();
         } else {
-            extraText = " (no RTS artifacts; likely the first run)";
+            extraText = NO_RTS_ARTIFACTS_LIKELY_THE_FIRST_RUN;
         }
-        printResult(changed, "ChangedClasses" + extraText);
+        printResult(changed, CHANGEDCLASSES + extraText);
         if (updateDiffChecksums) {
             updateForNextRun(nonAffected);
         }
@@ -80,10 +80,10 @@ public class DiffMojo extends BaseMojo {
         }
         Set<String> changed = data == null ? new HashSet<String>() : data.getValue();
         if (Logger.getGlobal().getLoggingLevel().intValue() <= Level.FINEST.intValue()) {
-            Writer.writeToFile(changed, "changed-classes", getArtifactsDir());
+            Writer.writeToFile(changed, CHANGED_CLASSES, getArtifactsDir());
         }
         long end = System.currentTimeMillis();
-        Logger.getGlobal().log(Level.FINE, "[PROFILE] COMPUTING CHANGES: " + Writer.millsToSeconds(end - start));
+        Logger.getGlobal().log(Level.FINE, PROFILE_COMPUTING_CHANGES + Writer.millsToSeconds(end - start));
         return data;
     }
 
@@ -92,7 +92,7 @@ public class DiffMojo extends BaseMojo {
         Classpath sfClassPath = getSureFireClassPath();
         String sfPathString = Writer.pathToString(sfClassPath.getClassPath());
         setIncludesExcludes();
-        List<String> allTests = getTestClasses("updateForNextRun");
+        List<String> allTests = getTestClasses(UPDATE_FOR_NEXT_RUN);
         Set<String> affectedTests = new HashSet<>(allTests);
         affectedTests.removeAll(nonAffected);
         DirectedGraph<String> graph = null;
@@ -111,7 +111,7 @@ public class DiffMojo extends BaseMojo {
                 // The next line is not needed with ZLC because '*' is explicitly tracked in ZLC
                 affectedTests = result.getAffectedTests();
                 if (affectedTests == null) {
-                    throw new MojoExecutionException("Affected tests should not be null with CLZ format!");
+                    throw new MojoExecutionException(AFFECTED_TESTS_SHOULD_NOT_BE_NULL_WITH_CLZ_FORMAT_EXCEPTION);
                 }
                 RTSUtil.computeAndSaveNewCheckSums(getArtifactsDir(), affectedTests, testDeps, loader);
             }
@@ -119,20 +119,20 @@ public class DiffMojo extends BaseMojo {
         save(getArtifactsDir(), affectedTests, allTests, sfPathString, graph);
         printToTerminal(allTests, affectedTests);
         long end = System.currentTimeMillis();
-        Logger.getGlobal().log(Level.FINE, "[PROFILE] updateForNextRun(total): " + Writer.millsToSeconds(end - start));
+        Logger.getGlobal().log(Level.FINE, PROFILE_UPDATE_FOR_NEXT_RUN_TOTAL + Writer.millsToSeconds(end - start));
     }
 
     public void printToTerminal(List<String> testClasses, Set<String> affectedTests) {
-        Logger.getGlobal().log(Level.INFO, "STARTS:AffectedTests: " + affectedTests.size());
-        Logger.getGlobal().log(Level.INFO, "STARTS:TotalTests: " + testClasses.size());
+        Logger.getGlobal().log(Level.INFO, STARTS_AFFECTED_TESTS + affectedTests.size());
+        Logger.getGlobal().log(Level.INFO, STARTS_TOTAL_TESTS + testClasses.size());
     }
 
     public void save(String artifactsDir, Set<String> affectedTests, List<String> testClasses,
                      String sfPathString, DirectedGraph<String> graph) {
         int globalLogLevel = Logger.getGlobal().getLoggingLevel().intValue();
         if (globalLogLevel <= Level.FINER.intValue()) {
-            Writer.writeToFile(testClasses, "all-tests", artifactsDir);
-            Writer.writeToFile(affectedTests, "selected-tests", artifactsDir);
+            Writer.writeToFile(testClasses, ALL_TESTS, artifactsDir);
+            Writer.writeToFile(affectedTests, SELECTED_TESTS, artifactsDir);
         }
         if (globalLogLevel <= Level.FINEST.intValue()) {
             RTSUtil.saveForNextRun(artifactsDir, graph, printGraph, graphFile);

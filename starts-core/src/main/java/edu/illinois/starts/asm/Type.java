@@ -40,7 +40,7 @@ import java.lang.reflect.Method;
  * @author Eric Bruneton
  * @author Chris Nokleberg
  */
-public class Type {
+public class Type implements StartsConstants {
 
     /**
      * The sort of the <tt>void</tt> type. See {@link #getSort getSort}.
@@ -539,27 +539,27 @@ public class Type {
     public String getClassName() {
         switch (sort) {
         case VOID:
-            return "void";
+            return VOID_NAME;
         case BOOLEAN:
-            return "boolean";
+            return BOOLEAN_NAME;
         case CHAR:
-            return "char";
+            return CHAR_NAME;
         case BYTE:
-            return "byte";
+            return BYTE_NAME;
         case SHORT:
-            return "short";
+            return SHORT_NAME;
         case INT:
-            return "int";
+            return INT_NAME;
         case FLOAT:
-            return "float";
+            return FLOAT_NAME;
         case LONG:
-            return "long";
+            return LONG_NAME;
         case DOUBLE:
-            return "double";
+            return DOUBLE_NAME;
         case ARRAY:
             StringBuilder sb = new StringBuilder(getElementType().getClassName());
             for (int i = getDimensions(); i > 0; --i) {
-                sb.append("[]");
+                sb.append(LEFT_RIGHT_BRACKETS);
             }
             return sb.toString();
         case OBJECT:

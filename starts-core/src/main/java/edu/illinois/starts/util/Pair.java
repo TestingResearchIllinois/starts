@@ -9,7 +9,7 @@ import java.io.Serializable;
 /**
  * A (key, value) pair.
  */
-public class Pair<K, V> implements Serializable {
+public class Pair<K, V> implements Serializable, StartsConstants {
     private K key;
     private V value;
 
@@ -20,7 +20,7 @@ public class Pair<K, V> implements Serializable {
 
     @Override
     public String toString() {
-        return key + "=" + value;
+        return key + EQUAL + value;
     }
 
     @Override

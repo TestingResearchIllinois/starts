@@ -22,7 +22,7 @@ public final class SurefireMojoInterceptor extends AbstractMojoInterceptor imple
         try {
             updateExcludes(mojo);
         } catch (Exception ex) {
-            throwMojoExecutionException(mojo, "Unsupported surefire version", ex);
+            throwMojoExecutionException(mojo, UNSUPPORTED_SUREFIRE_VERSION_EXCEPTION, ex);
         }
     }
 
@@ -33,7 +33,7 @@ public final class SurefireMojoInterceptor extends AbstractMojoInterceptor imple
     private static boolean isAlreadyInvoked(Object mojo) throws Exception {
         String key = STARTS_NAME + System.identityHashCode(mojo);
         String value = System.getProperty(key);
-        System.setProperty(key, "STARTS-invoked");
+        System.setProperty(key, STARTS_INVOKED);
         return value != null;
     }
 
@@ -42,16 +42,16 @@ public final class SurefireMojoInterceptor extends AbstractMojoInterceptor imple
             getField(ARGLINE_FIELD, mojo);
             getField(EXCLUDES_FIELD, mojo);
         } catch (NoSuchMethodException ex) {
-            throwMojoExecutionException(mojo, "Unsupported surefire version. "
-                     + "Try setting excludesFile in the surefire configuration.", ex);
+            throwMojoExecutionException(mojo, UNSUPPORTED_SUREFIRE_VERSION_EXCEPTION_EXCEPTION
+                     + TRY_SETTING_EXCLUDESFILE_SUREFIRE_CONFIGURATION_EXCEPTION, ex);
         }
     }
 
     private static void updateExcludes(Object mojo) throws Exception {
-        LOGGER.log(Level.FINE, "updating Excludes");
+        LOGGER.log(Level.FINE, UPDATING_EXCLUDES);
         List<String> currentExcludes = getListField(EXCLUDES_FIELD, mojo);
         List<String> newExcludes = new ArrayList<>(Arrays.asList(System.getProperty(STARTS_EXCLUDE_PROPERTY)
-                .replace("[", "").replace("]", "").split(",")));
+                .replace(LEFT_BRACKET, BLANK).replace(RIGHT_BRACKET, BLANK).split(COMMA)));
         if (currentExcludes != null) {
             newExcludes.addAll(currentExcludes);
         } else {

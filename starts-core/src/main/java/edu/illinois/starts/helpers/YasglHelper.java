@@ -23,7 +23,7 @@ import edu.illinois.yasgl.GraphVertexVisitor;
 /**
  * Utility methods for interacting with YASGL.
  */
-public class YasglHelper {
+public class YasglHelper implements StartsConstants {
     private List<String> lines = new ArrayList<>();
 
     public static Set<String> computeReachabilityFromChangedClasses(Set<String> changed, DirectedGraph<String> graph) {
@@ -62,9 +62,9 @@ public class YasglHelper {
     }
 
     public static void addEdgeToGraph(DirectedGraphBuilder<String> builder, String str) {
-        String[] edge = str.split(" ");
+        String[] edge = str.split(WHITE_SPACE);
         if (edge.length != 2) {
-            throw new IllegalArgumentException("@@@NoEdgeTarget: " + str);
+            throw new IllegalArgumentException(NO_EDGE_TARGET_EXCEPTION + str);
         }
         internAndAddEdge(builder, edge);
     }
@@ -72,7 +72,7 @@ public class YasglHelper {
     public static void internAndAddEdge(DirectedGraphBuilder<String> builder, String[] edge) {
         // TODO: does it need to "intern" at all, if the "builder" already uses "equals"?!
         if (edge.length != 2) {
-            throw new IllegalArgumentException("Edge should have length 2");
+            throw new IllegalArgumentException(EDGE_SHOULD_HAVE_LENGTH_TWO_EXCEPTION);
         }
         edge[0] = edge[0].intern();
         edge[1] = edge[1].intern();
@@ -81,14 +81,14 @@ public class YasglHelper {
 
     @SuppressWarnings("checkstyle:Regexp")
     public DirectedGraphBuilder<String> addEdgesToBuilder(File graphFile, DirectedGraphBuilder<String> builder) {
-        boolean noGZ = graphFile.getAbsolutePath().endsWith(".gz") ? false : true;
+        boolean noGZ = graphFile.getAbsolutePath().endsWith(GZ_TYPE_NAME) ? false : true;
 
         if (!graphFile.exists()) {
             return builder;
         }
 
         try {
-            System.out.print(".");
+            System.out.print(DOT);
             if (noGZ) {
                 lines = Files.readAllLines(graphFile.toPath(), Charset.defaultCharset());
                 for (String line : lines) {

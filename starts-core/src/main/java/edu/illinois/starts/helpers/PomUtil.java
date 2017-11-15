@@ -51,20 +51,20 @@ public class PomUtil implements StartsConstants {
     }
 
     public static Plugin getSfPlugin(MavenProject project) throws MojoExecutionException {
-        Plugin sfPlugin = lookupPlugin("org.apache.maven.plugins:maven-surefire-plugin", project);
+        Plugin sfPlugin = lookupPlugin(SUREFIRE_PLUGIN, project);
         checkSFVersion(sfPlugin);
         return sfPlugin;
     }
 
     public static void checkSFVersion(Plugin sfPlugin) throws MojoExecutionException {
         if (sfPlugin == null) {
-            throw new MojoExecutionException("Surefire plugin not available");
+            throw new MojoExecutionException(SUREFIRE_PLUGIN_NOT_AVAILABLE_EXCEPTION);
         }
 
         String version = sfPlugin.getVersion();
         if (StartsConstants.MIN_SUREFIRE_VERSION.compareTo(version) > 0) {
-            throw new MojoExecutionException("Unsupported Surefire version: " + version
-                    + ". Use version " + StartsConstants.MIN_SUREFIRE_VERSION + " and above.");
+            throw new MojoExecutionException(UNSUPPORTED_SUREFIRE_VERSION + version
+                    + Use_version + MIN_SUREFIRE_VERSION + AND_ABOVE);
         }
     }
 
@@ -81,12 +81,12 @@ public class PomUtil implements StartsConstants {
     }
 
     public static List<String> getFromPom(String type, MavenProject project) throws MojoExecutionException {
-        String file = type + "sFile";
+        String file = type + S_FILE;
         List<String> values = new ArrayList<>();
         List<String> typeValues = extractIncludeExcludes(getSfPlugin(project), type);
         values.addAll(typeValues);
         String fileName = extractParamValue(getSfPlugin(project), file);
-        if (fileName != null && !fileName.equals("myExcludes")) {
+        if (fileName != null && !fileName.equals(MY_EXCLUDES)) {
             try {
                 values.addAll(Files.readAllLines(Paths.get(fileName), Charset.defaultCharset()));
             } catch (IOException ioe) {

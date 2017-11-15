@@ -38,7 +38,7 @@ package edu.illinois.starts.asm;
  * @author Eric Bruneton
  * @author Eugene Kuleshov
  */
-class MethodWriter extends MethodVisitor {
+class MethodWriter extends MethodVisitor implements StartsConstants {
 
     /**
      * Pseudo access flag used to denote constructors.
@@ -629,7 +629,7 @@ class MethodWriter extends MethodVisitor {
                     frame[frameIndex++] = ((Integer) local[i]).intValue();
                 } else {
                     frame[frameIndex++] = Frame.UNINITIALIZED
-                            | cw.addUninitializedType("",
+                            | cw.addUninitializedType(BLANK,
                                     ((Label) local[i]).position);
                 }
             }
@@ -641,7 +641,7 @@ class MethodWriter extends MethodVisitor {
                     frame[frameIndex++] = ((Integer) stack[i]).intValue();
                 } else {
                     frame[frameIndex++] = Frame.UNINITIALIZED
-                            | cw.addUninitializedType("",
+                            | cw.addUninitializedType(BLANK,
                                     ((Label) stack[i]).position);
                 }
             }
@@ -1407,7 +1407,7 @@ class MethodWriter extends MethodVisitor {
             if (ClassReader.RESIZE) {
                 resizeInstructions();
             } else {
-                throw new RuntimeException("Method code too large!");
+                throw new RuntimeException(METHOD_CODE_TOO_LARGE_EXCEPTION);
             }
         }
         if (ClassReader.FRAMES && compute == FRAMES) {
@@ -1418,7 +1418,7 @@ class MethodWriter extends MethodVisitor {
                 Label h = handler.handler.getFirst();
                 Label e = handler.end.getFirst();
                 // computes the kind of the edges to 'h'
-                String t = handler.desc == null ? "java/lang/Throwable"
+                String t = handler.desc == null ? THROWABLE_CLASS
                         : handler.desc;
                 int kind = Frame.OBJECT | cw.addType(t);
                 // h is an exception handler
@@ -1507,7 +1507,7 @@ class MethodWriter extends MethodVisitor {
                         // emits a frame for this unreachable block
                         int frameIndex = startFrame(start, 0, 1);
                         frame[frameIndex] = Frame.OBJECT
-                                | cw.addType("java/lang/Throwable");
+                                | cw.addType(THROWABLE_CLASS);
                         endFrame();
                         // removes the start-end range from the exception
                         // handlers
@@ -2034,33 +2034,33 @@ class MethodWriter extends MethodVisitor {
         int size = 8;
         if (code.length > 0) {
             if (code.length > 65536) {
-                throw new RuntimeException("Method code too large!");
+                throw new RuntimeException(METHOD_CODE_TOO_LARGE_EXCEPTION);
             }
-            cw.newUTF8("Code");
+            cw.newUTF8(CODE);
             size += 18 + code.length + 8 * handlerCount;
             if (localVar != null) {
-                cw.newUTF8("LocalVariableTable");
+                cw.newUTF8(LOCAL_VARIABLE_TABLE);
                 size += 8 + localVar.length;
             }
             if (localVarType != null) {
-                cw.newUTF8("LocalVariableTypeTable");
+                cw.newUTF8(LOCAL_VARIABLE_TYPE_TABLE);
                 size += 8 + localVarType.length;
             }
             if (lineNumber != null) {
-                cw.newUTF8("LineNumberTable");
+                cw.newUTF8(Line_Number_Table);
                 size += 8 + lineNumber.length;
             }
             if (stackMap != null) {
                 boolean zip = (cw.version & 0xFFFF) >= Opcodes.V1_6;
-                cw.newUTF8(zip ? "StackMapTable" : "StackMap");
+                cw.newUTF8(zip ? STACK_MAP_TABLE : STACK_MAP);
                 size += 8 + stackMap.length;
             }
             if (ClassReader.ANNOTATIONS && ctanns != null) {
-                cw.newUTF8("RuntimeVisibleTypeAnnotations");
+                cw.newUTF8(RUNTIME_VISIBLE_TYPE_ANNOTATIONS);
                 size += 8 + ctanns.getSize();
             }
             if (ClassReader.ANNOTATIONS && ictanns != null) {
-                cw.newUTF8("RuntimeInvisibleTypeAnnotations");
+                cw.newUTF8(RUNTIME_INVISIBLE_TYPE_ANNOTATIONS);
                 size += 8 + ictanns.getSize();
             }
             if (cattrs != null) {
@@ -2069,58 +2069,58 @@ class MethodWriter extends MethodVisitor {
             }
         }
         if (exceptionCount > 0) {
-            cw.newUTF8("Exceptions");
+            cw.newUTF8(EXCEPTIONS);
             size += 8 + 2 * exceptionCount;
         }
         if ((access & Opcodes.ACC_SYNTHETIC) != 0) {
             if ((cw.version & 0xFFFF) < Opcodes.V1_5
                     || (access & ClassWriter.ACC_SYNTHETIC_ATTRIBUTE) != 0) {
-                cw.newUTF8("Synthetic");
+                cw.newUTF8(SYNTHETIC);
                 size += 6;
             }
         }
         if ((access & Opcodes.ACC_DEPRECATED) != 0) {
-            cw.newUTF8("Deprecated");
+            cw.newUTF8(DEPRECATED);
             size += 6;
         }
         if (ClassReader.SIGNATURES && signature != null) {
-            cw.newUTF8("Signature");
+            cw.newUTF8(SIGNATURE);
             cw.newUTF8(signature);
             size += 8;
         }
         if (methodParameters != null) {
-            cw.newUTF8("MethodParameters");
+            cw.newUTF8(METHOD_PARAMETERS);
             size += 7 + methodParameters.length;
         }
         if (ClassReader.ANNOTATIONS && annd != null) {
-            cw.newUTF8("AnnotationDefault");
+            cw.newUTF8(ANNOTATION_DEFAULT);
             size += 6 + annd.length;
         }
         if (ClassReader.ANNOTATIONS && anns != null) {
-            cw.newUTF8("RuntimeVisibleAnnotations");
+            cw.newUTF8(RUNTIME_VISIBLE_ANNOTATIONS);
             size += 8 + anns.getSize();
         }
         if (ClassReader.ANNOTATIONS && ianns != null) {
-            cw.newUTF8("RuntimeInvisibleAnnotations");
+            cw.newUTF8(RUNTIME_INVISIBLE_ANNOTATIONS);
             size += 8 + ianns.getSize();
         }
         if (ClassReader.ANNOTATIONS && tanns != null) {
-            cw.newUTF8("RuntimeVisibleTypeAnnotations");
+            cw.newUTF8(RUNTIME_VISIBLE_TYPE_ANNOTATIONS);
             size += 8 + tanns.getSize();
         }
         if (ClassReader.ANNOTATIONS && itanns != null) {
-            cw.newUTF8("RuntimeInvisibleTypeAnnotations");
+            cw.newUTF8(RUNTIME_INVISIBLE_TYPE_ANNOTATIONS);
             size += 8 + itanns.getSize();
         }
         if (ClassReader.ANNOTATIONS && panns != null) {
-            cw.newUTF8("RuntimeVisibleParameterAnnotations");
+            cw.newUTF8(RUNTIME_VISIBLE_PARAMETER_ANNOTATIONS);
             size += 7 + 2 * (panns.length - synthetics);
             for (int i = panns.length - 1; i >= synthetics; --i) {
                 size += panns[i] == null ? 0 : panns[i].getSize();
             }
         }
         if (ClassReader.ANNOTATIONS && ipanns != null) {
-            cw.newUTF8("RuntimeInvisibleParameterAnnotations");
+            cw.newUTF8(RUNTIME_INVISIBLE_PARAMETER_ANNOTATIONS);
             size += 7 + 2 * (ipanns.length - synthetics);
             for (int i = ipanns.length - 1; i >= synthetics; --i) {
                 size += ipanns[i] == null ? 0 : ipanns[i].getSize();
@@ -2220,7 +2220,7 @@ class MethodWriter extends MethodVisitor {
                 size += cattrs.getSize(cw, code.data, code.length, maxStack,
                         maxLocals);
             }
-            out.putShort(cw.newUTF8("Code")).putInt(size);
+            out.putShort(cw.newUTF8(CODE)).putInt(size);
             out.putShort(maxStack).putShort(maxLocals);
             out.putInt(code.length).putByteArray(code.data, 0, code.length);
             out.putShort(handlerCount);
@@ -2256,32 +2256,32 @@ class MethodWriter extends MethodVisitor {
             }
             out.putShort(attributeCount);
             if (localVar != null) {
-                out.putShort(cw.newUTF8("LocalVariableTable"));
+                out.putShort(cw.newUTF8(LOCAL_VARIABLE_TABLE));
                 out.putInt(localVar.length + 2).putShort(localVarCount);
                 out.putByteArray(localVar.data, 0, localVar.length);
             }
             if (localVarType != null) {
-                out.putShort(cw.newUTF8("LocalVariableTypeTable"));
+                out.putShort(cw.newUTF8(LOCAL_VARIABLE_TYPE_TABLE));
                 out.putInt(localVarType.length + 2).putShort(localVarTypeCount);
                 out.putByteArray(localVarType.data, 0, localVarType.length);
             }
             if (lineNumber != null) {
-                out.putShort(cw.newUTF8("LineNumberTable"));
+                out.putShort(cw.newUTF8(Line_Number_Table));
                 out.putInt(lineNumber.length + 2).putShort(lineNumberCount);
                 out.putByteArray(lineNumber.data, 0, lineNumber.length);
             }
             if (stackMap != null) {
                 boolean zip = (cw.version & 0xFFFF) >= Opcodes.V1_6;
-                out.putShort(cw.newUTF8(zip ? "StackMapTable" : "StackMap"));
+                out.putShort(cw.newUTF8(zip ? STACK_MAP_TABLE : STACK_MAP));
                 out.putInt(stackMap.length + 2).putShort(frameCount);
                 out.putByteArray(stackMap.data, 0, stackMap.length);
             }
             if (ClassReader.ANNOTATIONS && ctanns != null) {
-                out.putShort(cw.newUTF8("RuntimeVisibleTypeAnnotations"));
+                out.putShort(cw.newUTF8(RUNTIME_VISIBLE_TYPE_ANNOTATIONS));
                 ctanns.put(out);
             }
             if (ClassReader.ANNOTATIONS && ictanns != null) {
-                out.putShort(cw.newUTF8("RuntimeInvisibleTypeAnnotations"));
+                out.putShort(cw.newUTF8(RUNTIME_INVISIBLE_TYPE_ANNOTATIONS));
                 ictanns.put(out);
             }
             if (cattrs != null) {
@@ -2289,7 +2289,7 @@ class MethodWriter extends MethodVisitor {
             }
         }
         if (exceptionCount > 0) {
-            out.putShort(cw.newUTF8("Exceptions")).putInt(
+            out.putShort(cw.newUTF8(EXCEPTIONS)).putInt(
                     2 * exceptionCount + 2);
             out.putShort(exceptionCount);
             for (int i = 0; i < exceptionCount; ++i) {
@@ -2299,49 +2299,49 @@ class MethodWriter extends MethodVisitor {
         if ((access & Opcodes.ACC_SYNTHETIC) != 0) {
             if ((cw.version & 0xFFFF) < Opcodes.V1_5
                     || (access & ClassWriter.ACC_SYNTHETIC_ATTRIBUTE) != 0) {
-                out.putShort(cw.newUTF8("Synthetic")).putInt(0);
+                out.putShort(cw.newUTF8(SYNTHETIC)).putInt(0);
             }
         }
         if ((access & Opcodes.ACC_DEPRECATED) != 0) {
-            out.putShort(cw.newUTF8("Deprecated")).putInt(0);
+            out.putShort(cw.newUTF8(DEPRECATED)).putInt(0);
         }
         if (ClassReader.SIGNATURES && signature != null) {
-            out.putShort(cw.newUTF8("Signature")).putInt(2)
+            out.putShort(cw.newUTF8(SIGNATURE)).putInt(2)
                     .putShort(cw.newUTF8(signature));
         }
         if (methodParameters != null) {
-            out.putShort(cw.newUTF8("MethodParameters"));
+            out.putShort(cw.newUTF8(METHOD_PARAMETERS));
             out.putInt(methodParameters.length + 1).putByte(
                     methodParametersCount);
             out.putByteArray(methodParameters.data, 0, methodParameters.length);
         }
         if (ClassReader.ANNOTATIONS && annd != null) {
-            out.putShort(cw.newUTF8("AnnotationDefault"));
+            out.putShort(cw.newUTF8(ANNOTATION_DEFAULT));
             out.putInt(annd.length);
             out.putByteArray(annd.data, 0, annd.length);
         }
         if (ClassReader.ANNOTATIONS && anns != null) {
-            out.putShort(cw.newUTF8("RuntimeVisibleAnnotations"));
+            out.putShort(cw.newUTF8(RUNTIME_VISIBLE_ANNOTATIONS));
             anns.put(out);
         }
         if (ClassReader.ANNOTATIONS && ianns != null) {
-            out.putShort(cw.newUTF8("RuntimeInvisibleAnnotations"));
+            out.putShort(cw.newUTF8(RUNTIME_INVISIBLE_ANNOTATIONS));
             ianns.put(out);
         }
         if (ClassReader.ANNOTATIONS && tanns != null) {
-            out.putShort(cw.newUTF8("RuntimeVisibleTypeAnnotations"));
+            out.putShort(cw.newUTF8(RUNTIME_VISIBLE_TYPE_ANNOTATIONS));
             tanns.put(out);
         }
         if (ClassReader.ANNOTATIONS && itanns != null) {
-            out.putShort(cw.newUTF8("RuntimeInvisibleTypeAnnotations"));
+            out.putShort(cw.newUTF8(RUNTIME_INVISIBLE_TYPE_ANNOTATIONS));
             itanns.put(out);
         }
         if (ClassReader.ANNOTATIONS && panns != null) {
-            out.putShort(cw.newUTF8("RuntimeVisibleParameterAnnotations"));
+            out.putShort(cw.newUTF8(RUNTIME_VISIBLE_PARAMETER_ANNOTATIONS));
             AnnotationWriter.put(panns, synthetics, out);
         }
         if (ClassReader.ANNOTATIONS && ipanns != null) {
-            out.putShort(cw.newUTF8("RuntimeInvisibleParameterAnnotations"));
+            out.putShort(cw.newUTF8(RUNTIME_INVISIBLE_PARAMETER_ANNOTATIONS));
             AnnotationWriter.put(ipanns, synthetics, out);
         }
         if (attrs != null) {

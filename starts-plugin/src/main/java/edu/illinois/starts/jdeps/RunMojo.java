@@ -34,13 +34,13 @@ import org.apache.maven.plugins.annotations.ResolutionScope;
  * Prepares for test runs by writing non-affected tests in the excludesFile.
  */
 @Mojo(name = "run", requiresDependencyResolution = ResolutionScope.TEST)
-public class RunMojo extends DiffMojo {
+public class RunMojo extends DiffMojo implements StartsConstants {
     /**
      * Set this to "false" to prevent checksums from being persisted to disk. This
      * is useful for "dry runs" where one may want to see the non-affected tests that
      * STARTS writes to the Surefire excludesFile, without updating test dependencies.
      */
-    @Parameter(property = "updateRunChecksums", defaultValue = "true")
+    @Parameter(property = UPDATE_RUN_CHECKSUMS, defaultValue = TRUE)
     protected boolean updateRunChecksums;
 
     /**
@@ -52,7 +52,7 @@ public class RunMojo extends DiffMojo {
      * file, which contains the list of tests that would be run if this option is set to false, will
      * be written to disk.
      */
-    @Parameter(property = "retestAll", defaultValue = "false")
+    @Parameter(property = RETEST_ALL, defaultValue = FALSE)
     protected boolean retestAll;
 
     protected Set<String> nonAffectedTests;
@@ -67,17 +67,17 @@ public class RunMojo extends DiffMojo {
         List<String> excludePaths = Writer.fqnsToExcludePath(nonAffectedTests);
         setIncludesExcludes();
         if (logger.getLoggingLevel().intValue() <= Level.FINEST.intValue()) {
-            Writer.writeToFile(nonAffectedTests, "non-affected-tests", getArtifactsDir());
+            Writer.writeToFile(nonAffectedTests, NON_AFFECTED_TESTS, getArtifactsDir());
         }
         run(excludePaths);
-        Set<String> allTests = new HashSet<>(getTestClasses("checkIfAllAffected"));
+        Set<String> allTests = new HashSet<>(getTestClasses(CHECK_IF_ALL_AFFECTED));
         if (allTests.equals(nonAffectedTests)) {
-            logger.log(Level.INFO, "********** Run **********");
-            logger.log(Level.INFO, "No tests are selected to run.");
+            logger.log(Level.INFO, STARS_RUN_STARS);
+            logger.log(Level.INFO, NO_TESTS_ARE_SELECTED_TO_RUN);
         }
         long end = System.currentTimeMillis();
-        System.setProperty("[PROFILE] END-OF-RUN-MOJO: ", Long.toString(end));
-        logger.log(Level.FINE, "[PROFILE] RUN-MOJO-TOTAL: " + Writer.millsToSeconds(end - start));
+        System.setProperty(PROFILE_END_OF_RUN_MOJO, Long.toString(end));
+        logger.log(Level.FINE, PROFILE_RUN_MOJO_TOTAL + Writer.millsToSeconds(end - start));
     }
 
     protected void run(List<String> excludePaths) throws MojoExecutionException {
@@ -94,16 +94,16 @@ public class RunMojo extends DiffMojo {
             updateForNextRun(nonAffectedTests);
         }
         long endUpdateTime = System.currentTimeMillis();
-        logger.log(Level.FINE, "[PROFILE] STARTS-MOJO-UPDATE-TIME: "
+        logger.log(Level.FINE, PROFILE_STARTS_MOJO_UPDATE_TIME
                 + Writer.millsToSeconds(endUpdateTime - startUpdateTime));
     }
 
     private void dynamicallyUpdateExcludes(List<String> excludePaths) throws MojoExecutionException {
         if (AgentLoader.loadDynamicAgent()) {
-            logger.log(Level.FINEST, "AGENT LOADED!!!");
+            logger.log(Level.FINEST, AGENT_LOADED);
             System.setProperty(STARTS_EXCLUDE_PROPERTY, Arrays.toString(excludePaths.toArray(new String[0])));
         } else {
-            throw new MojoExecutionException("I COULD NOT ATTACH THE AGENT");
+            throw new MojoExecutionException(COULD_NOT_ATTACH_THE_AGENT_EXCEPTION);
         }
     }
 
@@ -116,7 +116,7 @@ public class RunMojo extends DiffMojo {
     }
 
     private boolean isSameClassPath(String sfPathString) throws MojoExecutionException {
-        String oldSfPathFileName = Paths.get(getArtifactsDir(), "sf-classpath").toString();
+        String oldSfPathFileName = Paths.get(getArtifactsDir(), SF_CLASSPATH).toString();
         if (!new File(oldSfPathFileName).exists()) {
             return false;
         }
@@ -134,7 +134,7 @@ public class RunMojo extends DiffMojo {
     }
 
     private boolean hasSameJarChecksum(String cleanSfClassPath) throws MojoExecutionException {
-        String oldChecksumPathFileName = Paths.get(getArtifactsDir(), "jar-checksums").toString();
+        String oldChecksumPathFileName = Paths.get(getArtifactsDir(), JAR_CHECKSUMS).toString();
         boolean noException = true;
         if (!new File(oldChecksumPathFileName).exists()) {
             return false;
@@ -143,12 +143,12 @@ public class RunMojo extends DiffMojo {
             Map<String, String> checksumMap = new HashMap<>();
             String line;
             while ((line = fileReader.readLine()) != null) {
-                String[] elems = line.split(",");
+                String[] elems = line.split(COMMA);
                 checksumMap.put(elems[0], elems[1]);
             }
             String[] jars = cleanSfClassPath.split(File.pathSeparator);
             for (int i = 0; i < jars.length; i++) {
-                String[] elems = Writer.getJarToChecksumMapping(jars[i]).split(",");
+                String[] elems = Writer.getJarToChecksumMapping(jars[i]).split(COMMA);
                 String oldCS = checksumMap.get(elems[0]);
                 if (!elems[1].equals(oldCS)) {
                     return false;
@@ -164,12 +164,12 @@ public class RunMojo extends DiffMojo {
     private String getCleanClassPath(String cp) {
         String[] paths = cp.split(File.pathSeparator);
         StringBuilder sb = new StringBuilder();
-        String classes = File.separator + "target" +  File.separator + "classes";
-        String testClasses = File.separator + "target" + File.separator + "test-classes";
+        String classes = File.separator + TARGET +  File.separator + CLASSES;
+        String testClasses = File.separator + TARGET + File.separator + TEST_CLASSES;
         for (int i = 0; i < paths.length; i++) {
             if (paths[i].contains(classes)
                 || paths[i].contains(testClasses)
-                || paths[i].contains("-SNAPSHOT.jar")) {
+                || paths[i].contains(SNAPSHOT_DOT_JAR)) {
                 continue;
             }
             if (sb.length() == 0) {
