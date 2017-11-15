@@ -21,7 +21,9 @@ import edu.illinois.starts.helpers.Writer;
 import edu.illinois.starts.util.Logger;
 import edu.illinois.starts.util.Pair;
 import org.apache.maven.plugin.MojoExecutionException;
-import org.apache.maven.plugins.annotations.*;
+import org.apache.maven.plugins.annotations.Mojo;
+import org.apache.maven.plugins.annotations.Parameter;
+import org.apache.maven.plugins.annotations.ResolutionScope;
 
 /**
  * Update class and test dependencies.
@@ -53,12 +55,14 @@ public class UpdateMojo extends DiffMojo {
                     + Writer.millsToSeconds(end - start));
         } else {
             Pair<Set<String>, Set<String>> data = computeChangeData();
-            if(data != null) nonAffected = data.getKey();
+            if (data != null) {
+                nonAffected = data.getKey();
+            }
             long end = System.currentTimeMillis();
             Logger.getGlobal().log(Level.FINE, "[PROFILE] computeChangeData(): "
                             + Writer.millsToSeconds(end - start));
         }
-        if(updateDiffChecksums) {
+        if (updateDiffChecksums) {
             updateForNextRun(nonAffected);
         }
     }
