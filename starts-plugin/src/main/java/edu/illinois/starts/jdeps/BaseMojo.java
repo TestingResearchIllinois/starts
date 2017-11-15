@@ -43,7 +43,7 @@ abstract class BaseMojo extends SurefirePlugin implements StartsConstants {
     /**
      * Set this to "false" to not filter out "sun.*" and "java.*" classes from jdeps parsing.
      */
-    @Parameter(property = "filterLib", defaultValue = "false")
+    @Parameter(property = FILTER_LIB, defaultValue = FALSE)
     protected boolean filterLib;
 
     /**
@@ -56,33 +56,33 @@ abstract class BaseMojo extends SurefirePlugin implements StartsConstants {
      * A full list of what we currently support can be found in
      * @see edu.illinois.starts.enums.DependencyFormat
      */
-    @Parameter(property = "depFormat", defaultValue = "ZLC")
+    @Parameter(property = DEP_FORMAT, defaultValue = ZLC)
     protected DependencyFormat depFormat;
 
     /**
      * Path to directory that contains the result of running jdeps on third-party
      * and standard library jars that an application may need, e.g., those in M2_REPO.
      */
-    @Parameter(property = "gCache", defaultValue = "${basedir}${file.separator}jdeps-cache")
+    @Parameter(property = G_CACHE, defaultValue = "${basedir}${file.separator}jdeps-cache")
     protected String graphCache;
 
     /**
      * Set this to "false" to not print the graph obtained from jdeps parsing.
      * When "true" the graph is written to file after the run.
      */
-    @Parameter(property = "printGraph", defaultValue = "true")
+    @Parameter(property = PRINT_GRAPH, defaultValue = TRUE)
     protected boolean printGraph;
 
     /**
      * Output filename for the graph, if printGraph == true.
      */
-    @Parameter(defaultValue = "graph", readonly = true, required = true)
+    @Parameter(defaultValue = GRAPH, readonly = true, required = true)
     protected String graphFile;
 
     /**
      * Log levels as defined in java.util.logging.Level.
      */
-    @Parameter(property = "startsLogging", defaultValue = "CONFIG")
+    @Parameter(property = STARTS_LOGGING, defaultValue = CONFIG)
     protected String loggingLevel;
 
     private Classpath sureFireClassPath;
@@ -96,7 +96,7 @@ abstract class BaseMojo extends SurefirePlugin implements StartsConstants {
             artifactsDir = basedir.getAbsolutePath() + File.separator + STARTS_DIRECTORY_PATH;
             File file = new File(artifactsDir);
             if (!file.mkdirs() && !file.exists()) {
-                throw new MojoExecutionException("I could not create artifacts dir: " + artifactsDir);
+                throw new MojoExecutionException(COULD_NOT_CREATE_ARTIFACTS_DIR_EXCEPTION + artifactsDir);
             }
         }
         return artifactsDir;
@@ -105,13 +105,13 @@ abstract class BaseMojo extends SurefirePlugin implements StartsConstants {
     public void setIncludesExcludes() throws MojoExecutionException {
         long start = System.currentTimeMillis();
         try {
-            Field projectField = AbstractSurefireMojo.class.getDeclaredField("project");
+            Field projectField = AbstractSurefireMojo.class.getDeclaredField(PROJECT);
             projectField.setAccessible(true);
             MavenProject accessedProject = (MavenProject) projectField.get(this);
-            List<String> includes = PomUtil.getFromPom("include", accessedProject);
-            List<String> excludes = PomUtil.getFromPom("exclude", accessedProject);
-            Logger.getGlobal().log(Level.FINEST, "@@Excludes: " + excludes);
-            Logger.getGlobal().log(Level.FINEST,"@@Includes: " + includes);
+            List<String> includes = PomUtil.getFromPom(INCLUDE, accessedProject);
+            List<String> excludes = PomUtil.getFromPom(EXCLUDE, accessedProject);
+            Logger.getGlobal().log(Level.FINEST, EXCLUDES + excludes);
+            Logger.getGlobal().log(Level.FINEST,INCLUDES + includes);
             setIncludes(includes);
             setExcludes(excludes);
         } catch (NoSuchFieldException nsfe) {
@@ -120,7 +120,7 @@ abstract class BaseMojo extends SurefirePlugin implements StartsConstants {
             iae.printStackTrace();
         }
         long end = System.currentTimeMillis();
-        Logger.getGlobal().log(Level.FINE, "[PROFILE] updateForNextRun(setIncludesExcludes): "
+        Logger.getGlobal().log(Level.FINE, PROFILE_UPDATE_FOR_NEXT_RUN_SET_INCLUDES_EXCLUDES
                 + Writer.millsToSeconds(end - start));
     }
 
@@ -128,7 +128,7 @@ abstract class BaseMojo extends SurefirePlugin implements StartsConstants {
         long start = System.currentTimeMillis();
         DefaultScanResult defaultScanResult = null;
         try {
-            Method scanMethod = AbstractSurefireMojo.class.getDeclaredMethod("scanForTestClasses", null);
+            Method scanMethod = AbstractSurefireMojo.class.getDeclaredMethod(SCAN_FOR_TEST_CLASSES, null);
             scanMethod.setAccessible(true);
             defaultScanResult = (DefaultScanResult) scanMethod.invoke(this, null);
         } catch (NoSuchMethodException nsme) {
@@ -139,7 +139,7 @@ abstract class BaseMojo extends SurefirePlugin implements StartsConstants {
             iae.printStackTrace();
         }
         long end = System.currentTimeMillis();
-        Logger.getGlobal().log(Level.FINE, "[PROFILE] " + methodName + "(getTestClasses): "
+        Logger.getGlobal().log(Level.FINE, PROFILE + methodName + GET_TEST_CLASSES
                 + Writer.millsToSeconds(end - start));
         return (List<String>) defaultScanResult.getFiles();
     }
@@ -148,12 +148,12 @@ abstract class BaseMojo extends SurefirePlugin implements StartsConstants {
         long start = System.currentTimeMillis();
         ClassLoader loader = null;
         try {
-            loader = sfClassPath.createClassLoader(false, false, "MyRole");
+            loader = sfClassPath.createClassLoader(false, false, MY_ROLE);
         } catch (SurefireExecutionException see) {
             see.printStackTrace();
         }
         long end = System.currentTimeMillis();
-        Logger.getGlobal().log(Level.FINE, "[PROFILE] updateForNextRun(createClassLoader): "
+        Logger.getGlobal().log(Level.FINE, PROFILE_UPDATE_FOR_NEXT_RUN_CREATE_CLASS_LOADER
                 + Writer.millsToSeconds(end - start));
         return loader;
     }
@@ -198,9 +198,9 @@ abstract class BaseMojo extends SurefirePlugin implements StartsConstants {
                 drre.printStackTrace();
             }
         }
-        Logger.getGlobal().log(Level.FINEST, "SF-CLASSPATH: " + sureFireClassPath.getClassPath());
+        Logger.getGlobal().log(Level.FINEST, SF_CLASSPATH_COLON + sureFireClassPath.getClassPath());
         long end = System.currentTimeMillis();
-        Logger.getGlobal().log(Level.FINE, "[PROFILE] updateForNextRun(getSureFireClassPath): "
+        Logger.getGlobal().log(Level.FINE, PROFILE_UPDATE_FOR_NEXT_RUN_GET_SUREFIRE_CLASSPATH
                 + Writer.millsToSeconds(end - start));
         return sureFireClassPath;
     }
@@ -213,7 +213,7 @@ abstract class BaseMojo extends SurefirePlugin implements StartsConstants {
         // We store the jdk-graphs at the root of "jdepsCache" directory, with
         // jdk.graph being the file that merges all the graphs for all standard
         // library jars.
-        File libraryFile = new File(jdepsCache, "jdk.graph");
+        File libraryFile = new File(jdepsCache, JDK_DOT_GRAPH);
         // Create the Loadables object early so we can use its helpers
         Loadables loadables = new Loadables(classesToAnalyze, artifactsDir, sfPathString, filterLib, jdepsCache);
         // Surefire Classpath object is easier to iterate over without de-constructing
@@ -241,22 +241,22 @@ abstract class BaseMojo extends SurefirePlugin implements StartsConstants {
                 : RTSUtil.computeAffectedTests(new HashSet<>(classesToAnalyze),
                 nonAffected, transitiveClosure);
         long end = System.currentTimeMillis();
-        Logger.getGlobal().log(Level.FINE, "[PROFILE] prepareForNextRun(loadMoreEdges): "
+        Logger.getGlobal().log(Level.FINE, PROFILE_PREPARE_FOR_NEXT_RUN_LOAD_MORE_EDGES
                 + Writer.millsToSeconds(loadMoreEdges - start));
-        Logger.getGlobal().log(Level.FINE, "[PROFILE] prepareForNextRun(loadM2EdgesFromCache): "
+        Logger.getGlobal().log(Level.FINE, PROFILE_PREPARE_FOR_NEXT_RUN_LOAD_M2_EDGES_FROM_CACHE
                 + Writer.millsToSeconds(loadM2EdgesFromCache - loadMoreEdges));
-        Logger.getGlobal().log(Level.FINE, "[PROFILE] prepareForNextRun(createLoadable): "
+        Logger.getGlobal().log(Level.FINE, PROFILE_PREPARE_FOR_NEXT_RUN_CREATE_LOADABLE
                 + Writer.millsToSeconds(createLoadables - loadM2EdgesFromCache));
-        Logger.getGlobal().log(Level.FINE, "[PROFILE] prepareForNextRun(computeAffectedTests): "
+        Logger.getGlobal().log(Level.FINE, PROFILE_PREPARE_FOR_NEXT_RUN_COMPUTE_AFFECTED_TESTS
                 + Writer.millsToSeconds(end - createLoadables));
-        Logger.getGlobal().log(Level.FINE, "[PROFILE] updateForNextRun(prepareForNextRun(TOTAL)): "
+        Logger.getGlobal().log(Level.FINE, PROFILE_UPDATE_AND_PREPARE_FOR_NEXT_RUN_TOTAL
                 + Writer.millsToSeconds(end - start));
         return new Result(transitiveClosure, loadables.getGraph(), affected, loadables.getUnreached());
     }
 
     protected List<String> getAllClasses() {
-        DirectoryScanner testScanner = new DirectoryScanner(getTestClassesDirectory(), new TestListResolver("*"));
-        DirectoryScanner classScanner = new DirectoryScanner(getClassesDirectory(), new TestListResolver("*"));
+        DirectoryScanner testScanner = new DirectoryScanner(getTestClassesDirectory(), new TestListResolver(STAR));
+        DirectoryScanner classScanner = new DirectoryScanner(getClassesDirectory(), new TestListResolver(STAR));
         DefaultScanResult scanResult = classScanner.scan().append(testScanner.scan());
         return scanResult.getFiles();
     }

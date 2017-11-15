@@ -25,7 +25,7 @@ import org.ekstazi.util.Types;
 /**
  * Utility methods for loading several things from disk.
  */
-public class Loadables {
+public class Loadables implements StartsConstants {
     private static final Logger LOGGER = Logger.getGlobal();
 
     Map<String, Set<String>> deps;
@@ -67,7 +67,7 @@ public class Loadables {
         List<String> localPaths = new ArrayList<>();
         if (surefireClasspath != null) {
             for (String path : surefireClasspath.getClassPath()) {
-                if (!path.endsWith(".jar") && new File(path).exists()) {
+                if (!path.endsWith(JAR_TYPE_NAME) && new File(path).exists()) {
                     localPaths.add(path);
                 }
             }
@@ -78,7 +78,7 @@ public class Loadables {
     public Loadables create(List<String> moreEdges, Classpath sfClassPath,
                             boolean computeUnreached) {
         setSurefireClasspath(sfClassPath);
-        LOGGER.log(Level.FINEST, "More: " + moreEdges.size());
+        LOGGER.log(Level.FINEST, MORE + moreEdges.size());
         extraEdges = moreEdges;
         long startTime = System.currentTimeMillis();
         deps = getDepMap(sfPathString, classesToAnalyze);
@@ -89,20 +89,20 @@ public class Loadables {
         long transitiveClosureTime = System.currentTimeMillis();
         if (computeUnreached) {
             unreached = findUnreached(deps, transitiveClosure);
-            LOGGER.log(Level.INFO, "UNREACHED(count): " + unreached.size());
+            LOGGER.log(Level.INFO, UNREACHED_COUNT + unreached.size());
         }
         long findUnreachedTime = System.currentTimeMillis();
         long endTime = System.currentTimeMillis();
-        LOGGER.log(Level.FINE, "[PROFILE] createLoadable(runJDeps): " + Writer.millsToSeconds(jdepsTime - startTime));
-        LOGGER.log(Level.FINE, "[PROFILE] createLoadable(buildGraph): "
+        LOGGER.log(Level.FINE, PROFILE_CREATE_LOADABLE_RUNJDEPS + Writer.millsToSeconds(jdepsTime - startTime));
+        LOGGER.log(Level.FINE, PROFILE_CREATE_LOADABLE_BUILDGRAPH
                 + Writer.millsToSeconds(graphBuildingTime - jdepsTime));
-        LOGGER.log(Level.FINE, "[PROFILE] createLoadable(transitiveClosure): "
+        LOGGER.log(Level.FINE, PROFILE_CREATE_LOADABLE_TRANSITIVECLOSURE
                 + Writer.millsToSeconds(transitiveClosureTime - graphBuildingTime));
-        LOGGER.log(Level.FINE, "[PROFILE] createLoadable(findUnreached): "
+        LOGGER.log(Level.FINE, PROFILE_CREATE_LOADABLE_FINDUNREACHED
                 + Writer.millsToSeconds(endTime - findUnreachedTime));
-        LOGGER.log(Level.FINE, "[PROFILE] createLoadable(TOTAL): " + Writer.millsToSeconds(endTime - startTime));
-        LOGGER.log(Level.INFO, "STARTS:Nodes: " + graph.getVertices().size());
-        LOGGER.log(Level.INFO, "STARTS:Edges: " + graph.getEdges().size());
+        LOGGER.log(Level.FINE, PROFILE_CREATE_LOADABLE_TOTAL + Writer.millsToSeconds(endTime - startTime));
+        LOGGER.log(Level.INFO, STARTS_NODES + graph.getVertices().size());
+        LOGGER.log(Level.INFO, STARTS_EDGES + graph.getEdges().size());
         return this;
     }
 
@@ -130,7 +130,7 @@ public class Loadables {
                 allClasses.add(loc);
             }
         }
-        LOGGER.log(Level.INFO, "ALL(count): " + allClasses.size());
+        LOGGER.log(Level.INFO, ALL_COUNT + allClasses.size());
         Set<String> reached = new HashSet<>(testDeps.keySet());
         for (String test : testDeps.keySet()) {
             reached.addAll(testDeps.get(test));
@@ -170,12 +170,12 @@ public class Loadables {
         }
         List<String> localPaths = getClasspathWithNoJars();
         if (localPaths.isEmpty()) {
-            throw new IllegalArgumentException("JDEPS cannot run with an empty classpath.");
+            throw new IllegalArgumentException(JDEPS_CANNOT_RUN_WITH_EMPTY_CLASSPATH_EXCEPTION);
         }
         String jdepsClassPath;
         if (!cache.exists() || (cache.isDirectory() && cache.list().length == 0)) {
             //There is no cache of jdeps graphs, so we want to run jdeps recursively with the entire surefire classpath
-            LOGGER.log(Level.WARNING, "Should jdeps cache really be empty? Running in recursive mode.");
+            LOGGER.log(Level.WARNING, JDEPS_CACHE_EMPTY_RUNNING_IN_RECURSIVE_MODE_WARNING);
             args.add("-R");
             jdepsClassPath = pathToUse;
         } else {
@@ -183,19 +183,19 @@ public class Loadables {
         }
         args.addAll(Arrays.asList("-cp", jdepsClassPath));
         args.addAll(localPaths);
-        LOGGER.log(Level.FINEST, "JDEPS CMD: " + args);
+        LOGGER.log(Level.FINEST, JDEPS_CMD + args);
         Map<String, Set<String>> depMap = RTSUtil.runJdeps(args);
         if (LOGGER.getLoggingLevel().intValue() == Level.FINEST.intValue()) {
-            Writer.writeMapToFile(depMap, artifactsDir + File.separator + "jdeps-out");
+            Writer.writeMapToFile(depMap, artifactsDir + File.separator + JDEPS_OUT);
         }
         return depMap;
     }
 
     private void addEdgesToGraphBuilder(DirectedGraphBuilder<String> builder, List<String> edges) {
         for (String edge : edges) {
-            String[] parts = edge.split(" ");
+            String[] parts = edge.split(WHITE_SPACE);
             if (parts.length != 2) {
-                LOGGER.log(Level.SEVERE, "@@BrokenEdge: " + edge);
+                LOGGER.log(Level.SEVERE, BROKEN_EDGE + edge);
                 continue;
             }
             String src = parts[0].intern();

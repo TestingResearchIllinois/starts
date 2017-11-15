@@ -10,17 +10,17 @@ import java.net.URLClassLoader;
 /**
  * This class is duplicated from Ekstazi, with minor changes.
  */
-public final class AgentLoader {
-    private static final String TOOLS_JAR_NAME = "tools.jar";
-    private static final String CLASSES_JAR_NAME = "classes.jar";
-    private static final String AGENT_INIT = AgentLoader.class.getName() + " Initialized";
+public final class AgentLoader implements StartsConstants {
+    private static final String TOOLS_JAR_NAME = TOOLS_DOT_JAR;
+    private static final String CLASSES_JAR_NAME = CLASSES_DOT_JAR;
+    private static final String AGENT_INIT = AgentLoader.class.getName() + INITIALIZED;
 
     public static boolean loadDynamicAgent() {
         try {
             if (System.getProperty(AGENT_INIT) != null) {
                 return true;
             }
-            System.setProperty(AGENT_INIT, "");
+            System.setProperty(AGENT_INIT, BLANK);
 
             URL agentJarURL = AbstractMojoInterceptor.extractJarURL(JavaAgent.class);
             return loadAgent(agentJarURL);
@@ -54,42 +54,42 @@ public final class AgentLoader {
     }
 
     private static Method getAttachMethod(Class<?> vc) throws SecurityException, NoSuchMethodException {
-        return vc.getMethod("attach", new Class<?>[]{String.class});
+        return vc.getMethod(ATTACH, new Class<?>[]{String.class});
     }
 
     private static Method getLoadAgentMethod(Class<?> vc) throws SecurityException, NoSuchMethodException {
-        return vc.getMethod("loadAgent", new Class[]{String.class});
+        return vc.getMethod(LOAD_AGENT, new Class[]{String.class});
     }
 
     private static Method getDetachMethod(Class<?> vc) throws SecurityException, NoSuchMethodException {
-        return vc.getMethod("detach");
+        return vc.getMethod(DETACH);
     }
 
     private static Class<?> loadVirtualMachine(URL[] urls) throws Exception {
         URLClassLoader loader = new URLClassLoader(urls, ClassLoader.getSystemClassLoader());
-        return loader.loadClass("com.sun.tools.attach.VirtualMachine");
+        return loader.loadClass(VIRTUALMACHINE_ATTACH_API_CLASS);
     }
 
     private static String getPID() {
         String vmName = ManagementFactory.getRuntimeMXBean().getName();
-        return vmName.substring(0, vmName.indexOf("@"));
+        return vmName.substring(0, vmName.indexOf(AT));
     }
 
     private static URL findToolsJar() throws MalformedURLException {
-        String javaHome = System.getProperty("java.home");
+        String javaHome = System.getProperty(JAVA_DOT_HOME);
         File javaHomeFile = new File(javaHome);
-        File tjf = new File(javaHomeFile, "lib" + File.separator + TOOLS_JAR_NAME);
+        File tjf = new File(javaHomeFile, LIB + File.separator + TOOLS_JAR_NAME);
 
         if (!tjf.exists()) {
-            tjf = new File(System.getenv("java_home"), "lib" + File.separator + TOOLS_JAR_NAME);
+            tjf = new File(System.getenv(JAVA_HOME), LIB + File.separator + TOOLS_JAR_NAME);
         }
 
-        if (!tjf.exists() && javaHomeFile.getAbsolutePath().endsWith(File.separator + "jre")) {
+        if (!tjf.exists() && javaHomeFile.getAbsolutePath().endsWith(File.separator + JRE)) {
             javaHomeFile = javaHomeFile.getParentFile();
-            tjf = new File(javaHomeFile, "lib" + File.separator + TOOLS_JAR_NAME);
+            tjf = new File(javaHomeFile, LIB + File.separator + TOOLS_JAR_NAME);
         }
 
-        if (!tjf.exists() && isMac() && javaHomeFile.getAbsolutePath().endsWith(File.separator + "Home")) {
+        if (!tjf.exists() && isMac() && javaHomeFile.getAbsolutePath().endsWith(File.separator + HOME)) {
             javaHomeFile = javaHomeFile.getParentFile();
             tjf = new File(javaHomeFile, "Classes" + File.separator + CLASSES_JAR_NAME);
         }
@@ -98,6 +98,6 @@ public final class AgentLoader {
     }
 
     private static boolean isMac() {
-        return System.getProperty("os.name").toLowerCase().indexOf("mac") >= 0;
+        return System.getProperty(OS_DOT_NAME).toLowerCase().indexOf(MAC) >= 0;
     }
 }

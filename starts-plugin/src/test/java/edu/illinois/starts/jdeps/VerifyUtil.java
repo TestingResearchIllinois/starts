@@ -15,7 +15,7 @@ import org.junit.Assert;
 /**
  * Util methods for scripts that verify results of integration tests.
  */
-public class VerifyUtil {
+public class VerifyUtil implements StartsConstants {
     private List<String> buildLog;
 
     public VerifyUtil(File buildLog) throws IOException {
@@ -24,9 +24,9 @@ public class VerifyUtil {
 
     public void assertCorrectlyAffected(String value) throws IOException {
         for (String line : buildLog) {
-            if (line.contains("STARTS:AffectedTests")) {
-                String[] affectedTests = line.split(": ");
-                Assert.assertTrue("Number of affected tests expected: " + value, affectedTests[2].equals(value));
+            if (line.contains(STARTS_AFFECTED_TESTS)) {
+                String[] affectedTests = line.split(COLON);
+                Assert.assertTrue(NUMBER_OF_AFFECTED_TESTS_EXPECTED + value, affectedTests[2].equals(value));
             }
         }
     }

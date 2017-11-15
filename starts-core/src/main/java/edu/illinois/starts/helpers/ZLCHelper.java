@@ -27,8 +27,8 @@ import org.ekstazi.util.Types;
 /**
  * Utility methods for dealing with the .zlc format.
  */
-public class ZLCHelper {
-    public static final String zlcFile = "deps.zlc";
+public class ZLCHelper implements StartsConstants {
+    public static final String zlcFile = ZLC_FILE;
     public static final String STAR_FILE = "file:*";
     private static final Logger LOGGER = Logger.getGlobal();
     private static Map<String, ZLCData> zlcDataMap;
@@ -73,7 +73,7 @@ public class ZLCHelper {
 //            Writer.writeToFile(zlcData, zlcFile, artifactsDir);
 //        }
 //        long end = System.currentTimeMillis();
-//        System.out.println("[TIME]UPDATING CHECKSUMS: " + (end - start) + "ms");
+//        System.out.println(TIME_UPDATING_CHECKSUMS + (end - start) + MS);
 //    }
 
     public static void updateZLCFile(Map<String, Set<String>> testDeps, ClassLoader loader,
@@ -83,7 +83,7 @@ public class ZLCHelper {
         List<ZLCData> zlc = createZLCData(testDeps, loader);
         Writer.writeToFile(zlc, zlcFile, artifactsDir);
         long end = System.currentTimeMillis();
-        LOGGER.log(Level.FINE, "[PROFILE] updateForNextRun(updateZLCFile): " + Writer.millsToSeconds(end - start));
+        LOGGER.log(Level.FINE, PROFILE_UPDATE_FOR_NEXT_RUN_UPDATEZLCFILE + Writer.millsToSeconds(end - start));
     }
 
     public static List<ZLCData> createZLCData(Map<String, Set<String>> testDeps, ClassLoader loader) {
@@ -116,7 +116,7 @@ public class ZLCHelper {
             zlcData.add(new ZLCData(url, checksum, tests));
         }
         long end = System.currentTimeMillis();
-        LOGGER.log(Level.FINEST, "[TIME]CREATING ZLC FILE: " + (end - start) + "ms");
+        LOGGER.log(Level.FINEST, TIME_CREATING_ZLC_FILE + (end - start) + MS);
         return zlcData;
     }
 
@@ -124,7 +124,7 @@ public class ZLCHelper {
         long start = System.currentTimeMillis();
         File zlc = new File(artifactsDir, zlcFile);
         if (!zlc.exists()) {
-            LOGGER.log(Level.FINEST, "@NoExistingZLCFile. First Run?");
+            LOGGER.log(Level.FINEST, NOEXISTING_ZLCFILE_FIRST_RUN);
             return null;
         }
         Set<String> changedClasses = new HashSet<>();
@@ -135,7 +135,7 @@ public class ZLCHelper {
         try {
             List<String> zlcLines = Files.readAllLines(zlc.toPath(), Charset.defaultCharset());
             String firstLine = zlcLines.get(0);
-            String space = " ";
+            String space = WHITE_SPACE;
 
             // check whether the first line is for *
             if (firstLine.startsWith(STAR_FILE)) {
@@ -158,7 +158,7 @@ public class ZLCHelper {
                 }
                 if (newCheckSum.equals("-1")) {
                     // a class was deleted or auto-generated, no need to track it in zlc
-                    LOGGER.log(Level.FINEST, "Ignoring: " + url);
+                    LOGGER.log(Level.FINEST, IGNORING + url);
                     continue;
                 }
                 ZLCData data = new ZLCData(url, newCheckSum, tests);
@@ -173,12 +173,12 @@ public class ZLCHelper {
         }
         nonAffected.removeAll(affected);
         long end = System.currentTimeMillis();
-        LOGGER.log(Level.FINEST, "[TIME]COMPUTING NON-AFFECTED: " + (end - start) + "ms");
+        LOGGER.log(Level.FINEST, TIME_COMPUTING_NON_AFFECTED + (end - start) + MS);
         return new Pair<>(nonAffected, changedClasses);
     }
 
     private static Set<String> fromCSV(String tests) {
-        return new HashSet<>(Arrays.asList(tests.split(",")));
+        return new HashSet<>(Arrays.asList(tests.split(COMMA)));
     }
 
     public static Set<String> getExistingClasses(String artifactsDir) {
@@ -186,21 +186,21 @@ public class ZLCHelper {
         long start = System.currentTimeMillis();
         File zlc = new File(artifactsDir, zlcFile);
         if (!zlc.exists()) {
-            LOGGER.log(Level.FINEST, "@NoExistingZLCFile. First Run?");
+            LOGGER.log(Level.FINEST, NOEXISTING_ZLCFILE_FIRST_RUN);
             return existingClasses;
         }
         try {
             List<String> zlcLines = Files.readAllLines(zlc.toPath(), Charset.defaultCharset());
             for (String line : zlcLines) {
-                if (line.startsWith("file")) {
-                    existingClasses.add(Writer.urlToFQN(line.split(" ")[0]));
+                if (line.startsWith(FILE_NAME)) {
+                    existingClasses.add(Writer.urlToFQN(line.split(WHITE_SPACE)[0]));
                 }
             }
         } catch (IOException ioe) {
             ioe.printStackTrace();
         }
         long end = System.currentTimeMillis();
-        LOGGER.log(Level.FINEST, "[TIME]COMPUTING EXISTING CLASSES: " + (end - start) + "ms");
+        LOGGER.log(Level.FINEST, TIME_COMPUTING_EXISTING_CLASSES + (end - start) + MS);
         return existingClasses;
     }
 }

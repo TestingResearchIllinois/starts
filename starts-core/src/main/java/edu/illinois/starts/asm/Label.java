@@ -39,7 +39,7 @@ package edu.illinois.starts.asm;
  *
  * @author Eric Bruneton
  */
-public class Label {
+public class Label implements StartsConstants{
 
     /**
      * Indicates if this label is only used for debug attributes. Such a label
@@ -273,7 +273,7 @@ public class Label {
     public int getOffset() {
         if ((status & RESOLVED) == 0) {
             throw new IllegalStateException(
-                    "Label offset position has not been resolved yet");
+            		LABEL_OFFSET_NOT_RESOLVED_EXCEPTION);
         }
         return position;
     }

@@ -22,10 +22,10 @@ import org.ekstazi.check.AffectedChecker;
 /**
  * Utility methods for interacting with Ekstazi.
  */
-public class EkstaziHelper {
+public class EkstaziHelper implements StartsConstants {
     public static final Logger LOGGER = Logger.getGlobal();
-    public static String notFirstRunMarker = "not-first-run.clz";
-    public static String lineSeparator = System.getProperty("line.separator");
+    public static String notFirstRunMarker = NOT_FIRST_RUN_CLZ;
+    public static String lineSeparator = System.getProperty(LINE_SEPARATOR);
 
     public static Pair<Set<String>, Set<String>> getNonAffectedTests(String artifactsDir) {
         long start = System.currentTimeMillis();
@@ -48,7 +48,7 @@ public class EkstaziHelper {
         Set<String> changed = processEkstaziDebugInfo(baosErr, artifactsDir);
         Set<String> nonAffected = new HashSet<>(Arrays.asList(baosOut.toString().split(lineSeparator)));
         long end = System.currentTimeMillis();
-        LOGGER.log(Level.FINEST, "[TIME]COMPUTING NON-AFFECTED: " + (end - start) + "ms");
+        LOGGER.log(Level.FINEST, TIME_COMPUTING_NON_AFFECTED + (end - start) + MS);
         return new Pair<>(nonAffected, changed);
     }
 
@@ -58,7 +58,7 @@ public class EkstaziHelper {
         long end = System.currentTimeMillis();
         Set<String> nonAffectedTests = toFQN(new HashSet<>(nonAffectedFiles));
         Set<String> changed = new HashSet<>();
-        LOGGER.log(Level.FINEST, "[TIME]COMPUTING NON-AFFECTED(2): " + (end - start) + "ms");
+        LOGGER.log(Level.FINEST, TIME_COMPUTING_NON_AFFECTED_2 + (end - start) + MS);
         return new Pair<>(nonAffectedTests, changed);
     }
 
@@ -80,9 +80,9 @@ public class EkstaziHelper {
         if (LOGGER.getLoggingLevel().intValue() > Level.FINEST.intValue()) {
             return changed;
         }
-        String outFilename = artifactsDir + File.separator + "changed-classes";
+        String outFilename = artifactsDir + File.separator + CHANGED_CLASSES;
         for (String line : Arrays.asList(baosErr.toString().split(lineSeparator))) {
-            String ekstaziDiffMarker = "::Diff:: ";
+            String ekstaziDiffMarker = DIFF_MARKER;
             if (line.contains(ekstaziDiffMarker)) {
                 changed.add(line.split(ekstaziDiffMarker)[1]);
             }
@@ -98,18 +98,18 @@ public class EkstaziHelper {
     }
 
     private static String getRootDirOption(File basedir) {
-        return "root.dir=" + getRootDirURI(basedir);
+        return ROOT_DOT_DIR + getRootDirURI(basedir);
     }
 
     private static String getRootDirURI(File rootDir) {
-        String artifactsDir = rootDir.getAbsolutePath() + File.separator + ".starts";
+        String artifactsDir = rootDir.getAbsolutePath() + File.separator + DOT_STARTS;
         return (new File(artifactsDir)).toURI().toString();
     }
 
     private static Set<String> toFQN(Set<String> diff) {
         Set<String> diffFQNs = new HashSet<>();
         for (String d : diff) {
-            diffFQNs.add(d.replace(".java", "").replace("/", "."));
+            diffFQNs.add(d.replace(JAVA_TYPE_NAME, BLANK).replace(SLASH, DOT));
         }
         return diffFQNs;
     }

@@ -37,7 +37,7 @@ package edu.illinois.starts.asm;
  * @author Remi Forax
  * @author Eric Bruneton
  */
-public final class Handle {
+public final class Handle implements StartsConstants {
 
     /**
      * The kind of field or method designated by this Handle. Should be
@@ -166,6 +166,6 @@ public final class Handle {
      */
     @Override
     public String toString() {
-        return owner + '.' + name + desc + " (" + tag + ')';
+        return owner + '.' + name + desc + WHITE_SPACE + LEFT_PARENTHESIS + tag + ')';
     }
 }

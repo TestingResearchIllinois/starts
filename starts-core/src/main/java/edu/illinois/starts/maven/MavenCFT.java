@@ -31,7 +31,7 @@ public final class MavenCFT implements ClassFileTransformer, StartsConstants {
         public void visitCode() {
             mv.visitVarInsn(Opcodes.ALOAD, 0);
             mv.visitMethodInsn(Opcodes.INVOKESTATIC, mavenInterceptorName, mavenMethodName,
-                    mavenMethodDesc.replace("(", "(Ljava/lang/Object;"), false);
+                    mavenMethodDesc.replace(LEFT_PARENTHESIS, "(Ljava/lang/Object;"), false);
             mv.visitCode();
         }
     }

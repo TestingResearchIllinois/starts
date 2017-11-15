@@ -35,7 +35,7 @@ package edu.illinois.starts.asm;
  *
  * @author Eric Bruneton
  */
-final class Frame {
+final class Frame implements StartsConstants {
 
     /*
      * Frames are computed in a two steps process: during the visit of each
@@ -911,17 +911,17 @@ final class Frame {
                 push(TOP);
                 break;
             case ClassWriter.CLASS:
-                push(OBJECT | cw.addType("java/lang/Class"));
+                push(OBJECT | cw.addType(CLASS_CLASS));
                 break;
             case ClassWriter.STR:
-                push(OBJECT | cw.addType("java/lang/String"));
+                push(OBJECT | cw.addType(STRING_CLASS));
                 break;
             case ClassWriter.MTYPE:
-                push(OBJECT | cw.addType("java/lang/invoke/MethodType"));
+                push(OBJECT | cw.addType(METHODTYPE_CLASS));
                 break;
             // case ClassWriter.HANDLE_BASE + [1..9]:
             default:
-                push(OBJECT | cw.addType("java/lang/invoke/MethodHandle"));
+                push(OBJECT | cw.addType(METHODHANDLE_CLASS));
             }
             break;
         case Opcodes.ALOAD:
@@ -1177,7 +1177,7 @@ final class Frame {
         case Opcodes.JSR:
         case Opcodes.RET:
             throw new RuntimeException(
-                    "JSR/RET are not supported with computeFrames option");
+            		JSR_RET_NOT_SUPPORTED_EXCEPTION);
         case Opcodes.GETSTATIC:
             push(cw, item.strVal3);
             break;
@@ -1429,7 +1429,7 @@ final class Frame {
                     // if u and t are array types, but not with the same element
                     // type, merge(u,t) = dim(u) - 1 | java/lang/Object
                     int vdim = ELEMENT_OF + (u & DIM);
-                    v = vdim | OBJECT | cw.addType("java/lang/Object");
+                    v = vdim | OBJECT | cw.addType(OBJECT_CLASS);
                 }
             } else if ((t & BASE_KIND) == OBJECT || (t & DIM) != 0) {
                 // if t is any other reference or array type, the merged type
@@ -1441,7 +1441,7 @@ final class Frame {
                 int udim = (((u & DIM) == 0 || (u & BASE_KIND) == OBJECT) ? 0
                         : ELEMENT_OF) + (u & DIM);
                 v = Math.min(tdim, udim) | OBJECT
-                        | cw.addType("java/lang/Object");
+                        | cw.addType(OBJECT_CLASS);
             } else {
                 // if t is any other type, merge(u,t)=TOP
                 v = TOP;

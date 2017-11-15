@@ -35,7 +35,7 @@ package edu.illinois.starts.asm;
  *
  * @author Eric Bruneton
  */
-final class FieldWriter extends FieldVisitor {
+final class FieldWriter extends FieldVisitor implements StartsConstants {
 
     /**
      * The class writer to which this field must be added.
@@ -207,38 +207,38 @@ final class FieldWriter extends FieldVisitor {
     int getSize() {
         int size = 8;
         if (value != 0) {
-            cw.newUTF8("ConstantValue");
+            cw.newUTF8(CONSTANT_VALUE);
             size += 8;
         }
         if ((access & Opcodes.ACC_SYNTHETIC) != 0) {
             if ((cw.version & 0xFFFF) < Opcodes.V1_5
                     || (access & ClassWriter.ACC_SYNTHETIC_ATTRIBUTE) != 0) {
-                cw.newUTF8("Synthetic");
+                cw.newUTF8(SYNTHETIC);
                 size += 6;
             }
         }
         if ((access & Opcodes.ACC_DEPRECATED) != 0) {
-            cw.newUTF8("Deprecated");
+            cw.newUTF8(DEPRECATED);
             size += 6;
         }
         if (ClassReader.SIGNATURES && signature != 0) {
-            cw.newUTF8("Signature");
+            cw.newUTF8(SIGNATURE);
             size += 8;
         }
         if (ClassReader.ANNOTATIONS && anns != null) {
-            cw.newUTF8("RuntimeVisibleAnnotations");
+            cw.newUTF8(RUNTIME_VISIBLE_ANNOTATIONS);
             size += 8 + anns.getSize();
         }
         if (ClassReader.ANNOTATIONS && ianns != null) {
-            cw.newUTF8("RuntimeInvisibleAnnotations");
+            cw.newUTF8(RUNTIME_INVISIBLE_ANNOTATIONS);
             size += 8 + ianns.getSize();
         }
         if (ClassReader.ANNOTATIONS && tanns != null) {
-            cw.newUTF8("RuntimeVisibleTypeAnnotations");
+            cw.newUTF8(RUNTIME_VISIBLE_TYPE_ANNOTATIONS);
             size += 8 + tanns.getSize();
         }
         if (ClassReader.ANNOTATIONS && itanns != null) {
-            cw.newUTF8("RuntimeInvisibleTypeAnnotations");
+            cw.newUTF8(RUNTIME_INVISIBLE_TYPE_ANNOTATIONS);
             size += 8 + itanns.getSize();
         }
         if (attrs != null) {
@@ -291,36 +291,36 @@ final class FieldWriter extends FieldVisitor {
         }
         out.putShort(attributeCount);
         if (value != 0) {
-            out.putShort(cw.newUTF8("ConstantValue"));
+            out.putShort(cw.newUTF8(CONSTANT_VALUE));
             out.putInt(2).putShort(value);
         }
         if ((access & Opcodes.ACC_SYNTHETIC) != 0) {
             if ((cw.version & 0xFFFF) < Opcodes.V1_5
                     || (access & ClassWriter.ACC_SYNTHETIC_ATTRIBUTE) != 0) {
-                out.putShort(cw.newUTF8("Synthetic")).putInt(0);
+                out.putShort(cw.newUTF8(SYNTHETIC)).putInt(0);
             }
         }
         if ((access & Opcodes.ACC_DEPRECATED) != 0) {
-            out.putShort(cw.newUTF8("Deprecated")).putInt(0);
+            out.putShort(cw.newUTF8(DEPRECATED)).putInt(0);
         }
         if (ClassReader.SIGNATURES && signature != 0) {
-            out.putShort(cw.newUTF8("Signature"));
+            out.putShort(cw.newUTF8(SIGNATURE));
             out.putInt(2).putShort(signature);
         }
         if (ClassReader.ANNOTATIONS && anns != null) {
-            out.putShort(cw.newUTF8("RuntimeVisibleAnnotations"));
+            out.putShort(cw.newUTF8(RUNTIME_VISIBLE_ANNOTATIONS));
             anns.put(out);
         }
         if (ClassReader.ANNOTATIONS && ianns != null) {
-            out.putShort(cw.newUTF8("RuntimeInvisibleAnnotations"));
+            out.putShort(cw.newUTF8(RUNTIME_INVISIBLE_ANNOTATIONS));
             ianns.put(out);
         }
         if (ClassReader.ANNOTATIONS && tanns != null) {
-            out.putShort(cw.newUTF8("RuntimeVisibleTypeAnnotations"));
+            out.putShort(cw.newUTF8(RUNTIME_VISIBLE_TYPE_ANNOTATIONS));
             tanns.put(out);
         }
         if (ClassReader.ANNOTATIONS && itanns != null) {
-            out.putShort(cw.newUTF8("RuntimeInvisibleTypeAnnotations"));
+            out.putShort(cw.newUTF8(RUNTIME_INVISIBLE_TYPE_ANNOTATIONS));
             itanns.put(out);
         }
         if (attrs != null) {

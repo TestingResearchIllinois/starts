@@ -28,19 +28,19 @@ import org.apache.maven.surefire.booter.Classpath;
  */
 @Mojo(name = "impacted", requiresDirectInvocation = true, requiresDependencyResolution = ResolutionScope.TEST)
 @Execute(phase = LifecyclePhase.TEST_COMPILE)
-public class ImpactedMojo extends DiffMojo {
+public class ImpactedMojo extends DiffMojo implements StartsConstants {
     /**
      * Set this to "true" to update test dependencies on disk. The default value of "false"
      * is useful for "dry runs" where one may want to see the diff without updating
      * the test dependencies.
      */
-    @Parameter(property = "updateImpactedChecksums", defaultValue = "false")
+    @Parameter(property = UPDATE_IMPACTED_CHECKSUMS, defaultValue = FALSE)
     private boolean updateImpactedChecksums;
 
     /**
      * Set to "true" to print newly-added classes: classes in the program that were not in the previous version.
      */
-    @Parameter(property = "trackNewClasses", defaultValue = "false")
+    @Parameter(property = TRACK_NEW_CLASSES, defaultValue = FALSE)
     private boolean trackNewClasses;
     private Logger logger;
 
@@ -51,7 +51,7 @@ public class ImpactedMojo extends DiffMojo {
         // 0. Find all classes in program
         List<String> allClasses = getAllClasses();
         if (allClasses.isEmpty()) {
-            logger.log(Level.INFO, "There are no .class files in this module.");
+            logger.log(Level.INFO, THERE_ARE_NO_CLASS_FILES_IN_THIS_MODULE);
             return;
         }
         Set<String>  impacted = new HashSet<>(allClasses);
@@ -62,23 +62,23 @@ public class ImpactedMojo extends DiffMojo {
         // 1b. Remove nonAffected from all classes to get classes impacted by the change
         impacted.removeAll(nonAffected);
 
-        logger.log(Level.FINEST, "CHANGED: " + changed.toString());
-        logger.log(Level.FINEST, "IMPACTED: " + impacted.toString());
+        logger.log(Level.FINEST, CHANGED + changed.toString());
+        logger.log(Level.FINEST, IMPACTED + impacted.toString());
         // 2. Optionally find newly-added classes
         if (trackNewClasses) {
             Set<String> newClasses = new HashSet<>(allClasses);
             Set<String> oldClasses = ZLCHelper.getExistingClasses(getArtifactsDir());
             newClasses.removeAll(oldClasses);
-            logger.log(Level.FINEST, "NEWLY-ADDED: " + newClasses.toString());
-            Writer.writeToFile(newClasses, "new-classes", getArtifactsDir());
+            logger.log(Level.FINEST, NEWLY_ADDED + newClasses.toString());
+            Writer.writeToFile(newClasses, NEW_CLASSES, getArtifactsDir());
         }
         // 3. Optionally update ZLC file for next run, using all classes in the SUT
         if (updateImpactedChecksums) {
             updateForNextRun(allClasses);
         }
         // 4. Print impacted and/or write to file
-        Writer.writeToFile(changed, "changed-classes", getArtifactsDir());
-        Writer.writeToFile(impacted, "impacted-classes", getArtifactsDir());
+        Writer.writeToFile(changed, CHANGED_CLASSES, getArtifactsDir());
+        Writer.writeToFile(impacted, IMPACTED_CLASSES, getArtifactsDir());
     }
 
     private void updateForNextRun(List<String> allClasses) throws MojoExecutionException {
@@ -96,7 +96,7 @@ public class ImpactedMojo extends DiffMojo {
         if (logger.getLoggingLevel().intValue() <= Level.FINEST.intValue()) {
             save(getArtifactsDir(), result.getGraph());
         }
-        Logger.getGlobal().log(Level.FINE, "[PROFILE] updateForNextRun(total): " + Writer.millsToSeconds(end - start));
+        Logger.getGlobal().log(Level.FINE, PROFILE_UPDATE_FOR_NEXT_RUN_TOTAL + Writer.millsToSeconds(end - start));
     }
 
     private void save(String artifactsDir, DirectedGraph<String> graph) {

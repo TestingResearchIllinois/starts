@@ -23,8 +23,8 @@ import org.ekstazi.data.TxtStorer;
 import org.ekstazi.hash.Hasher;
 import org.ekstazi.util.Types;
 
-public class ChecksumUtil {
-    public static final String JAVA_HOME = System.getProperty("java.home");
+public class ChecksumUtil implements StartsConstants {
+    public static final String JAVA_HOME = System.getProperty(JAVA_DOT_HOME);
 
     private static final Logger LOGGER = Logger.getLogger(ChecksumUtil.class.getName());
 
@@ -65,12 +65,12 @@ public class ChecksumUtil {
                         // Known benign cases where this can happen: (i) dep is from a shaded jar which is itself on
                         // the classpath; (ii) dep is from an optional jar dependency of a direct jar dependency (e.g.,
                         // users of joda-time-*.jar do not necessarily depend on classes from joda-convert-8.jar
-                        LOGGER.log(Level.FINEST, "@@LoadedNullURLForDep: " + dep);
+                        LOGGER.log(Level.FINEST, LOADED_NULL_URL_FOR_DEP + dep);
                     }
                 }
             }
             long end = System.currentTimeMillis();
-            LOGGER.log(Level.FINEST, "LOADED RESOURCES: " + (end - start) + "ms");
+            LOGGER.log(Level.FINEST, LOADED_RESOURCES + (end - start) + MS);
         }
         return checksums;
     }
@@ -88,7 +88,7 @@ public class ChecksumUtil {
     }
 
     public static String toClassName(String fqn) {
-        return fqn.replace(".", "/") + ".class";
+        return fqn.replace(DOT, SLASH) + CLASS_TYPE_NAME;
     }
 
     public static void saveCheckSums(Map<String, Set<RegData>> newCheckSums, String artifactsDir) {
@@ -99,7 +99,7 @@ public class ChecksumUtil {
     }
 
     public static String makeCheckSumPath(String test, String artifactsDir) {
-        return artifactsDir + test + ".clz";
+        return artifactsDir + test + CLZ_TYPE_NAME;
     }
 
     public static void writeChecksumFile(String filePath, Set<RegData> data) {

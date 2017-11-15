@@ -42,7 +42,7 @@ import java.io.InputStream;
  * @author Eric Bruneton
  * @author Eugene Kuleshov
  */
-public class ClassReader {
+public class ClassReader implements StartsConstants {
 
     /**
      * True to enable signatures support.
@@ -381,7 +381,7 @@ public class ClassReader {
         boolean found = false;
         for (int i = readUnsignedShort(u); i > 0; --i) {
             String attrName = readUTF8(u + 2, c);
-            if ("BootstrapMethods".equals(attrName)) {
+            if (BOOTSTRAP_METHODS.equals(attrName)) {
                 found = true;
                 break;
             }
@@ -436,7 +436,7 @@ public class ClassReader {
     public ClassReader(final String name) throws IOException {
         this(readClass(
                 ClassLoader.getSystemResourceAsStream(name.replace('.', '/')
-                        + ".class"), true));
+                        + CLASS_TYPE_NAME), true));
     }
 
     /**
@@ -453,7 +453,7 @@ public class ClassReader {
     private static byte[] readClass(final InputStream is, boolean close)
             throws IOException {
         if (is == null) {
-            throw new IOException("Class not found");
+            throw new IOException(CLASS_NOT_FOUND_EXCEPTION);
         }
         try {
             byte[] b = new byte[is.available()];
@@ -568,40 +568,40 @@ public class ClassReader {
             String attrName = readUTF8(u + 2, c);
             // tests are sorted in decreasing frequency order
             // (based on frequencies observed on typical classes)
-            if ("SourceFile".equals(attrName)) {
+            if (SOURCE_FILE.equals(attrName)) {
                 sourceFile = readUTF8(u + 8, c);
-            } else if ("InnerClasses".equals(attrName)) {
+            } else if (INNER_CLASSES.equals(attrName)) {
                 innerClasses = u + 8;
-            } else if ("EnclosingMethod".equals(attrName)) {
+            } else if (ENCLOSING_METHOD.equals(attrName)) {
                 enclosingOwner = readClass(u + 8, c);
                 int item = readUnsignedShort(u + 10);
                 if (item != 0) {
                     enclosingName = readUTF8(items[item], c);
                     enclosingDesc = readUTF8(items[item] + 2, c);
                 }
-            } else if (SIGNATURES && "Signature".equals(attrName)) {
+            } else if (SIGNATURES && SIGNATURE.equals(attrName)) {
                 signature = readUTF8(u + 8, c);
             } else if (ANNOTATIONS
-                    && "RuntimeVisibleAnnotations".equals(attrName)) {
+                    && RUNTIME_VISIBLE_ANNOTATIONS.equals(attrName)) {
                 anns = u + 8;
             } else if (ANNOTATIONS
-                    && "RuntimeVisibleTypeAnnotations".equals(attrName)) {
+                    && RUNTIME_VISIBLE_TYPE_ANNOTATIONS.equals(attrName)) {
                 tanns = u + 8;
-            } else if ("Deprecated".equals(attrName)) {
+            } else if (DEPRECATED.equals(attrName)) {
                 access |= Opcodes.ACC_DEPRECATED;
-            } else if ("Synthetic".equals(attrName)) {
+            } else if (SYNTHETIC.equals(attrName)) {
                 access |= Opcodes.ACC_SYNTHETIC
                         | ClassWriter.ACC_SYNTHETIC_ATTRIBUTE;
-            } else if ("SourceDebugExtension".equals(attrName)) {
+            } else if (SOURCE_DEBUG_EXTENSION.equals(attrName)) {
                 int len = readInt(u + 4);
                 sourceDebug = readUTF(u + 8, len, new char[len]);
             } else if (ANNOTATIONS
-                    && "RuntimeInvisibleAnnotations".equals(attrName)) {
+                    && RUNTIME_INVISIBLE_ANNOTATIONS.equals(attrName)) {
                 ianns = u + 8;
             } else if (ANNOTATIONS
-                    && "RuntimeInvisibleTypeAnnotations".equals(attrName)) {
+                    && RUNTIME_INVISIBLE_TYPE_ANNOTATIONS.equals(attrName)) {
                 itanns = u + 8;
-            } else if ("BootstrapMethods".equals(attrName)) {
+            } else if (BOOTSTRAP_METHODS.equals(attrName)) {
                 int[] bootstrapMethods = new int[readUnsignedShort(u + 8)];
                 for (int j = 0, v = u + 10; j < bootstrapMethods.length; j++) {
                     bootstrapMethods[j] = v;
@@ -731,27 +731,27 @@ public class ClassReader {
             String attrName = readUTF8(u + 2, c);
             // tests are sorted in decreasing frequency order
             // (based on frequencies observed on typical classes)
-            if ("ConstantValue".equals(attrName)) {
+            if (CONSTANT_VALUE.equals(attrName)) {
                 int item = readUnsignedShort(u + 8);
                 value = item == 0 ? null : readConst(item, c);
-            } else if (SIGNATURES && "Signature".equals(attrName)) {
+            } else if (SIGNATURES && SIGNATURE.equals(attrName)) {
                 signature = readUTF8(u + 8, c);
-            } else if ("Deprecated".equals(attrName)) {
+            } else if (DEPRECATED.equals(attrName)) {
                 access |= Opcodes.ACC_DEPRECATED;
-            } else if ("Synthetic".equals(attrName)) {
+            } else if (SYNTHETIC.equals(attrName)) {
                 access |= Opcodes.ACC_SYNTHETIC
                         | ClassWriter.ACC_SYNTHETIC_ATTRIBUTE;
             } else if (ANNOTATIONS
-                    && "RuntimeVisibleAnnotations".equals(attrName)) {
+                    && RUNTIME_VISIBLE_ANNOTATIONS.equals(attrName)) {
                 anns = u + 8;
             } else if (ANNOTATIONS
-                    && "RuntimeVisibleTypeAnnotations".equals(attrName)) {
+                    && RUNTIME_VISIBLE_TYPE_ANNOTATIONS.equals(attrName)) {
                 tanns = u + 8;
             } else if (ANNOTATIONS
-                    && "RuntimeInvisibleAnnotations".equals(attrName)) {
+                    && RUNTIME_INVISIBLE_ANNOTATIONS.equals(attrName)) {
                 ianns = u + 8;
             } else if (ANNOTATIONS
-                    && "RuntimeInvisibleTypeAnnotations".equals(attrName)) {
+                    && RUNTIME_INVISIBLE_TYPE_ANNOTATIONS.equals(attrName)) {
                 itanns = u + 8;
             } else {
                 Attribute attr = readAttribute(context.attrs, attrName, u + 8,
@@ -856,45 +856,45 @@ public class ClassReader {
             String attrName = readUTF8(u + 2, c);
             // tests are sorted in decreasing frequency order
             // (based on frequencies observed on typical classes)
-            if ("Code".equals(attrName)) {
+            if (CODE.equals(attrName)) {
                 if ((context.flags & SKIP_CODE) == 0) {
                     code = u + 8;
                 }
-            } else if ("Exceptions".equals(attrName)) {
+            } else if (EXCEPTIONS.equals(attrName)) {
                 exceptions = new String[readUnsignedShort(u + 8)];
                 exception = u + 10;
                 for (int j = 0; j < exceptions.length; ++j) {
                     exceptions[j] = readClass(exception, c);
                     exception += 2;
                 }
-            } else if (SIGNATURES && "Signature".equals(attrName)) {
+            } else if (SIGNATURES && SIGNATURE.equals(attrName)) {
                 signature = readUTF8(u + 8, c);
-            } else if ("Deprecated".equals(attrName)) {
+            } else if (DEPRECATED.equals(attrName)) {
                 context.access |= Opcodes.ACC_DEPRECATED;
             } else if (ANNOTATIONS
-                    && "RuntimeVisibleAnnotations".equals(attrName)) {
+                    && RUNTIME_VISIBLE_ANNOTATIONS.equals(attrName)) {
                 anns = u + 8;
             } else if (ANNOTATIONS
-                    && "RuntimeVisibleTypeAnnotations".equals(attrName)) {
+                    && RUNTIME_VISIBLE_TYPE_ANNOTATIONS.equals(attrName)) {
                 tanns = u + 8;
-            } else if (ANNOTATIONS && "AnnotationDefault".equals(attrName)) {
+            } else if (ANNOTATIONS && ANNOTATION_DEFAULT.equals(attrName)) {
                 dann = u + 8;
-            } else if ("Synthetic".equals(attrName)) {
+            } else if (SYNTHETIC.equals(attrName)) {
                 context.access |= Opcodes.ACC_SYNTHETIC
                         | ClassWriter.ACC_SYNTHETIC_ATTRIBUTE;
             } else if (ANNOTATIONS
-                    && "RuntimeInvisibleAnnotations".equals(attrName)) {
+                    && RUNTIME_INVISIBLE_ANNOTATIONS.equals(attrName)) {
                 ianns = u + 8;
             } else if (ANNOTATIONS
-                    && "RuntimeInvisibleTypeAnnotations".equals(attrName)) {
+                    && RUNTIME_INVISIBLE_TYPE_ANNOTATIONS.equals(attrName)) {
                 itanns = u + 8;
             } else if (ANNOTATIONS
-                    && "RuntimeVisibleParameterAnnotations".equals(attrName)) {
+                    && RUNTIME_VISIBLE_PARAMETER_ANNOTATIONS.equals(attrName)) {
                 mpanns = u + 8;
             } else if (ANNOTATIONS
-                    && "RuntimeInvisibleParameterAnnotations".equals(attrName)) {
+                    && RUNTIME_INVISIBLE_PARAMETER_ANNOTATIONS.equals(attrName)) {
                 impanns = u + 8;
-            } else if ("MethodParameters".equals(attrName)) {
+            } else if (METHOD_PARAMETERS.equals(attrName)) {
                 methodParameters = u + 8;
             } else {
                 Attribute attr = readAttribute(context.attrs, attrName, u + 8,
@@ -1147,7 +1147,7 @@ public class ClassReader {
 
         for (int i = readUnsignedShort(u); i > 0; --i) {
             String attrName = readUTF8(u + 2, c);
-            if ("LocalVariableTable".equals(attrName)) {
+            if (LOCAL_VARIABLE_TABLE.equals(attrName)) {
                 if ((context.flags & SKIP_DEBUG) == 0) {
                     varTable = u + 8;
                     for (int j = readUnsignedShort(u + 8), v = u; j > 0; --j) {
@@ -1162,9 +1162,9 @@ public class ClassReader {
                         v += 10;
                     }
                 }
-            } else if ("LocalVariableTypeTable".equals(attrName)) {
+            } else if (LOCAL_VARIABLE_TYPE_TABLE.equals(attrName)) {
                 varTypeTable = u + 8;
-            } else if ("LineNumberTable".equals(attrName)) {
+            } else if (Line_Number_Table.equals(attrName)) {
                 if ((context.flags & SKIP_DEBUG) == 0) {
                     for (int j = readUnsignedShort(u + 8), v = u; j > 0; --j) {
                         int label = readUnsignedShort(v + 10);
@@ -1176,16 +1176,16 @@ public class ClassReader {
                     }
                 }
             } else if (ANNOTATIONS
-                    && "RuntimeVisibleTypeAnnotations".equals(attrName)) {
+                    && RUNTIME_VISIBLE_TYPE_ANNOTATIONS.equals(attrName)) {
                 tanns = readTypeAnnotations(mv, context, u + 8, true);
                 ntoff = tanns.length == 0 || readByte(tanns[0]) < 0x43 ? -1
                         : readUnsignedShort(tanns[0] + 1);
             } else if (ANNOTATIONS
-                    && "RuntimeInvisibleTypeAnnotations".equals(attrName)) {
+                    && RUNTIME_INVISIBLE_TYPE_ANNOTATIONS.equals(attrName)) {
                 itanns = readTypeAnnotations(mv, context, u + 8, false);
                 nitoff = itanns.length == 0 || readByte(itanns[0]) < 0x43 ? -1
                         : readUnsignedShort(itanns[0] + 1);
-            } else if (FRAMES && "StackMapTable".equals(attrName)) {
+            } else if (FRAMES && STACK_MAP_TABLE.equals(attrName)) {
                 if ((context.flags & SKIP_FRAMES) == 0) {
                     stackMap = u + 10;
                     stackMapSize = readInt(u + 4);
@@ -1209,7 +1209,7 @@ public class ClassReader {
                  * this by parsing the stack map table without a full decoding
                  * (see below).
                  */
-            } else if (FRAMES && "StackMap".equals(attrName)) {
+            } else if (FRAMES && STACK_MAP.equals(attrName)) {
                 if ((context.flags & SKIP_FRAMES) == 0) {
                     zip = false;
                     stackMap = u + 10;
