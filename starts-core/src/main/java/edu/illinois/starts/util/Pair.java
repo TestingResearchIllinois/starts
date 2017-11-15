@@ -6,6 +6,9 @@ package edu.illinois.starts.util;
 
 import java.io.Serializable;
 
+import edu.illinois.starts.constants.StartsConstants;
+
+
 /**
  * A (key, value) pair.
  */

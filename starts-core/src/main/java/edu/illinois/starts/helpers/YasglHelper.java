@@ -16,9 +16,11 @@ import java.util.List;
 import java.util.Set;
 import java.util.zip.GZIPInputStream;
 
+import edu.illinois.starts.constants.StartsConstants;
 import edu.illinois.yasgl.DirectedGraph;
 import edu.illinois.yasgl.DirectedGraphBuilder;
 import edu.illinois.yasgl.GraphVertexVisitor;
+
 
 /**
  * Utility methods for interacting with YASGL.

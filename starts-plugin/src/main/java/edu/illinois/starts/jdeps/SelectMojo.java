@@ -8,6 +8,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.logging.Level;
 
+import edu.illinois.starts.constants.StartsConstants;
 import edu.illinois.starts.helpers.Writer;
 import edu.illinois.starts.util.Logger;
 import edu.illinois.starts.util.Pair;
@@ -17,6 +18,7 @@ import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
+
 
 /**
  * Finds tests affected by a change but does not run them.

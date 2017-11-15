@@ -32,6 +32,8 @@ package edu.illinois.starts.asm;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
+import edu.illinois.starts.constants.StartsConstants;
+
 
 /**
  * A Java field or method type. This class can be used to make it easier to

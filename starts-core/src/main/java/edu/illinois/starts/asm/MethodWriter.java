@@ -28,6 +28,7 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 package edu.illinois.starts.asm;
+import edu.illinois.starts.constants.StartsConstants;
 
 
 /**

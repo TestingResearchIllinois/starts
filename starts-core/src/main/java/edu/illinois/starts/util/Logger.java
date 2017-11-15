@@ -10,6 +10,9 @@ package edu.illinois.starts.util;
 import java.io.PrintStream;
 import java.util.logging.Level;
 
+import edu.illinois.starts.constants.StartsConstants;
+
+
 public class Logger implements StartsConstants {
 
     private static final Logger INSTANCE = new Logger();

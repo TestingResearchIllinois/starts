@@ -63,7 +63,7 @@ public class PomUtil implements StartsConstants {
 
         String version = sfPlugin.getVersion();
         if (StartsConstants.MIN_SUREFIRE_VERSION.compareTo(version) > 0) {
-            throw new MojoExecutionException(UNSUPPORTED_SUREFIRE_VERSION + version
+            throw new MojoExecutionException(UNSUPPORTED_SUREFIRE_VERSION_COLON_EXCEPTION + version
                     + Use_version + MIN_SUREFIRE_VERSION + AND_ABOVE);
         }
     }

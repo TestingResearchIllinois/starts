@@ -7,6 +7,9 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 
+import edu.illinois.starts.constants.StartsConstants;
+
+
 /**
  * This class is duplicated from Ekstazi, with minor changes.
  */

@@ -18,10 +18,12 @@ import java.util.TreeSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import edu.illinois.starts.constants.StartsConstants;
 import org.ekstazi.data.RegData;
 import org.ekstazi.data.TxtStorer;
 import org.ekstazi.hash.Hasher;
 import org.ekstazi.util.Types;
+
 
 public class ChecksumUtil implements StartsConstants {
     public static final String JAVA_HOME = System.getProperty(JAVA_DOT_HOME);

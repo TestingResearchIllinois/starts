@@ -11,10 +11,10 @@ import java.io.File;
  */
 
 public interface StartsConstants {
-	
-	String DOT_STARTS = ".starts";
-	String STARTS_NAME = "STARTS";
-	String MIN_SUREFIRE_VERSION = "2.13";
+
+    String DOT_STARTS = ".starts";
+    String STARTS_NAME = "STARTS";
+    String MIN_SUREFIRE_VERSION = "2.13";
     String STARTS_DIRECTORY_PATH = ".starts" + File.separator;
 
     String SUREFIRE_PLUGIN = "org.apache.maven.plugins:maven-surefire-plugin";
@@ -27,7 +27,7 @@ public interface StartsConstants {
     String MOJO_EXECUTION_EXCEPTION_BIN = "org.apache.maven.plugin.MojoExecutionException";
 
     String ZLC_FILE = "deps.zlc";
-    
+
     String EXECUTE_MDESC = "()V";
     String EXECUTE_MNAME = "execute";
 
@@ -36,8 +36,7 @@ public interface StartsConstants {
     String MY_EXCLUDES = "myExcludes";
     String STARTS_EXCLUDE_PROPERTY = "STARTS_EXCLUDES";
 
-    
-    //simple characters:
+    // simple characters:
     String AT = "@";
     String DOT = ".";
     String BLANK = "";
@@ -55,16 +54,14 @@ public interface StartsConstants {
     String STARS_AND_SPACE = "********** ";
     String SPACE_AND_STARTS = " **********";
 
-    
-    //Annotations:
+    // Annotations:
     String RUNTIME_VISIBLE_ANNOTATIONS = "RuntimeVisibleAnnotations";
     String RUNTIME_INVISIBLE_ANNOTATIONS = "RuntimeInvisibleAnnotations";
     String RUNTIME_VISIBLE_TYPE_ANNOTATIONS = "RuntimeVisibleTypeAnnotations";
     String RUNTIME_INVISIBLE_TYPE_ANNOTATIONS = "RuntimeInvisibleTypeAnnotations";
     String RUNTIME_VISIBLE_PARAMETER_ANNOTATIONS = "RuntimeVisibleParameterAnnotations";
     String RUNTIME_INVISIBLE_PARAMETER_ANNOTATIONS = "RuntimeInvisibleParameterAnnotations";
-    
-    
+
     String MS = "ms";
     String TRUE = "true";
     String CODE = "Code";
@@ -82,7 +79,6 @@ public interface StartsConstants {
     String BOOTSTRAP_METHODS = "BootstrapMethods";
     String SOURCE_DEBUG_EXTENSION = "SourceDebugExtension";
 
-        
     // Logger Messages:
     String BROKEN_EDGE = "@@BrokenEdge: ";
     String AGENT_LOADED = "AGENT LOADED!!!";
@@ -124,9 +120,8 @@ public interface StartsConstants {
     String PROFILE_UPDATE_FOR_NEXT_RUN_CREATE_CLASS_LOADER = "[PROFILE] updateForNextRun(createClassLoader): ";
     String PROFILE_UPDATE_FOR_NEXT_RUN_SET_INCLUDES_EXCLUDES = "[PROFILE] updateForNextRun(setIncludesExcludes): ";
     String PROFILE_UPDATE_FOR_NEXT_RUN_GET_SUREFIRE_CLASSPATH = "[PROFILE] updateForNextRun(getSureFireClassPath): ";
-    
-    
-    //Types' Names:
+
+    // Types' Names:
     String INT_NAME = "int";
     String VOID_NAME = "void";
     String CHAR_NAME = "char";
@@ -137,7 +132,6 @@ public interface StartsConstants {
     String DOUBLE_NAME = "double";
     String BOOLEAN_NAME = "boolean";
 
-    
     String LIB = "lib";
     String JRE = "jre";
     String MAC = "mac";
@@ -224,8 +218,7 @@ public interface StartsConstants {
     String LOCAL_VARIABLE_TYPE_TABLE = "LocalVariableTypeTable";
     String UPDATE_IMPACTED_CHECKSUMS = "updateImpactedChecksums";
     String NUMBER_OF_AFFECTED_TESTS_EXPECTED = "Number of affected tests expected: ";
-    
-    
+
     String GZ_TYPE_NAME = ".gz";
     String CLZ_TYPE_NAME = ".clz";
     String JAR_TYPE_NAME = ".jar";
@@ -242,9 +235,8 @@ public interface StartsConstants {
     String METHODTYPE_CLASS = "java/lang/invoke/MethodType";
     String METHODHANDLE_CLASS = "java/lang/invoke/MethodHandle";
     String VIRTUALMACHINE_ATTACH_API_CLASS = "com.sun.tools.attach.VirtualMachine";
-    
-    
-    //Exceptions And Warnings' Messages:
+
+    // Exceptions And Warnings' Messages:
     String CLASS_NOT_FOUND_EXCEPTION = "Class not found";
     String NO_EDGE_TARGET_EXCEPTION = "@@@NoEdgeTarget: ";
     String CLASS_FILE_TOO_LARGE_EXCEPTION = "Class file too large!";
@@ -255,14 +247,16 @@ public interface StartsConstants {
     String SUREFIRE_PLUGIN_NOT_AVAILABLE_EXCEPTION = "Surefire plugin not available";
     String COULD_NOT_CREATE_ARTIFACTS_DIR_EXCEPTION = "I could not create artifacts dir: ";
     String COULD_NOT_CREATE_JDEPS_CACHE_EXCEPTION = "I could not create the jdeps cache: ";
-    String UNSUPPORTED_SUREFIRE_VERSION_EXCEPTION_EXCEPTION = "Unsupported Surefire version: ";
+    String UNSUPPORTED_SUREFIRE_VERSION_COLON_EXCEPTION = "Unsupported Surefire version: ";
     String LABEL_OFFSET_NOT_RESOLVED_EXCEPTION = "Label offset position has not been resolved yet";
     String JSR_RET_NOT_SUPPORTED_EXCEPTION = "JSR/RET are not supported with computeFrames option";
     String JDEPS_CANNOT_RUN_WITH_EMPTY_CLASSPATH_EXCEPTION = "JDEPS cannot run with an empty classpath.";
     String COULD_NOT_FIND_CREATE_JDEPS_GRAPH_EXCEPTION = "I could not find or create jdeps graphs in any cache: ";
-    String AFFECTED_TESTS_SHOULD_NOT_BE_NULL_WITH_CLZ_FORMAT_EXCEPTION = "Affected tests should not be null with CLZ format!";
-    String TRY_SETTING_EXCLUDESFILE_SUREFIRE_CONFIGURATION_EXCEPTION = "Try setting excludesFile in the surefire configuration.";
-    String JDEPS_CACHE_EMPTY_RUNNING_IN_RECURSIVE_MODE_WARNING = "Should jdeps cache really be empty? Running in recursive mode.";
-    
-    
+    String AFFECTED_TESTS_SHOULD_NOT_BE_NULL_WITH_CLZ_FORMAT_EXCEPTION = "Affected tests should "
+            + "not be null with CLZ format!";
+    String TRY_SETTING_EXCLUDESFILE_SUREFIRE_CONFIGURATION_EXCEPTION = "Try setting excludesFile "
+            + "in the surefire configuration.";
+    String JDEPS_CACHE_EMPTY_RUNNING_IN_RECURSIVE_MODE_WARNING = "Should jdeps cache really be empty? "
+            + "Running in recursive mode.";
+
 }

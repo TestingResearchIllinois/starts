@@ -25,10 +25,12 @@ import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 
+import edu.illinois.starts.constants.StartsConstants;
 import edu.illinois.starts.util.Logger;
 import edu.illinois.yasgl.DirectedGraph;
 import edu.illinois.yasgl.Edge;
 import org.apache.commons.codec.binary.Hex;
+
 
 /**
  * Utility methods for writing various data to file.

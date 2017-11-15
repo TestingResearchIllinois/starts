@@ -6,6 +6,7 @@ package edu.illinois.starts.jdeps;
 
 import java.util.logging.Level;
 
+import edu.illinois.starts.constants.StartsConstants;
 import edu.illinois.starts.helpers.Writer;
 import edu.illinois.starts.util.Logger;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -13,6 +14,7 @@ import org.apache.maven.plugins.annotations.Execute;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.ResolutionScope;
+
 
 /**
  * Invoked after after running selected tests (see lifecycle.xml for details).
