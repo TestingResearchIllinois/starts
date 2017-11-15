@@ -36,8 +36,14 @@ public class UpdateMojo extends DiffMojo {
     @Parameter(property = "updateDiffChecksums", defaultValue = "true")
     private boolean updateDiffChecksums;
 
+    private Logger logger;
+
     public void execute() throws MojoExecutionException {
+        Logger.getGlobal().setLoggingLevel(Level.parse(loggingLevel));
         long start = System.currentTimeMillis();
+        logger = Logger.getGlobal();
+        logger.log(Level.INFO, "********** Update **********");
+
         Set<String> nonAffected = new HashSet<>();
         String filenameNonAffected = getArtifactsDir() + File.separator + "non-affected-tests";
         File fileNonAffected = new File(filenameNonAffected);
@@ -49,18 +55,22 @@ public class UpdateMojo extends DiffMojo {
                 ioe.printStackTrace();
             }
             long end = System.currentTimeMillis();
-            Logger.getGlobal().log(Level.FINE, "[PROFILE] readFromFile " + filenameNonAffected + " : "
+            logger.log(Level.FINE, "[PROFILE] readFromFile " + filenameNonAffected + " : "
                     + Writer.millsToSeconds(end - start));
         } else {
             Pair<Set<String>, Set<String>> data = computeChangeData();
             if(data != null) nonAffected = data.getKey();
             long end = System.currentTimeMillis();
-            Logger.getGlobal().log(Level.FINE, "[PROFILE] computeChangeData(): "
+            logger.log(Level.FINE, "[PROFILE] computeChangeData(): "
                             + Writer.millsToSeconds(end - start));
         }
         if(updateDiffChecksums) {
             updateForNextRun(nonAffected);
         }
+
+        long end = System.currentTimeMillis();
+        System.setProperty("[PROFILE] END-OF-UPDATE-MOJO: ", Long.toString(end));
+        logger.log(Level.FINE, "[PROFILE] UPDATE-MOJO-TOTAL: " + Writer.millsToSeconds(end - start));
     }
 
     public Set<String> readFromFile(File inFile, String artifactsDir) {
