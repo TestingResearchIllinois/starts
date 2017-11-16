@@ -10,12 +10,10 @@ import java.net.URLClassLoader;
 /**
  * This class is duplicated from Ekstazi, with minor changes.
  */
-
 public final class AgentLoader {
     private static final String TOOLS_JAR_NAME = "tools.jar";
     private static final String CLASSES_JAR_NAME = "classes.jar";
     private static final String AGENT_INIT = AgentLoader.class.getName() + " Initialized";
-
 
     public static boolean loadDynamicAgent() {
         try {
