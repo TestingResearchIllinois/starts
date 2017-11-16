@@ -22,8 +22,9 @@ public final class AgentLoader {
             }
             System.setProperty(AGENT_INIT, "");
 
-            URL agentJarURL = AbstractMojoInterceptor.extractJarURL(JavaAgent.class);
-            return loadAgent(agentJarURL);
+            URL agentJarURL = AbstractMojoInterceptor.class.getResource("JavaAgent.class");
+            URL agentJarURLConnection = AbstractMojoInterceptor.extractJarURL(agentJarURL);
+            return loadAgent(agentJarURLConnection);
         } catch (Exception ex) {
             return false;
         }
