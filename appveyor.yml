@@ -18,9 +18,9 @@ install:
   - cmd: mvn --version
   - cmd: java -version
 build_script:
-  - mvn clean compile -B -DskipTest
+  - mvn install -DskipTests=true -Dmaven.javadoc.skip=true -B -V
 test_script:
-  - mvn clean verify -B
+  - mvn verify -B
 cache:
   - C:\maven\
   - C:\Users\appveyor\.m2
