@@ -73,3 +73,9 @@ Level.FINEST will store:
 - classpath that STARTS used
 - yasgl graph that STARTS constructed
 - set of changed types
+
+To set the log level at runtime, call starts like this: 
+
+``mvn starts:starts -DStartsLogging=<Level>``
+
+i.e. ``mvn starts:starts -DStartsLogging=FINEST``
