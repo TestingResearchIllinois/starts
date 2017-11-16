@@ -65,3 +65,6 @@ checksums of files in the latest version, while the command in (4)
 `update**Checksums` option that can be used to change the default
 behavior. For example, to update the checksums while checking the
 diff, run `mvn starts:diff -DupdateDiffChecksums=true`.
+
+
+### [Logging and Artifact documentation](./STARTS-LOGGING.md)
