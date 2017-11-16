@@ -67,6 +67,8 @@ checksums of files in the latest version, while the command in (4)
 behavior. For example, to update the checksums while checking the
 diff, run `mvn starts:diff -DupdateDiffChecksums=true`.
 
+[Logging and Artifact storage Docs](./STARTS-LOGGING.md)
+
 ## Papers on STARTS
 
 Below is a list of research papers that describe some aspects of
