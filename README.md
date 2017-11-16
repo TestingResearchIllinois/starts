@@ -65,3 +65,21 @@ checksums of files in the latest version, while the command in (4)
 `update**Checksums` option that can be used to change the default
 behavior. For example, to update the checksums while checking the
 diff, run `mvn starts:diff -DupdateDiffChecksums=true`.
+
+## Papers on STARTS
+
+Below is a list of research papers that describe some aspects of
+STARTS:
+
+* [STARTS: STAtic Regression Test Selection](http://mir.cs.illinois.edu/legunsen/pubs/LegunsenETALSTARTSDemo.pdf)
+  ```
+  Owolabi Legunsen, August Shi, Darko Marinov
+  32nd IEEE/ACM International Conference On Automated Software Engineering, Tool Demonstrations Track
+  (ASE Demo 2017), pages 949-954, Urbana-Champaign, IL, October-November 2017
+  ```
+* [An Extensive Study of Static Regression Test Selection in Modern Software Evolution](http://mir.cs.illinois.edu/legunsen/pubs/LegunsenETAL16StaticRTSStudy.pdf)
+  ```
+  Owolabi Legunsen, Farah Hariri, August Shi, Yafeng Lu, Lingming Zhang, Darko Marinov
+  24th ACM SIGSOFT International Symposium on the Foundations of Software Engineering
+  (FSE 2016), pages 583-594, Seattle, WA, November 2016
+  ```
