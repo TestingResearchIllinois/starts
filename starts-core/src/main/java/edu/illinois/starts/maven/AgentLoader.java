@@ -21,9 +21,9 @@ public final class AgentLoader {
                 return true;
             }
             System.setProperty(AGENT_INIT, "");
-
-            URL agentJarURL = AbstractMojoInterceptor.extractJarURL(JavaAgent.class);
-            return loadAgent(agentJarURL);
+            URL agentJarURL = AbstractMojoInterceptor.class.getResource("JavaAgent.class");
+            agentJarURLConnection = AbstractMojoInterceptor.extractJarURL(agentJarURL);
+            return loadAgent(agentJarURLConnection);
         } catch (Exception ex) {
             return false;
         }
@@ -34,12 +34,12 @@ public final class AgentLoader {
         if (toolsJarFile == null) {
             return false;
         }
-
+        
         Class<?> vc = loadVirtualMachine(new URL[]{toolsJarFile});
         if (vc == null) {
             return false;
         }
-
+        
         attachAgent(vc, aju);
         return true;
     }
