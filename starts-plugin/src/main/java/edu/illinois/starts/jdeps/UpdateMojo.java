@@ -29,12 +29,12 @@ import org.apache.maven.plugins.annotations.*;
 @Mojo(name = "update", requiresDirectInvocation = true, requiresDependencyResolution = ResolutionScope.TEST)
 public class UpdateMojo extends DiffMojo {
     /**
-     * Set this to "false" to prevent checksums from being persisted to disk. This
-     * is useful for "dry runs" where one may want to see the non-affected tests that
-     * STARTS writes to the Surefire excludesFile, without updating test dependencies.
+     * Set this to "false" to prevent checksums from being persisted to disk when
+     * updateRunChecksums is false and to prevent running updateForNextRun() twice
+     * when updateRunChecksums is true.
      */
-    @Parameter(property = "updateDiffChecksums", defaultValue = "true")
-    private boolean updateDiffChecksums;
+    @Parameter(property = "updateUpdateChecksums", defaultValue = "true")
+    private boolean updateUpdateChecksums;
 
     private Logger logger;
 
@@ -64,7 +64,7 @@ public class UpdateMojo extends DiffMojo {
             logger.log(Level.FINE, "[PROFILE] computeChangeData(): "
                             + Writer.millsToSeconds(end - start));
         }
-        if(updateDiffChecksums) {
+        if (updateUpdateChecksums) {
             updateForNextRun(nonAffected);
         }
 
