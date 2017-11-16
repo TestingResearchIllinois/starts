@@ -10,7 +10,7 @@ matrix:
       osx_image: xcode8
 
 script:
-    - mvn clean verify -B
+    - mvn verify -B
 
 cache:
     directories:
