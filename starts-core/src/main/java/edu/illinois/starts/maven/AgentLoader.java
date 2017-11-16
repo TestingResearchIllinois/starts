@@ -34,10 +34,12 @@ public final class AgentLoader {
         if (toolsJarFile == null) {
             return false;
         }
+        
         Class<?> vc = loadVirtualMachine(new URL[]{toolsJarFile});
         if (vc == null) {
             return false;
         }
+        
         attachAgent(vc, aju);
         return true;
     }
