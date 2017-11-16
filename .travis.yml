@@ -1,9 +1,5 @@
 language: java
 
-#default depth is 50, unnecessary
-git:
-    depth: 1
-
 sudo: false
   
 matrix:
@@ -19,4 +15,3 @@ script:
 cache:
     directories:
     - $HOME/.m2
-    - $HOME/.binaries
