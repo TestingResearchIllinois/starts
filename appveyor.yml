@@ -8,5 +8,4 @@ build_script:
 test_script:
   - mvn verify -B
 cache:
-  - C:\maven\
   - C:\Users\appveyor\.m2
