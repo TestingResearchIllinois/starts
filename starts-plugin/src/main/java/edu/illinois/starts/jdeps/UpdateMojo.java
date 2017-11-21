@@ -36,6 +36,15 @@ public class UpdateMojo extends DiffMojo {
     @Parameter(property = "updateUpdateChecksums", defaultValue = "true")
     private boolean updateUpdateChecksums;
 
+    /**
+     * This should only be set to "true" when the previous run goal set it to true as well.
+     * the previous run goal saves nonAffectedTests as a file on disk when this value is true,
+     * then the update goal can load the file to prevent running computeChangeData() twice.
+     */
+    @Parameter(property = "writeNonAffected", defaultValue = "false")
+    private boolean writeNonAffected;
+
+
     private Logger logger;
 
     public void execute() throws MojoExecutionException {
@@ -47,7 +56,7 @@ public class UpdateMojo extends DiffMojo {
         Set<String> nonAffected = new HashSet<>();
         String filenameNonAffected = getArtifactsDir() + File.separator + "non-affected-tests";
         File fileNonAffected = new File(filenameNonAffected);
-        if (fileNonAffected.isFile()) {
+        if (writeNonAffected && fileNonAffected.isFile()) {
             try {
                 List<String> testNames = Files.readAllLines(fileNonAffected.toPath(), StandardCharsets.UTF_8);
                 nonAffected.addAll(testNames);
