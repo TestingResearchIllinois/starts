@@ -4,10 +4,20 @@
 
 package edu.illinois.starts.jdeps;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 
@@ -71,8 +81,11 @@ public class RunMojo extends DiffMojo {
     }
 
     protected void run(List<String> excludePaths) throws MojoExecutionException {
-        if (retestAll) {
+        String sfPathString = getCleanClassPath(Writer.pathToString(getSureFireClassPath().getClassPath()));
+        if (retestAll || !isSameClassPath(sfPathString) || !hasSameJarChecksum(sfPathString)) {
             dynamicallyUpdateExcludes(new ArrayList<String>());
+            Writer.writeClassPath(sfPathString, artifactsDir);
+            Writer.writeJarChecksums(getCleanClassPath(sfPathString), artifactsDir);
         } else {
             dynamicallyUpdateExcludes(excludePaths);
         }
@@ -101,5 +114,71 @@ public class RunMojo extends DiffMojo {
         Pair<Set<String>, Set<String>> data = computeChangeData();
         nonAffectedTests = data == null ? new HashSet<String>() : data.getKey();
         changedClasses  = data == null ? new HashSet<String>() : data.getValue();
+    }
+
+    private boolean isSameClassPath(String sfPathString) throws MojoExecutionException {
+        String oldSfPathFileName = Paths.get(getArtifactsDir(), "sf-classpath").toString();
+        if (!new File(oldSfPathFileName).exists()) {
+            return false;
+        }
+        try {
+            String cleanOldSfPathFileName = getCleanClassPath(Files.readAllLines(Paths.get(oldSfPathFileName)).get(0));
+            Set<String> sfClassPathSet = new HashSet<>(Arrays.asList(sfPathString.split(File.pathSeparator)));
+            Set<String> oldSfClassPathSet = new HashSet<>(Arrays.asList(cleanOldSfPathFileName.split(File.pathSeparator)));
+            if (sfClassPathSet.equals(oldSfClassPathSet)) {
+                return true;
+            }
+        } catch (IOException ioe) {
+            ioe.printStackTrace();
+        }
+        return false;
+    }
+
+    private boolean hasSameJarChecksum(String cleanSfClassPath) throws MojoExecutionException {
+        String oldChecksumPathFileName = Paths.get(getArtifactsDir(), "jar-checksums").toString();
+        boolean noException = true;
+        if (!new File(oldChecksumPathFileName).exists()) {
+            return false;
+        }
+        try (BufferedReader fileReader = new BufferedReader(new FileReader(oldChecksumPathFileName))) {
+            Map<String, String> checksumMap = new HashMap<>();
+            String line;
+            while ((line = fileReader.readLine()) != null) {
+                String[] elems = line.split(",");
+                checksumMap.put(elems[0], elems[1]);
+            }
+            String[] jars = cleanSfClassPath.split(File.pathSeparator);
+            for (int i = 0; i < jars.length; i++) {
+                String[] elems = Writer.getJarToChecksumMapping(jars[i]).split(",");
+                String oldCS = checksumMap.get(elems[0]);
+                if (!elems[1].equals(oldCS)) {
+                    return false;
+                }
+            }
+        } catch (IOException ioe) {
+            noException = false;
+            ioe.printStackTrace();
+        }
+        return noException;
+    }
+
+    private String getCleanClassPath(String cp) {
+        String[] paths = cp.split(File.pathSeparator);
+        StringBuilder sb = new StringBuilder();
+        String classes = File.separator + "target" +  File.separator + "classes";
+        String testClasses = File.separator + "target" + File.separator + "test-classes";
+        for (int i = 0; i < paths.length; i++) {
+            if (paths[i].contains(classes)
+                || paths[i].contains(testClasses)
+                || paths[i].contains("-SNAPSHOT.jar")) {
+                continue;
+            }
+            if (sb.length() == 0) {
+                sb.append(paths[i]);
+            } else {
+                sb.append(File.pathSeparator).append(paths[i]);
+            }
+        }
+        return sb.toString();
     }
 }
