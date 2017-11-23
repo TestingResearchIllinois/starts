@@ -14,12 +14,11 @@ import edu.illinois.starts.constants.StartsConstants;
  * This class is duplicated from Ekstazi, with minor changes.
  */
 public final class AgentLoader implements StartsConstants {
-    
     private static final String TOOLS_JAR_NAME = "tools.jar";
     private static final String CLASSES_JAR_NAME = "classes.jar";
-    private static final String AGENT_INIT = AgentLoader.class.getName() + " Initialized";
     private static final String LIB = "lib";
-    
+    private static final String AGENT_INIT = AgentLoader.class.getName() + " Initialized";
+
     public static boolean loadDynamicAgent() {
         try {
             if (System.getProperty(AGENT_INIT) != null) {

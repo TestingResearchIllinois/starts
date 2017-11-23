@@ -29,13 +29,12 @@ import org.ekstazi.util.Types;
  * Utility methods for dealing with the .zlc format.
  */
 public class ZLCHelper implements StartsConstants {
-    
     public static final String zlcFile = ZLC_FILE;
     public static final String STAR_FILE = "file:*";
     private static final Logger LOGGER = Logger.getGlobal();
     private static Map<String, ZLCData> zlcDataMap;
     private static final String NOEXISTING_ZLCFILE_FIRST_RUN = "@NoExistingZLCFile. First Run?";
-    
+
     public ZLCHelper() {
         zlcDataMap = new HashMap<>();
     }

@@ -24,7 +24,6 @@ import edu.illinois.starts.util.Logger;
 public class Cache implements StartsConstants {
     private static final Logger LOGGER = Logger.getGlobal();
     private static final String GRAPH_EXTENSION = ".graph";
-    
     File jdepsCache;
     String m2Repo;
 

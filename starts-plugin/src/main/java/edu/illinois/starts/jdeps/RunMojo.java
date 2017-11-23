@@ -37,6 +37,7 @@ import org.apache.maven.plugins.annotations.ResolutionScope;
  */
 @Mojo(name = "run", requiresDependencyResolution = ResolutionScope.TEST)
 public class RunMojo extends DiffMojo implements StartsConstants {
+    private static final String TARGET = "target";
     /**
      * Set this to "false" to prevent checksums from being persisted to disk. This
      * is useful for "dry runs" where one may want to see the non-affected tests that
@@ -56,11 +57,10 @@ public class RunMojo extends DiffMojo implements StartsConstants {
      */
     @Parameter(property = "retestAll", defaultValue = FALSE)
     protected boolean retestAll;
-    
+
     protected Set<String> nonAffectedTests;
     protected Set<String> changedClasses;
     private Logger logger;
-    private static final String TARGET = "target";
 
     public void execute() throws MojoExecutionException {
         Logger.getGlobal().setLoggingLevel(Level.parse(loggingLevel));

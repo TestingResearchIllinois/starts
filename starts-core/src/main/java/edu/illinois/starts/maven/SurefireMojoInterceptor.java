@@ -10,7 +10,6 @@ import edu.illinois.starts.constants.StartsConstants;
 /** This class is from Ekstazi. **/
 
 public final class SurefireMojoInterceptor extends AbstractMojoInterceptor implements StartsConstants {
-    
     static final String UNSUPPORTED_SUREFIRE_VERSION_EXCEPTION = "Unsupported surefire version. ";
 
     public static void execute(Object mojo) throws Exception {
