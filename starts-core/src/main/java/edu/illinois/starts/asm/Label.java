@@ -274,7 +274,7 @@ public class Label implements StartsConstants {
     public int getOffset() {
         if ((status & RESOLVED) == 0) {
             throw new IllegalStateException(
-            		LABEL_OFFSET_NOT_RESOLVED_EXCEPTION);
+                    "Label offset position has not been resolved yet");
         }
         return position;
     }

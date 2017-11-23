@@ -541,27 +541,27 @@ public class Type implements StartsConstants {
     public String getClassName() {
         switch (sort) {
         case VOID:
-            return VOID_NAME;
+            return "void";
         case BOOLEAN:
-            return BOOLEAN_NAME;
+            return "boolean";
         case CHAR:
-            return CHAR_NAME;
+            return "char";
         case BYTE:
-            return BYTE_NAME;
+            return "byte";
         case SHORT:
-            return SHORT_NAME;
+            return "short";
         case INT:
-            return INT_NAME;
+            return "int";
         case FLOAT:
-            return FLOAT_NAME;
+            return "float";
         case LONG:
-            return LONG_NAME;
+            return "long";
         case DOUBLE:
-            return DOUBLE_NAME;
+            return "double";
         case ARRAY:
             StringBuilder sb = new StringBuilder(getElementType().getClassName());
             for (int i = getDimensions(); i > 0; --i) {
-                sb.append(LEFT_RIGHT_BRACKETS);
+                sb.append("[]");
             }
             return sb.toString();
         case OBJECT:

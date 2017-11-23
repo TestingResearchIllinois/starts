@@ -23,7 +23,8 @@ import edu.illinois.starts.util.Logger;
 
 public class Cache implements StartsConstants {
     private static final Logger LOGGER = Logger.getGlobal();
-
+    private static final String GRAPH_EXTENSION = ".graph";
+    
     File jdepsCache;
     String m2Repo;
 
@@ -37,7 +38,7 @@ public class Cache implements StartsConstants {
     public void loadM2EdgesFromCache(List<String> moreEdges, String pathString) {
         if (!jdepsCache.exists()) {
             if (!jdepsCache.mkdir()) {
-                throw new RuntimeException(COULD_NOT_CREATE_JDEPS_CACHE_EXCEPTION + jdepsCache.getAbsolutePath());
+                throw new RuntimeException("I could not create the jdeps cache: " + jdepsCache.getAbsolutePath());
             }
         }
         //1. get jars from sfClassPath
@@ -66,7 +67,7 @@ public class Cache implements StartsConstants {
         for (String jar : missing) {
             File missingFile = new File(jar);
             String fileName = missingFile.getName();
-            File jdkJarGraphFile = new File(jdepsCache, fileName.replace(JAR_TYPE_NAME, GRAPH_TYPE_NAME));
+            File jdkJarGraphFile = new File(jdepsCache, fileName.replace(JAR_EXTENSION, GRAPH_EXTENSION));
             if (jdkJarGraphFile.exists()) {
                 found.add(jdkJarGraphFile.getName());
             } else {
@@ -85,7 +86,7 @@ public class Cache implements StartsConstants {
         //3. remove newly-created graphs from list of jars that were not found
         notFound.removeAll(newlyCreated);
         if (notFound.size() > 0) {
-            throw new RuntimeException(COULD_NOT_FIND_CREATE_JDEPS_GRAPH_EXCEPTION + notFound);
+            throw new RuntimeException("I could not find or create jdeps graphs in any cache: " + notFound);
         }
         return found;
     }
@@ -94,7 +95,7 @@ public class Cache implements StartsConstants {
         List<String> edges = new ArrayList<>();
         for (String jar : jarsInCache) {
             File cacheFile = createCacheFile(jar);
-            LOGGER.log(Level.FINEST, LOADING_FROM_NORMAL_CACHE + cacheFile.getAbsolutePath());
+            LOGGER.log(Level.FINEST, "@@LoadingFromNormalCache: " + cacheFile.getAbsolutePath());
             try {
                 List<String> lines = Files.readAllLines(cacheFile.toPath(), Charset.defaultCharset());
                 edges.addAll(lines);
@@ -102,7 +103,7 @@ public class Cache implements StartsConstants {
                 ioe.printStackTrace();
             }
         }
-        LOGGER.log(Level.FINEST, LOADED_CACHED_EDGES_FROM_JARS);
+        LOGGER.log(Level.FINEST, "@@LoadedCachedEdgesFromJars: ");
         return edges;
     }
 
@@ -118,7 +119,7 @@ public class Cache implements StartsConstants {
     }
 
     private File createCacheFile(String jar) {
-        String cachePath = jar.replace(m2Repo + File.separator, BLANK).replace(JAR_TYPE_NAME, GRAPH_TYPE_NAME);
+        String cachePath = jar.replace(m2Repo + FILE_SEPARATOR, EMPTY).replace(JAR_EXTENSION, GRAPH_EXTENSION);
         return new File(jdepsCache, cachePath);
     }
 
@@ -129,7 +130,7 @@ public class Cache implements StartsConstants {
         Set<String> jars = new HashSet<>();
         String[] splitCP = sfPathString.split(File.pathSeparator);
         for (int i = 0; i < splitCP.length; i++) {
-            if (splitCP[i].endsWith(JAR_TYPE_NAME)) {
+            if (splitCP[i].endsWith(JAR_EXTENSION)) {
                 jars.add(splitCP[i]);
             }
         }

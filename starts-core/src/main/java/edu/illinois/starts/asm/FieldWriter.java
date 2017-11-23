@@ -208,38 +208,38 @@ final class FieldWriter extends FieldVisitor implements StartsConstants {
     int getSize() {
         int size = 8;
         if (value != 0) {
-            cw.newUTF8(CONSTANT_VALUE);
+            cw.newUTF8("ConstantValue");
             size += 8;
         }
         if ((access & Opcodes.ACC_SYNTHETIC) != 0) {
             if ((cw.version & 0xFFFF) < Opcodes.V1_5
                     || (access & ClassWriter.ACC_SYNTHETIC_ATTRIBUTE) != 0) {
-                cw.newUTF8(SYNTHETIC);
+                cw.newUTF8("Synthetic");
                 size += 6;
             }
         }
         if ((access & Opcodes.ACC_DEPRECATED) != 0) {
-            cw.newUTF8(DEPRECATED);
+            cw.newUTF8("Deprecated");
             size += 6;
         }
         if (ClassReader.SIGNATURES && signature != 0) {
-            cw.newUTF8(SIGNATURE);
+            cw.newUTF8("Signature");
             size += 8;
         }
         if (ClassReader.ANNOTATIONS && anns != null) {
-            cw.newUTF8(RUNTIME_VISIBLE_ANNOTATIONS);
+            cw.newUTF8("RuntimeVisibleAnnotations");
             size += 8 + anns.getSize();
         }
         if (ClassReader.ANNOTATIONS && ianns != null) {
-            cw.newUTF8(RUNTIME_INVISIBLE_ANNOTATIONS);
+            cw.newUTF8("RuntimeInvisibleAnnotations");
             size += 8 + ianns.getSize();
         }
         if (ClassReader.ANNOTATIONS && tanns != null) {
-            cw.newUTF8(RUNTIME_VISIBLE_TYPE_ANNOTATIONS);
+            cw.newUTF8("RuntimeVisibleTypeAnnotations");
             size += 8 + tanns.getSize();
         }
         if (ClassReader.ANNOTATIONS && itanns != null) {
-            cw.newUTF8(RUNTIME_INVISIBLE_TYPE_ANNOTATIONS);
+            cw.newUTF8("RuntimeInvisibleTypeAnnotations");
             size += 8 + itanns.getSize();
         }
         if (attrs != null) {
@@ -292,36 +292,36 @@ final class FieldWriter extends FieldVisitor implements StartsConstants {
         }
         out.putShort(attributeCount);
         if (value != 0) {
-            out.putShort(cw.newUTF8(CONSTANT_VALUE));
+            out.putShort(cw.newUTF8("ConstantValue"));
             out.putInt(2).putShort(value);
         }
         if ((access & Opcodes.ACC_SYNTHETIC) != 0) {
             if ((cw.version & 0xFFFF) < Opcodes.V1_5
                     || (access & ClassWriter.ACC_SYNTHETIC_ATTRIBUTE) != 0) {
-                out.putShort(cw.newUTF8(SYNTHETIC)).putInt(0);
+                out.putShort(cw.newUTF8("Synthetic")).putInt(0);
             }
         }
         if ((access & Opcodes.ACC_DEPRECATED) != 0) {
-            out.putShort(cw.newUTF8(DEPRECATED)).putInt(0);
+            out.putShort(cw.newUTF8("Deprecated")).putInt(0);
         }
         if (ClassReader.SIGNATURES && signature != 0) {
-            out.putShort(cw.newUTF8(SIGNATURE));
+            out.putShort(cw.newUTF8("Signature"));
             out.putInt(2).putShort(signature);
         }
         if (ClassReader.ANNOTATIONS && anns != null) {
-            out.putShort(cw.newUTF8(RUNTIME_VISIBLE_ANNOTATIONS));
+            out.putShort(cw.newUTF8("RuntimeVisibleAnnotations"));
             anns.put(out);
         }
         if (ClassReader.ANNOTATIONS && ianns != null) {
-            out.putShort(cw.newUTF8(RUNTIME_INVISIBLE_ANNOTATIONS));
+            out.putShort(cw.newUTF8("RuntimeInvisibleAnnotations"));
             ianns.put(out);
         }
         if (ClassReader.ANNOTATIONS && tanns != null) {
-            out.putShort(cw.newUTF8(RUNTIME_VISIBLE_TYPE_ANNOTATIONS));
+            out.putShort(cw.newUTF8("RuntimeVisibleTypeAnnotations"));
             tanns.put(out);
         }
         if (ClassReader.ANNOTATIONS && itanns != null) {
-            out.putShort(cw.newUTF8(RUNTIME_INVISIBLE_TYPE_ANNOTATIONS));
+            out.putShort(cw.newUTF8("RuntimeInvisibleTypeAnnotations"));
             itanns.put(out);
         }
         if (attrs != null) {

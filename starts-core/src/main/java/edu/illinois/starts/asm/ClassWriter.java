@@ -811,7 +811,7 @@ public class ClassWriter extends ClassVisitor implements StartsConstants {
      */
     public byte[] toByteArray() {
         if (index > 0xFFFF) {
-            throw new RuntimeException(CLASS_FILE_TOO_LARGE_EXCEPTION);
+            throw new RuntimeException("Class file too large!");
         }
         // computes the real size of the bytecode of this class
         int size = 24 + 2 * interfaceCount;
@@ -835,65 +835,65 @@ public class ClassWriter extends ClassVisitor implements StartsConstants {
             // ClassReader.copyBootstrapMethods
             ++attributeCount;
             size += 8 + bootstrapMethods.length;
-            newUTF8(BOOTSTRAP_METHODS);
+            newUTF8("BootstrapMethods");
         }
         if (ClassReader.SIGNATURES && signature != 0) {
             ++attributeCount;
             size += 8;
-            newUTF8(SIGNATURE);
+            newUTF8("Signature");
         }
         if (sourceFile != 0) {
             ++attributeCount;
             size += 8;
-            newUTF8(SOURCE_FILE);
+            newUTF8("SourceFile");
         }
         if (sourceDebug != null) {
             ++attributeCount;
             size += sourceDebug.length + 6;
-            newUTF8(SOURCE_DEBUG_EXTENSION);
+            newUTF8("SourceDebugExtension");
         }
         if (enclosingMethodOwner != 0) {
             ++attributeCount;
             size += 10;
-            newUTF8(ENCLOSING_METHOD);
+            newUTF8("EnclosingMethod");
         }
         if ((access & Opcodes.ACC_DEPRECATED) != 0) {
             ++attributeCount;
             size += 6;
-            newUTF8(DEPRECATED);
+            newUTF8("Deprecated");
         }
         if ((access & Opcodes.ACC_SYNTHETIC) != 0) {
             if ((version & 0xFFFF) < Opcodes.V1_5
                     || (access & ACC_SYNTHETIC_ATTRIBUTE) != 0) {
                 ++attributeCount;
                 size += 6;
-                newUTF8(SYNTHETIC);
+                newUTF8("Synthetic");
             }
         }
         if (innerClasses != null) {
             ++attributeCount;
             size += 8 + innerClasses.length;
-            newUTF8(INNER_CLASSES);
+            newUTF8("InnerClasses");
         }
         if (ClassReader.ANNOTATIONS && anns != null) {
             ++attributeCount;
             size += 8 + anns.getSize();
-            newUTF8(RUNTIME_VISIBLE_ANNOTATIONS);
+            newUTF8("RuntimeVisibleAnnotations");
         }
         if (ClassReader.ANNOTATIONS && ianns != null) {
             ++attributeCount;
             size += 8 + ianns.getSize();
-            newUTF8(RUNTIME_INVISIBLE_ANNOTATIONS);
+            newUTF8("RuntimeInvisibleAnnotations");
         }
         if (ClassReader.ANNOTATIONS && tanns != null) {
             ++attributeCount;
             size += 8 + tanns.getSize();
-            newUTF8(RUNTIME_VISIBLE_TYPE_ANNOTATIONS);
+            newUTF8("RuntimeVisibleTypeAnnotations");
         }
         if (ClassReader.ANNOTATIONS && itanns != null) {
             ++attributeCount;
             size += 8 + itanns.getSize();
-            newUTF8(RUNTIME_INVISIBLE_TYPE_ANNOTATIONS);
+            newUTF8("RuntimeInvisibleTypeAnnotations");
         }
         if (attrs != null) {
             attributeCount += attrs.getCount();
@@ -926,54 +926,54 @@ public class ClassWriter extends ClassVisitor implements StartsConstants {
         }
         out.putShort(attributeCount);
         if (bootstrapMethods != null) {
-            out.putShort(newUTF8(BOOTSTRAP_METHODS));
+            out.putShort(newUTF8("BootstrapMethods"));
             out.putInt(bootstrapMethods.length + 2).putShort(
                     bootstrapMethodsCount);
             out.putByteArray(bootstrapMethods.data, 0, bootstrapMethods.length);
         }
         if (ClassReader.SIGNATURES && signature != 0) {
-            out.putShort(newUTF8(SIGNATURE)).putInt(2).putShort(signature);
+            out.putShort(newUTF8("Signature")).putInt(2).putShort(signature);
         }
         if (sourceFile != 0) {
-            out.putShort(newUTF8(SOURCE_FILE)).putInt(2).putShort(sourceFile);
+            out.putShort(newUTF8("SourceFile")).putInt(2).putShort(sourceFile);
         }
         if (sourceDebug != null) {
             int len = sourceDebug.length;
-            out.putShort(newUTF8(SOURCE_DEBUG_EXTENSION)).putInt(len);
+            out.putShort(newUTF8("SourceDebugExtension")).putInt(len);
             out.putByteArray(sourceDebug.data, 0, len);
         }
         if (enclosingMethodOwner != 0) {
-            out.putShort(newUTF8(ENCLOSING_METHOD)).putInt(4);
+            out.putShort(newUTF8("EnclosingMethod")).putInt(4);
             out.putShort(enclosingMethodOwner).putShort(enclosingMethod);
         }
         if ((access & Opcodes.ACC_DEPRECATED) != 0) {
-            out.putShort(newUTF8(DEPRECATED)).putInt(0);
+            out.putShort(newUTF8("Deprecated")).putInt(0);
         }
         if ((access & Opcodes.ACC_SYNTHETIC) != 0) {
             if ((version & 0xFFFF) < Opcodes.V1_5
                     || (access & ACC_SYNTHETIC_ATTRIBUTE) != 0) {
-                out.putShort(newUTF8(SYNTHETIC)).putInt(0);
+                out.putShort(newUTF8("Synthetic")).putInt(0);
             }
         }
         if (innerClasses != null) {
-            out.putShort(newUTF8(INNER_CLASSES));
+            out.putShort(newUTF8("InnerClasses"));
             out.putInt(innerClasses.length + 2).putShort(innerClassesCount);
             out.putByteArray(innerClasses.data, 0, innerClasses.length);
         }
         if (ClassReader.ANNOTATIONS && anns != null) {
-            out.putShort(newUTF8(RUNTIME_VISIBLE_ANNOTATIONS));
+            out.putShort(newUTF8("RuntimeVisibleAnnotations"));
             anns.put(out);
         }
         if (ClassReader.ANNOTATIONS && ianns != null) {
-            out.putShort(newUTF8(RUNTIME_INVISIBLE_ANNOTATIONS));
+            out.putShort(newUTF8("RuntimeInvisibleAnnotations"));
             ianns.put(out);
         }
         if (ClassReader.ANNOTATIONS && tanns != null) {
-            out.putShort(newUTF8(RUNTIME_VISIBLE_TYPE_ANNOTATIONS));
+            out.putShort(newUTF8("RuntimeVisibleTypeAnnotations"));
             tanns.put(out);
         }
         if (ClassReader.ANNOTATIONS && itanns != null) {
-            out.putShort(newUTF8(RUNTIME_INVISIBLE_TYPE_ANNOTATIONS));
+            out.putShort(newUTF8("RuntimeInvisibleTypeAnnotations"));
             itanns.put(out);
         }
         if (attrs != null) {
@@ -1056,7 +1056,7 @@ public class ClassWriter extends ClassVisitor implements StartsConstants {
             Handle h = (Handle) cst;
             return newHandleItem(h.tag, h.owner, h.name, h.desc);
         } else {
-            throw new IllegalArgumentException(VALUE_NAME + cst);
+            throw new IllegalArgumentException("value " + cst);
         }
     }
 
@@ -1692,7 +1692,7 @@ public class ClassWriter extends ClassVisitor implements StartsConstants {
             return type2;
         }
         if (c.isInterface() || d.isInterface()) {
-            return OBJECT_CLASS;
+            return "java/lang/Object";
         } else {
             do {
                 c = c.getSuperclass();

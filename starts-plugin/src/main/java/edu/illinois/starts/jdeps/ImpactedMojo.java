@@ -36,13 +36,13 @@ public class ImpactedMojo extends DiffMojo implements StartsConstants {
      * is useful for "dry runs" where one may want to see the diff without updating
      * the test dependencies.
      */
-    @Parameter(property = UPDATE_IMPACTED_CHECKSUMS, defaultValue = FALSE)
+    @Parameter(property = "updateImpactedChecksums", defaultValue = FALSE)
     private boolean updateImpactedChecksums;
 
     /**
      * Set to "true" to print newly-added classes: classes in the program that were not in the previous version.
      */
-    @Parameter(property = TRACK_NEW_CLASSES, defaultValue = FALSE)
+    @Parameter(property = "trackNewClasses", defaultValue = FALSE)
     private boolean trackNewClasses;
     private Logger logger;
 
@@ -53,7 +53,7 @@ public class ImpactedMojo extends DiffMojo implements StartsConstants {
         // 0. Find all classes in program
         List<String> allClasses = getAllClasses();
         if (allClasses.isEmpty()) {
-            logger.log(Level.INFO, THERE_ARE_NO_CLASS_FILES_IN_THIS_MODULE);
+            logger.log(Level.INFO, "There are no .class files in this module.");
             return;
         }
         Set<String>  impacted = new HashSet<>(allClasses);
@@ -64,15 +64,15 @@ public class ImpactedMojo extends DiffMojo implements StartsConstants {
         // 1b. Remove nonAffected from all classes to get classes impacted by the change
         impacted.removeAll(nonAffected);
 
-        logger.log(Level.FINEST, CHANGED + changed.toString());
-        logger.log(Level.FINEST, IMPACTED + impacted.toString());
+        logger.log(Level.FINEST, "CHANGED: " + changed.toString());
+        logger.log(Level.FINEST, "IMPACTED: " + impacted.toString());
         // 2. Optionally find newly-added classes
         if (trackNewClasses) {
             Set<String> newClasses = new HashSet<>(allClasses);
             Set<String> oldClasses = ZLCHelper.getExistingClasses(getArtifactsDir());
             newClasses.removeAll(oldClasses);
-            logger.log(Level.FINEST, NEWLY_ADDED + newClasses.toString());
-            Writer.writeToFile(newClasses, NEW_CLASSES, getArtifactsDir());
+            logger.log(Level.FINEST, "NEWLY-ADDED: " + newClasses.toString());
+            Writer.writeToFile(newClasses, "new-classes", getArtifactsDir());
         }
         // 3. Optionally update ZLC file for next run, using all classes in the SUT
         if (updateImpactedChecksums) {
@@ -80,7 +80,7 @@ public class ImpactedMojo extends DiffMojo implements StartsConstants {
         }
         // 4. Print impacted and/or write to file
         Writer.writeToFile(changed, CHANGED_CLASSES, getArtifactsDir());
-        Writer.writeToFile(impacted, IMPACTED_CLASSES, getArtifactsDir());
+        Writer.writeToFile(impacted, "impacted-classes", getArtifactsDir());
     }
 
     private void updateForNextRun(List<String> allClasses) throws MojoExecutionException {

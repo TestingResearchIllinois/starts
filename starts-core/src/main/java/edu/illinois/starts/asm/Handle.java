@@ -167,6 +167,6 @@ public final class Handle implements StartsConstants {
      */
     @Override
     public String toString() {
-        return owner + '.' + name + desc + WHITE_SPACE + LEFT_PARENTHESIS + tag + ')';
+        return owner + '.' + name + desc + " (" + tag + ')';
     }
 }

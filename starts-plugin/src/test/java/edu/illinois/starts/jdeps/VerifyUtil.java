@@ -29,7 +29,7 @@ public class VerifyUtil implements StartsConstants {
         for (String line : buildLog) {
             if (line.contains(STARTS_AFFECTED_TESTS)) {
                 String[] affectedTests = line.split(COLON);
-                Assert.assertTrue(NUMBER_OF_AFFECTED_TESTS_EXPECTED + value, affectedTests[2].equals(value));
+                Assert.assertTrue("Number of affected tests expected: " + value, affectedTests[2].equals(value));
             }
         }
     }

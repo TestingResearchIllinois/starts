@@ -31,7 +31,7 @@ public class SelectMojo extends DiffMojo implements StartsConstants {
      * "false" is useful for "dry runs" where one may want to see the affected
      * tests, without updating test dependencies.
      */
-    @Parameter(property = UPDATE_SELECT_CHECKSUMS, defaultValue = FALSE)
+    @Parameter(property = "updateSelectChecksums", defaultValue = FALSE)
     private boolean updateSelectChecksums;
 
     private Logger logger;
@@ -41,7 +41,7 @@ public class SelectMojo extends DiffMojo implements StartsConstants {
         logger = Logger.getGlobal();
         long start = System.currentTimeMillis();
         Set<String> affectedTests = computeAffectedTests();
-        printResult(affectedTests, AFFECTED_TESTS);
+        printResult(affectedTests, "AffectedTests");
         long end = System.currentTimeMillis();
         logger.log(Level.FINE, PROFILE_RUN_MOJO_TOTAL + Writer.millsToSeconds(end - start));
         logger.log(Level.FINE, PROFILE_TEST_RUNNING_TIME + 0.0);

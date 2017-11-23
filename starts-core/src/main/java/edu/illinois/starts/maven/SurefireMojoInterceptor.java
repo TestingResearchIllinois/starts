@@ -10,6 +10,8 @@ import edu.illinois.starts.constants.StartsConstants;
 /** This class is from Ekstazi. **/
 
 public final class SurefireMojoInterceptor extends AbstractMojoInterceptor implements StartsConstants {
+    
+    static final String UNSUPPORTED_SUREFIRE_VERSION_EXCEPTION = "Unsupported surefire version. ";
 
     public static void execute(Object mojo) throws Exception {
         if (!isSurefirePlugin(mojo)) {
@@ -33,7 +35,7 @@ public final class SurefireMojoInterceptor extends AbstractMojoInterceptor imple
     private static boolean isAlreadyInvoked(Object mojo) throws Exception {
         String key = STARTS_NAME + System.identityHashCode(mojo);
         String value = System.getProperty(key);
-        System.setProperty(key, STARTS_INVOKED);
+        System.setProperty(key, "STARTS-invoked");
         return value != null;
     }
 
@@ -43,15 +45,15 @@ public final class SurefireMojoInterceptor extends AbstractMojoInterceptor imple
             getField(EXCLUDES_FIELD, mojo);
         } catch (NoSuchMethodException ex) {
             throwMojoExecutionException(mojo, UNSUPPORTED_SUREFIRE_VERSION_EXCEPTION
-                     + TRY_SETTING_EXCLUDESFILE_SUREFIRE_CONFIGURATION_EXCEPTION, ex);
+                     + "Try setting excludesFile in the surefire configuration.", ex);
         }
     }
 
     private static void updateExcludes(Object mojo) throws Exception {
-        LOGGER.log(Level.FINE, UPDATING_EXCLUDES);
+        LOGGER.log(Level.FINE, "updating Excludes");
         List<String> currentExcludes = getListField(EXCLUDES_FIELD, mojo);
         List<String> newExcludes = new ArrayList<>(Arrays.asList(System.getProperty(STARTS_EXCLUDE_PROPERTY)
-                .replace(LEFT_BRACKET, BLANK).replace(RIGHT_BRACKET, BLANK).split(COMMA)));
+                .replace("[", EMPTY).replace("]", EMPTY).split(COMMA)));
         if (currentExcludes != null) {
             newExcludes.addAll(currentExcludes);
         } else {

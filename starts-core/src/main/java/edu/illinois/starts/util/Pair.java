@@ -23,7 +23,7 @@ public class Pair<K, V> implements Serializable, StartsConstants {
 
     @Override
     public String toString() {
-        return key + EQUAL + value;
+        return key + "=" + value;
     }
 
     @Override

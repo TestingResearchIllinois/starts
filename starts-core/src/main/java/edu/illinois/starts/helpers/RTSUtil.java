@@ -35,7 +35,7 @@ public class RTSUtil implements StartsConstants {
         long start = System.currentTimeMillis();
         Writer.writeGraph(graph, artifactsDir, printGraph, graphFile);
         long end = System.currentTimeMillis();
-        LOGGER.log(Level.FINEST, TIME_WRITING_FILES + (end - start) + MS);
+        LOGGER.log(Level.FINEST, "[TIME]WRITING FILES: " + (end - start) + MILLISECOND);
     }
 
     public static void computeAndSaveNewCheckSums(String artifactsDir,
@@ -47,7 +47,7 @@ public class RTSUtil implements StartsConstants {
         start = System.currentTimeMillis();
         Map<String, Set<RegData>> newCheckSums = ChecksumUtil.makeCheckSumMap(loader, testDeps, affectedTests);
         end = System.currentTimeMillis();
-        LOGGER.log(Level.FINEST, TIME_UPDATING_CHECKSUMS + (end - start) + MS);
+        LOGGER.log(Level.FINEST, "[TIME]UPDATING CHECKSUMS: " + (end - start) + MILLISECOND);
         start = System.currentTimeMillis();
         ChecksumUtil.saveCheckSums(newCheckSums, artifactsDir);
         try {
@@ -56,7 +56,7 @@ public class RTSUtil implements StartsConstants {
             throw new MojoExecutionException(ioe.getMessage());
         }
         end = System.currentTimeMillis();
-        LOGGER.log(Level.FINEST, TIME_RESAVING_CHECKSUMS + (end - start) + MS);
+        LOGGER.log(Level.FINEST, "[TIME]RE-SAVING CHECKSUMS: " + (end - start) + MILLISECOND);
     }
 
     /**
@@ -69,13 +69,13 @@ public class RTSUtil implements StartsConstants {
         Set<String> affectedTests = new HashSet<>(allTests);
         affectedTests.removeAll(nonAffected);
         long end = System.currentTimeMillis();
-        LOGGER.log(Level.FINEST, TIME_COMPUTING_AFFECTED + (end - start) + MS);
+        LOGGER.log(Level.FINEST, "[TIME]COMPUTING AFFECTED: " + (end - start) + MILLISECOND);
         return affectedTests;
     }
 
     public static Map<String, Set<String>> runJdeps(List<String> args) {
         StringWriter output = new StringWriter();
-        LOGGER.log(Level.FINE, JDEPS_ARGS + args);
+        LOGGER.log(Level.FINE, "JDEPS ARGS:" + args);
         Main.run(args.toArray(new String[0]), new PrintWriter(output));
         // jdeps can return an empty output when run on .jar files with no .class files
         return output.getBuffer().length() != 0 ? getDepsFromJdepsOutput(output) : new HashMap<String, Set<String>>();
@@ -87,7 +87,7 @@ public class RTSUtil implements StartsConstants {
         for (String line : lines) {
             String[] parts = line.split("->");
             String left = parts[0].trim();
-            if (left.startsWith(CLASSES) || left.startsWith(TEST_CLASSES) || left.endsWith(JAR_TYPE_NAME)) {
+            if (left.startsWith(CLASSES) || left.startsWith(TEST_CLASSES) || left.endsWith(JAR_EXTENSION)) {
                 continue;
             }
             String right = parts[1].trim().split(WHITE_SPACE)[0];

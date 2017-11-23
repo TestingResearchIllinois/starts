@@ -66,7 +66,7 @@ public class YasglHelper implements StartsConstants {
     public static void addEdgeToGraph(DirectedGraphBuilder<String> builder, String str) {
         String[] edge = str.split(WHITE_SPACE);
         if (edge.length != 2) {
-            throw new IllegalArgumentException(NO_EDGE_TARGET_EXCEPTION + str);
+            throw new IllegalArgumentException("@@@NoEdgeTarget: " + str);
         }
         internAndAddEdge(builder, edge);
     }
@@ -74,7 +74,7 @@ public class YasglHelper implements StartsConstants {
     public static void internAndAddEdge(DirectedGraphBuilder<String> builder, String[] edge) {
         // TODO: does it need to "intern" at all, if the "builder" already uses "equals"?!
         if (edge.length != 2) {
-            throw new IllegalArgumentException(EDGE_SHOULD_HAVE_LENGTH_TWO_EXCEPTION);
+            throw new IllegalArgumentException("Edge should have length 2");
         }
         edge[0] = edge[0].intern();
         edge[1] = edge[1].intern();
@@ -83,7 +83,7 @@ public class YasglHelper implements StartsConstants {
 
     @SuppressWarnings("checkstyle:Regexp")
     public DirectedGraphBuilder<String> addEdgesToBuilder(File graphFile, DirectedGraphBuilder<String> builder) {
-        boolean noGZ = graphFile.getAbsolutePath().endsWith(GZ_TYPE_NAME) ? false : true;
+        boolean noGZ = graphFile.getAbsolutePath().endsWith(".gz") ? false : true;
 
         if (!graphFile.exists()) {
             return builder;

@@ -912,17 +912,17 @@ final class Frame implements StartsConstants {
                 push(TOP);
                 break;
             case ClassWriter.CLASS:
-                push(OBJECT | cw.addType(CLASS_CLASS));
+                push(OBJECT | cw.addType("java/lang/Class"));
                 break;
             case ClassWriter.STR:
-                push(OBJECT | cw.addType(STRING_CLASS));
+                push(OBJECT | cw.addType("java/lang/String"));
                 break;
             case ClassWriter.MTYPE:
-                push(OBJECT | cw.addType(METHODTYPE_CLASS));
+                push(OBJECT | cw.addType("java/lang/invoke/MethodType"));
                 break;
             // case ClassWriter.HANDLE_BASE + [1..9]:
             default:
-                push(OBJECT | cw.addType(METHODHANDLE_CLASS));
+                push(OBJECT | cw.addType("java/lang/invoke/MethodHandle"));
             }
             break;
         case Opcodes.ALOAD:
@@ -1178,7 +1178,7 @@ final class Frame implements StartsConstants {
         case Opcodes.JSR:
         case Opcodes.RET:
             throw new RuntimeException(
-            		JSR_RET_NOT_SUPPORTED_EXCEPTION);
+                    "JSR/RET are not supported with computeFrames option");
         case Opcodes.GETSTATIC:
             push(cw, item.strVal3);
             break;
@@ -1430,7 +1430,7 @@ final class Frame implements StartsConstants {
                     // if u and t are array types, but not with the same element
                     // type, merge(u,t) = dim(u) - 1 | java/lang/Object
                     int vdim = ELEMENT_OF + (u & DIM);
-                    v = vdim | OBJECT | cw.addType(OBJECT_CLASS);
+                    v = vdim | OBJECT | cw.addType("java/lang/Object");
                 }
             } else if ((t & BASE_KIND) == OBJECT || (t & DIM) != 0) {
                 // if t is any other reference or array type, the merged type
@@ -1442,7 +1442,7 @@ final class Frame implements StartsConstants {
                 int udim = (((u & DIM) == 0 || (u & BASE_KIND) == OBJECT) ? 0
                         : ELEMENT_OF) + (u & DIM);
                 v = Math.min(tdim, udim) | OBJECT
-                        | cw.addType(OBJECT_CLASS);
+                        | cw.addType("java/lang/Object");
             } else {
                 // if t is any other type, merge(u,t)=TOP
                 v = TOP;

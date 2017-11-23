@@ -39,14 +39,14 @@ public class Writer implements StartsConstants {
     private static final Logger LOGGER = Logger.getGlobal();
 
     public static void writeToFile(Collection col, String filename, String artifactsDir) {
-        String outFilename = artifactsDir + File.separator + filename;
+        String outFilename = artifactsDir + FILE_SEPARATOR + filename;
         writeToFile(col, outFilename);
     }
 
     public static void writeToFile(Collection col, String filename) {
         try (BufferedWriter writer = getWriter(filename)) {
             if (col.isEmpty()) {
-                writer.write(BLANK);
+                writer.write(EMPTY);
                 return;
             }
             for (Object elem : col) {
@@ -60,7 +60,7 @@ public class Writer implements StartsConstants {
     public static void writeMapToFile(Map map, String filename) {
         try (BufferedWriter writer = getWriter(filename)) {
             if (map.isEmpty()) {
-                writer.write(BLANK);
+                writer.write(EMPTY);
                 return;
             }
             for (Object key : map.keySet()) {
@@ -107,10 +107,10 @@ public class Writer implements StartsConstants {
      */
     public static void writeGraph(DirectedGraph<String> graph, String artifactsDir, boolean print, String graphFile) {
         if (print) {
-            String outFilename = artifactsDir + File.separator + graphFile;
+            String outFilename = artifactsDir + FILE_SEPARATOR + graphFile;
             try (BufferedWriter writer = getWriter(outFilename)) {
                 if (graph == null) {
-                    writer.write(BLANK);
+                    writer.write(EMPTY);
                     return;
                 }
                 // write all the edges in the graph
@@ -136,7 +136,7 @@ public class Writer implements StartsConstants {
     }
 
     public static void writeTCSimple(Map<String, Set<String>> testDeps, String artifactsDir, String tcFile) {
-        String outFilename = artifactsDir + File.separator + tcFile;
+        String outFilename = artifactsDir + FILE_SEPARATOR + tcFile;
         try (BufferedWriter writer = getWriter(outFilename)) {
             for (String test : testDeps.keySet()) {
                 writer.write(test + WHITE_SPACE + test);
@@ -176,7 +176,7 @@ public class Writer implements StartsConstants {
             }
         }
         long end = System.currentTimeMillis();
-        LOGGER.log(Level.FINE, PROFILE_UPDATE_FOR_NEXT_RUN_PATHTOSTRING + millsToSeconds(end - start));
+        LOGGER.log(Level.FINE, "[PROFILE] updateForNextRun(pathToString): " + millsToSeconds(end - start));
         return sb.toString();
     }
 
@@ -193,21 +193,21 @@ public class Writer implements StartsConstants {
     }
 
     public static String fqnToExcludePath(String fqn) {
-        return fqn.replace(DOT, File.separator) + ".*";
+        return fqn.replace(DOT, FILE_SEPARATOR) + ".*";
     }
 
     public static void writeToLog(Set<String> set, String title, Logger logger) {
         List<String> list = new ArrayList<>(set);
         Collections.sort(list);
-        logger.log(Level.INFO, BLANK);
-        logger.log(Level.INFO, STARS_AND_SPACE + title + SPACE_AND_STARTS);
+        logger.log(Level.INFO, EMPTY);
+        logger.log(Level.INFO, STARS + WHITE_SPACE + title + WHITE_SPACE + STARS);
 
         for (String listItem : list) {
             logger.log(Level.INFO, listItem);
         }
 
         if (set.isEmpty()) {
-            logger.log(Level.INFO, title + FOUND_NO_CLASSES);
+            logger.log(Level.INFO, title + " found no classes.");
         }
     }
 
@@ -227,7 +227,7 @@ public class Writer implements StartsConstants {
         byte[] bytes;
         int bufSize = 65536 * 2;
         try {
-            MessageDigest md = MessageDigest.getInstance(MD5);
+            MessageDigest md = MessageDigest.getInstance("MD5");
             InputStream is = Files.newInputStream(Paths.get(jar));
             bytes = new byte[bufSize];
             int size = is.read(bytes, 0, bufSize);
@@ -252,6 +252,6 @@ public class Writer implements StartsConstants {
      */
     public static String urlToFQN(String url) {
         // ASSUMPTION: "classes/" rarely occurs in the rest of the path
-        return url.split(CLASSES + File.separator)[1].replace(CLASS_TYPE_NAME, BLANK).replace(File.separator, DOT);
+        return url.split(CLASSES + FILE_SEPARATOR)[1].replace(CLASS_EXTENSION, EMPTY).replace(FILE_SEPARATOR, DOT);
     }
 }

@@ -29,11 +29,13 @@ import org.ekstazi.util.Types;
  * Utility methods for dealing with the .zlc format.
  */
 public class ZLCHelper implements StartsConstants {
+    
     public static final String zlcFile = ZLC_FILE;
     public static final String STAR_FILE = "file:*";
     private static final Logger LOGGER = Logger.getGlobal();
     private static Map<String, ZLCData> zlcDataMap;
-
+    private static final String NOEXISTING_ZLCFILE_FIRST_RUN = "@NoExistingZLCFile. First Run?";
+    
     public ZLCHelper() {
         zlcDataMap = new HashMap<>();
     }
@@ -84,7 +86,7 @@ public class ZLCHelper implements StartsConstants {
         List<ZLCData> zlc = createZLCData(testDeps, loader);
         Writer.writeToFile(zlc, zlcFile, artifactsDir);
         long end = System.currentTimeMillis();
-        LOGGER.log(Level.FINE, PROFILE_UPDATE_FOR_NEXT_RUN_UPDATEZLCFILE + Writer.millsToSeconds(end - start));
+        LOGGER.log(Level.FINE, "[PROFILE] updateForNextRun(updateZLCFile): " + Writer.millsToSeconds(end - start));
     }
 
     public static List<ZLCData> createZLCData(Map<String, Set<String>> testDeps, ClassLoader loader) {
@@ -117,7 +119,7 @@ public class ZLCHelper implements StartsConstants {
             zlcData.add(new ZLCData(url, checksum, tests));
         }
         long end = System.currentTimeMillis();
-        LOGGER.log(Level.FINEST, TIME_CREATING_ZLC_FILE + (end - start) + MS);
+        LOGGER.log(Level.FINEST, "[TIME]CREATING ZLC FILE: " + (end - start) + MILLISECOND);
         return zlcData;
     }
 
@@ -159,7 +161,7 @@ public class ZLCHelper implements StartsConstants {
                 }
                 if (newCheckSum.equals("-1")) {
                     // a class was deleted or auto-generated, no need to track it in zlc
-                    LOGGER.log(Level.FINEST, IGNORING + url);
+                    LOGGER.log(Level.FINEST, "Ignoring: " + url);
                     continue;
                 }
                 ZLCData data = new ZLCData(url, newCheckSum, tests);
@@ -174,7 +176,7 @@ public class ZLCHelper implements StartsConstants {
         }
         nonAffected.removeAll(affected);
         long end = System.currentTimeMillis();
-        LOGGER.log(Level.FINEST, TIME_COMPUTING_NON_AFFECTED + (end - start) + MS);
+        LOGGER.log(Level.FINEST, TIME_COMPUTING_NON_AFFECTED + (end - start) + MILLISECOND);
         return new Pair<>(nonAffected, changedClasses);
     }
 
@@ -193,7 +195,7 @@ public class ZLCHelper implements StartsConstants {
         try {
             List<String> zlcLines = Files.readAllLines(zlc.toPath(), Charset.defaultCharset());
             for (String line : zlcLines) {
-                if (line.startsWith(FILE_NAME)) {
+                if (line.startsWith("file")) {
                     existingClasses.add(Writer.urlToFQN(line.split(WHITE_SPACE)[0]));
                 }
             }
@@ -201,7 +203,7 @@ public class ZLCHelper implements StartsConstants {
             ioe.printStackTrace();
         }
         long end = System.currentTimeMillis();
-        LOGGER.log(Level.FINEST, TIME_COMPUTING_EXISTING_CLASSES + (end - start) + MS);
+        LOGGER.log(Level.FINEST, "[TIME]COMPUTING EXISTING CLASSES: " + (end - start) + MILLISECOND);
         return existingClasses;
     }
 }

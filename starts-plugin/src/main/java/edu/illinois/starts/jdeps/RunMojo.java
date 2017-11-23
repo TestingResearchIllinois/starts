@@ -42,7 +42,7 @@ public class RunMojo extends DiffMojo implements StartsConstants {
      * is useful for "dry runs" where one may want to see the non-affected tests that
      * STARTS writes to the Surefire excludesFile, without updating test dependencies.
      */
-    @Parameter(property = UPDATE_RUN_CHECKSUMS, defaultValue = TRUE)
+    @Parameter(property = "updateRunChecksums", defaultValue = TRUE)
     protected boolean updateRunChecksums;
 
     /**
@@ -54,12 +54,13 @@ public class RunMojo extends DiffMojo implements StartsConstants {
      * file, which contains the list of tests that would be run if this option is set to false, will
      * be written to disk.
      */
-    @Parameter(property = RETEST_ALL, defaultValue = FALSE)
+    @Parameter(property = "retestAll", defaultValue = FALSE)
     protected boolean retestAll;
-
+    
     protected Set<String> nonAffectedTests;
     protected Set<String> changedClasses;
     private Logger logger;
+    private static final String TARGET = "target";
 
     public void execute() throws MojoExecutionException {
         Logger.getGlobal().setLoggingLevel(Level.parse(loggingLevel));
@@ -69,7 +70,7 @@ public class RunMojo extends DiffMojo implements StartsConstants {
         List<String> excludePaths = Writer.fqnsToExcludePath(nonAffectedTests);
         setIncludesExcludes();
         if (logger.getLoggingLevel().intValue() <= Level.FINEST.intValue()) {
-            Writer.writeToFile(nonAffectedTests, NON_AFFECTED_TESTS, getArtifactsDir());
+            Writer.writeToFile(nonAffectedTests, "non-affected-tests", getArtifactsDir());
         }
         run(excludePaths);
         Set<String> allTests = new HashSet<>(getTestClasses(CHECK_IF_ALL_AFFECTED));
@@ -102,10 +103,10 @@ public class RunMojo extends DiffMojo implements StartsConstants {
 
     private void dynamicallyUpdateExcludes(List<String> excludePaths) throws MojoExecutionException {
         if (AgentLoader.loadDynamicAgent()) {
-            logger.log(Level.FINEST, AGENT_LOADED);
+            logger.log(Level.FINEST, "AGENT LOADED!!!");
             System.setProperty(STARTS_EXCLUDE_PROPERTY, Arrays.toString(excludePaths.toArray(new String[0])));
         } else {
-            throw new MojoExecutionException(COULD_NOT_ATTACH_THE_AGENT_EXCEPTION);
+            throw new MojoExecutionException("I COULD NOT ATTACH THE AGENT");
         }
     }
 
@@ -166,12 +167,12 @@ public class RunMojo extends DiffMojo implements StartsConstants {
     private String getCleanClassPath(String cp) {
         String[] paths = cp.split(File.pathSeparator);
         StringBuilder sb = new StringBuilder();
-        String classes = File.separator + TARGET +  File.separator + CLASSES;
-        String testClasses = File.separator + TARGET + File.separator + TEST_CLASSES;
+        String classes = FILE_SEPARATOR + TARGET +  FILE_SEPARATOR + CLASSES;
+        String testClasses = FILE_SEPARATOR + TARGET + FILE_SEPARATOR + TEST_CLASSES;
         for (int i = 0; i < paths.length; i++) {
             if (paths[i].contains(classes)
                 || paths[i].contains(testClasses)
-                || paths[i].contains(SNAPSHOT_DOT_JAR)) {
+                || paths[i].contains("-SNAPSHOT.jar")) {
                 continue;
             }
             if (sb.length() == 0) {

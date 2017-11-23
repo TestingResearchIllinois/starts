@@ -67,12 +67,12 @@ public class ChecksumUtil implements StartsConstants {
                         // Known benign cases where this can happen: (i) dep is from a shaded jar which is itself on
                         // the classpath; (ii) dep is from an optional jar dependency of a direct jar dependency (e.g.,
                         // users of joda-time-*.jar do not necessarily depend on classes from joda-convert-8.jar
-                        LOGGER.log(Level.FINEST, LOADED_NULL_URL_FOR_DEP + dep);
+                        LOGGER.log(Level.FINEST, "@@LoadedNullURLForDep: " + dep);
                     }
                 }
             }
             long end = System.currentTimeMillis();
-            LOGGER.log(Level.FINEST, LOADED_RESOURCES + (end - start) + MS);
+            LOGGER.log(Level.FINEST, "LOADED RESOURCES: " + (end - start) + MILLISECOND);
         }
         return checksums;
     }
@@ -90,7 +90,7 @@ public class ChecksumUtil implements StartsConstants {
     }
 
     public static String toClassName(String fqn) {
-        return fqn.replace(DOT, SLASH) + CLASS_TYPE_NAME;
+        return fqn.replace(DOT, FILE_SEPARATOR) + CLASS_EXTENSION;
     }
 
     public static void saveCheckSums(Map<String, Set<RegData>> newCheckSums, String artifactsDir) {
@@ -101,7 +101,7 @@ public class ChecksumUtil implements StartsConstants {
     }
 
     public static String makeCheckSumPath(String test, String artifactsDir) {
-        return artifactsDir + test + CLZ_TYPE_NAME;
+        return artifactsDir + test + ".clz";
     }
 
     public static void writeChecksumFile(String filePath, Set<RegData> data) {

@@ -39,11 +39,14 @@ public interface StartsConstants {
     // simple characters:
     String AT = "@";
     String DOT = ".";
-    String BLANK = "";
+    String EMPTY = "";
     String STAR = "*";
     String COMMA = ",";
     String EQUAL = "=";
-    String SLASH = "/";
+    String FILE_SEPARATOR = File.separator;
+    char FILE_SEPARATOR_CHAR = File.separatorChar;
+    String FILE_PATH_SEPARATOR = File.pathSeparator;
+    char FILE_PATH_SEPARATOR_CHAR = File.pathSeparatorChar;
     String COLON = ": ";
     String WHITE_SPACE = " ";
     String LEFT_BRACKET = "[";
@@ -51,8 +54,7 @@ public interface StartsConstants {
     String LEFT_PARENTHESIS = "(";
     String RIGHT_PARENTHESIS = ")";
     String LEFT_RIGHT_BRACKETS = "[]";
-    String STARS_AND_SPACE = "********** ";
-    String SPACE_AND_STARTS = " **********";
+    String STARS = "**********";
 
     // Annotations:
     String RUNTIME_VISIBLE_ANNOTATIONS = "RuntimeVisibleAnnotations";
@@ -62,7 +64,7 @@ public interface StartsConstants {
     String RUNTIME_VISIBLE_PARAMETER_ANNOTATIONS = "RuntimeVisibleParameterAnnotations";
     String RUNTIME_INVISIBLE_PARAMETER_ANNOTATIONS = "RuntimeInvisibleParameterAnnotations";
 
-    String MS = "ms";
+    String MILLISECOND = "ms";
     String TRUE = "true";
     String CODE = "Code";
     String FALSE = "false";
@@ -87,7 +89,9 @@ public interface StartsConstants {
     String LOADING_FROM_NORMAL_CACHE = "@@LoadingFromNormalCache: ";
     String NO_TESTS_ARE_SELECTED_TO_RUN = "No tests are selected to run.";
     String LOADED_CACHED_EDGES_FROM_JARS = "@@LoadedCachedEdgesFromJars: ";
-    String NOEXISTING_ZLCFILE_FIRST_RUN = "@NoExistingZLCFile. First Run?";
+    /*
+     * String NOEXISTING_ZLCFILE_FIRST_RUN = "@NoExistingZLCFile. First Run?";
+     */
     String NO_RTS_ARTIFACTS_LIKELY_THE_FIRST_RUN = " (no RTS artifacts; likely the first run)";
     String THERE_ARE_NO_CLASS_FILES_IN_THIS_MODULE = "There are no .class files in this module.";
     String TIME_WRITING_FILES = "[TIME]WRITING FILES: ";
@@ -132,7 +136,7 @@ public interface StartsConstants {
     String DOUBLE_NAME = "double";
     String BOOLEAN_NAME = "boolean";
 
-    String LIB = "lib";
+    /* String LIB = "lib"; */
     String JRE = "jre";
     String MAC = "mac";
     String ZLC = "ZLC";
@@ -144,7 +148,7 @@ public interface StartsConstants {
     String CONFIG = "CONFIG";
     String ATTACH = "attach";
     String DETACH = "detach";
-    String TARGET = "target";
+    /* String TARGET = "target"; */
     String MY_ROLE = "MyRole";
     String G_CACHE = "gCache";
     String FILE_NAME = "file";
@@ -219,12 +223,12 @@ public interface StartsConstants {
     String UPDATE_IMPACTED_CHECKSUMS = "updateImpactedChecksums";
     String NUMBER_OF_AFFECTED_TESTS_EXPECTED = "Number of affected tests expected: ";
 
-    String GZ_TYPE_NAME = ".gz";
-    String CLZ_TYPE_NAME = ".clz";
-    String JAR_TYPE_NAME = ".jar";
-    String JAVA_TYPE_NAME = ".java";
-    String CLASS_TYPE_NAME = ".class";
-    String GRAPH_TYPE_NAME = ".graph";
+    String GZ_EXTENSION = ".gz";
+    String CLZ_EXTENSION = ".clz";
+    String JAR_EXTENSION = ".jar";
+    String JAVA_EXTENSION = ".java";
+    String CLASS_EXTENSION = ".class";
+    /* String GRAPH_EXTENSION = ".graph"; */
     String TOOLS_DOT_JAR = "tools.jar";
     String JDK_DOT_GRAPH = "jdk.graph";
     String CLASSES_DOT_JAR = "classes.jar";
@@ -243,7 +247,10 @@ public interface StartsConstants {
     String METHOD_CODE_TOO_LARGE_EXCEPTION = "Method code too large!";
     String EDGE_SHOULD_HAVE_LENGTH_TWO_EXCEPTION = "Edge should have length 2";
     String COULD_NOT_ATTACH_THE_AGENT_EXCEPTION = "I COULD NOT ATTACH THE AGENT";
-    String UNSUPPORTED_SUREFIRE_VERSION_EXCEPTION = "Unsupported surefire version. ";
+    /*
+     * String UNSUPPORTED_SUREFIRE_VERSION_EXCEPTION =
+     * "Unsupported surefire version. ";
+     */
     String SUREFIRE_PLUGIN_NOT_AVAILABLE_EXCEPTION = "Surefire plugin not available";
     String COULD_NOT_CREATE_ARTIFACTS_DIR_EXCEPTION = "I could not create artifacts dir: ";
     String COULD_NOT_CREATE_JDEPS_CACHE_EXCEPTION = "I could not create the jdeps cache: ";
