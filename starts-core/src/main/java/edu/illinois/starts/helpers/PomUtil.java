@@ -77,6 +77,17 @@ public class PomUtil implements StartsConstants {
                 break;
             }
         }
+        // Did not find plugin under <build><plugins>,
+        // check under <build><pluginManagement><plugins>
+        if (plugin == null) {
+            plugins = project.getPluginManagement().getPlugins();
+            for (Plugin p : plugins) {
+                if (p.getKey().equalsIgnoreCase(name)) {
+                    plugin = p;
+                    break;
+                }
+            }
+        }
         return plugin;
     }
 
