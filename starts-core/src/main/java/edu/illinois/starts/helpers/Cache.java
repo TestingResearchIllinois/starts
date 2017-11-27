@@ -46,7 +46,11 @@ public class Cache {
         // Some projects depend directly on jars in the standard library, so
         // we want to check there as well
         jarsInCache.addAll(checkMissingJarsInJDKCache(missing));
-        moreEdges.addAll(loadCachedEdges(jarsInCache));
+        if (moreEdges != null) {
+            moreEdges.addAll(loadCachedEdges(jarsInCache));
+        } else {
+            moreEdges = new ArrayList<>(loadCachedEdges(jarsInCache));
+        }
     }
 
     private HashSet<String> getJarsMissingFromCache(Set<String> jarsInCache) {
