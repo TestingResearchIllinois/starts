@@ -55,6 +55,15 @@ public class RunMojo extends DiffMojo {
     @Parameter(property = "retestAll", defaultValue = "false")
     protected boolean retestAll;
 
+    /**
+     * Set this to "true" to save nonAffectedTests as a file on disk. This improve the time of
+     * updating test dependencies in offline mode by not running computeChangeData() for the second
+     * time.
+     * Note: Run with "-DstartsLogging=FINEST" does the same thing.
+     */
+    @Parameter(property = "writeNonAffected", defaultValue = "false")
+    protected boolean writeNonAffected;
+
     protected Set<String> nonAffectedTests;
     protected Set<String> changedClasses;
     private Logger logger;
@@ -66,7 +75,7 @@ public class RunMojo extends DiffMojo {
         setChangedAndNonaffected();
         List<String> excludePaths = Writer.fqnsToExcludePath(nonAffectedTests);
         setIncludesExcludes();
-        if (logger.getLoggingLevel().intValue() <= Level.FINEST.intValue()) {
+        if (writeNonAffected || logger.getLoggingLevel().intValue() <= Level.FINEST.intValue()) {
             Writer.writeToFile(nonAffectedTests, "non-affected-tests", getArtifactsDir());
         }
         run(excludePaths);
