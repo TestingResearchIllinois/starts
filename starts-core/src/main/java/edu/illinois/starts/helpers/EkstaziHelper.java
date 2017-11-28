@@ -20,7 +20,6 @@ import edu.illinois.starts.util.Logger;
 import edu.illinois.starts.util.Pair;
 import org.ekstazi.check.AffectedChecker;
 
-
 /**
  * Utility methods for interacting with Ekstazi.
  */

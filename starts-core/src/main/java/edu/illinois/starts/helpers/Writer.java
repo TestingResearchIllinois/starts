@@ -31,7 +31,6 @@ import edu.illinois.yasgl.DirectedGraph;
 import edu.illinois.yasgl.Edge;
 import org.apache.commons.codec.binary.Hex;
 
-
 /**
  * Utility methods for writing various data to file.
  */

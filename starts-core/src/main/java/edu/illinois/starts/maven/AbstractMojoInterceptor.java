@@ -35,7 +35,7 @@ public abstract class AbstractMojoInterceptor implements StartsConstants {
     }
 
     protected static void throwMojoExecutionException(Object mojo, String message, Exception cause) throws Exception {
-        Class<?> clz = mojo.getClass().getClassLoader().loadClass("org.apache.maven.plugin.MojoExecutionException");
+        Class<?> clz = mojo.getClass().getClassLoader().loadClass(MOJO_EXECUTION_EXCEPTION_BIN);
         Constructor<?> con = clz.getConstructor(String.class, Exception.class);
         Exception ex = (Exception) con.newInstance(message, cause);
         throw ex;

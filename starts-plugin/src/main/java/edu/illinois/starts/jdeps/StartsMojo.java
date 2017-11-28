@@ -15,7 +15,6 @@ import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.ResolutionScope;
 
-
 /**
  * Invoked after after running selected tests (see lifecycle.xml for details).
  */

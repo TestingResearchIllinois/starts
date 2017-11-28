@@ -19,7 +19,6 @@ import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
 
-
 /**
  * Finds tests affected by a change but does not run them.
  */

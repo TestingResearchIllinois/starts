@@ -12,7 +12,6 @@ import java.util.stream.Collectors;
 
 import edu.illinois.starts.constants.StartsConstants;
 
-
 /**
  * This class creates objects that represent one row in the .zlc file.
  */

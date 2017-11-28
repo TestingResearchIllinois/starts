@@ -18,12 +18,12 @@ import java.util.logging.Level;
 import edu.illinois.starts.constants.StartsConstants;
 import edu.illinois.starts.util.Logger;
 
-
 /** Utility methods for dealing with cached files. */
 
 public class Cache implements StartsConstants {
     private static final Logger LOGGER = Logger.getGlobal();
     private static final String GRAPH_EXTENSION = ".graph";
+
     File jdepsCache;
     String m2Repo;
 

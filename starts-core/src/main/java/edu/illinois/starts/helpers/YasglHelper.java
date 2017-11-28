@@ -21,7 +21,6 @@ import edu.illinois.yasgl.DirectedGraph;
 import edu.illinois.yasgl.DirectedGraphBuilder;
 import edu.illinois.yasgl.GraphVertexVisitor;
 
-
 /**
  * Utility methods for interacting with YASGL.
  */

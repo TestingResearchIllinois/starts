@@ -32,7 +32,7 @@ public final class SurefireMojoInterceptor extends AbstractMojoInterceptor imple
     }
 
     private static boolean isAlreadyInvoked(Object mojo) throws Exception {
-        String key = "STARTS" + System.identityHashCode(mojo);
+        String key = STARTS_NAME + System.identityHashCode(mojo);
         String value = System.getProperty(key);
         System.setProperty(key, "STARTS-invoked");
         return value != null;
@@ -40,7 +40,7 @@ public final class SurefireMojoInterceptor extends AbstractMojoInterceptor imple
 
     private static void checkSurefireVersion(Object mojo) throws Exception {
         try {
-            getField("argLine", mojo);
+            getField(ARGLINE_FIELD, mojo);
             getField(EXCLUDES_FIELD, mojo);
         } catch (NoSuchMethodException ex) {
             throwMojoExecutionException(mojo, UNSUPPORTED_SUREFIRE_VERSION_EXCEPTION

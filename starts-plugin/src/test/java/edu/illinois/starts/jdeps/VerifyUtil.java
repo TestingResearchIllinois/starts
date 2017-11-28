@@ -14,7 +14,6 @@ import edu.illinois.starts.constants.StartsConstants;
 
 import org.junit.Assert;
 
-
 /**
  * Util methods for scripts that verify results of integration tests.
  */

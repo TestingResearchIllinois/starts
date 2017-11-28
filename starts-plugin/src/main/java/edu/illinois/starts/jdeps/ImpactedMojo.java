@@ -24,7 +24,6 @@ import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.maven.surefire.booter.Classpath;
 
-
 /**
  * Find all types that are impacted by a change.
  */

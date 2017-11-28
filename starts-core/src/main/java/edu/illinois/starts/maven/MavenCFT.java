@@ -9,10 +9,11 @@ import edu.illinois.starts.asm.ClassVisitor;
 import edu.illinois.starts.asm.ClassWriter;
 import edu.illinois.starts.asm.MethodVisitor;
 import edu.illinois.starts.asm.Opcodes;
+import edu.illinois.starts.constants.StartsConstants;
 
 /** This class is from Ekstazi. **/
 
-public final class MavenCFT implements ClassFileTransformer {
+public final class MavenCFT implements ClassFileTransformer, StartsConstants {
 
     private static class MavenMethodVisitor extends MethodVisitor {
         private final String mavenMethodName;
@@ -47,7 +48,7 @@ public final class MavenCFT implements ClassFileTransformer {
 
         public MethodVisitor visitMethod(int access, String name, String desc, String signature, String[] exceptions) {
             MethodVisitor mv = cv.visitMethod(access, name, desc, signature, exceptions);
-            if (name.equals("execute") && desc.equals("()V")) {
+            if (name.equals(EXECUTE_MNAME) && desc.equals(EXECUTE_MDESC)) {
                 mv = new MavenMethodVisitor(mavenInterceptorName, name, desc, mv);
             }
             return mv;
@@ -56,9 +57,9 @@ public final class MavenCFT implements ClassFileTransformer {
 
     public byte[] transform(ClassLoader loader, String className, Class<?> classBeingRedefined,
                             ProtectionDomain protectionDomain, byte[] classfileBuffer) throws IllegalClassFormatException {
-        if (className.equals("org/apache/maven/plugin/surefire/AbstractSurefireMojo")
-                || className.equals("org/apache/maven/plugin/surefire/SurefirePlugin")) {
-            return addInterceptor(className, classfileBuffer, "edu/illinois/starts/maven/SurefireMojoInterceptor");
+        if (className.equals(ABSTRACT_SUREFIRE_MOJO_VM)
+                || className.equals(SUREFIRE_PLUGIN_VM)) {
+            return addInterceptor(className, classfileBuffer, SUREFIRE_INTERCEPTOR_CLASS_VM);
         } else {
             return null;
         }
