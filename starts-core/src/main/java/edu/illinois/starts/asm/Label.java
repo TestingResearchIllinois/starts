@@ -28,7 +28,6 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 package edu.illinois.starts.asm;
-import edu.illinois.starts.constants.StartsConstants;
 
 
 /**
@@ -40,7 +39,7 @@ import edu.illinois.starts.constants.StartsConstants;
  *
  * @author Eric Bruneton
  */
-public class Label implements StartsConstants {
+public class Label {
 
     /**
      * Indicates if this label is only used for debug attributes. Such a label

@@ -18,6 +18,7 @@ import edu.illinois.starts.constants.StartsConstants;
 public abstract class AbstractMojoInterceptor implements StartsConstants {
 
     protected static final Logger LOGGER = Logger.getGlobal();
+    static final char FILE_SEPARATOR_CHAR = File.separatorChar;
 
     public static URL extractJarURL(URL url) throws IOException {
         JarURLConnection connection = (JarURLConnection) url.openConnection();
@@ -34,7 +35,7 @@ public abstract class AbstractMojoInterceptor implements StartsConstants {
     }
 
     protected static void throwMojoExecutionException(Object mojo, String message, Exception cause) throws Exception {
-        Class<?> clz = mojo.getClass().getClassLoader().loadClass(MOJO_EXECUTION_EXCEPTION_BIN);
+        Class<?> clz = mojo.getClass().getClassLoader().loadClass("org.apache.maven.plugin.MojoExecutionException");
         Constructor<?> con = clz.getConstructor(String.class, Exception.class);
         Exception ex = (Exception) con.newInstance(message, cause);
         throw ex;

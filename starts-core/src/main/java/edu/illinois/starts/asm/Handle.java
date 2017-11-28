@@ -29,7 +29,6 @@
  */
 
 package edu.illinois.starts.asm;
-import edu.illinois.starts.constants.StartsConstants;
 
 
 /**
@@ -38,7 +37,7 @@ import edu.illinois.starts.constants.StartsConstants;
  * @author Remi Forax
  * @author Eric Bruneton
  */
-public final class Handle implements StartsConstants {
+public final class Handle {
 
     /**
      * The kind of field or method designated by this Handle. Should be

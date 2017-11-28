@@ -6,13 +6,10 @@ package edu.illinois.starts.util;
 
 import java.io.Serializable;
 
-import edu.illinois.starts.constants.StartsConstants;
-
-
 /**
  * A (key, value) pair.
  */
-public class Pair<K, V> implements Serializable, StartsConstants {
+public class Pair<K, V> implements Serializable {
     private K key;
     private V value;
 

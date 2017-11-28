@@ -80,7 +80,7 @@ public final class AgentLoader implements StartsConstants {
     }
 
     private static URL findToolsJar() throws MalformedURLException {
-        String javaHome = System.getProperty(JAVA_DOT_HOME);
+        String javaHome = System.getProperty(JAVA_HOME);
         File javaHomeFile = new File(javaHome);
         File tjf = new File(javaHomeFile, LIB + FILE_SEPARATOR + TOOLS_JAR_NAME);
 

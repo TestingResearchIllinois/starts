@@ -104,7 +104,7 @@ public class EkstaziHelper implements StartsConstants {
     }
 
     private static String getRootDirURI(File rootDir) {
-        String artifactsDir = rootDir.getAbsolutePath() + FILE_SEPARATOR + DOT_STARTS;
+        String artifactsDir = rootDir.getAbsolutePath() + FILE_SEPARATOR + ".starts";
         return (new File(artifactsDir)).toURI().toString();
     }
 

@@ -29,7 +29,7 @@ import org.ekstazi.util.Types;
  * Utility methods for dealing with the .zlc format.
  */
 public class ZLCHelper implements StartsConstants {
-    public static final String zlcFile = ZLC_FILE;
+    public static final String zlcFile = "deps.zlc";
     public static final String STAR_FILE = "file:*";
     private static final Logger LOGGER = Logger.getGlobal();
     private static Map<String, ZLCData> zlcDataMap;

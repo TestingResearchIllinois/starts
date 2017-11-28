@@ -28,7 +28,6 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 package edu.illinois.starts.asm;
-import edu.illinois.starts.constants.StartsConstants;
 
 
 /**
@@ -36,7 +35,7 @@ import edu.illinois.starts.constants.StartsConstants;
  *
  * @author Eric Bruneton
  */
-final class FieldWriter extends FieldVisitor implements StartsConstants {
+final class FieldWriter extends FieldVisitor {
 
     /**
      * The class writer to which this field must be added.

@@ -40,6 +40,7 @@ import org.apache.maven.surefire.util.DefaultScanResult;
  * Base MOJO for the JDeps-Based STARTS.
  */
 abstract class BaseMojo extends SurefirePlugin implements StartsConstants {
+    static final String STAR = "*";
     /**
      * Set this to "false" to not filter out "sun.*" and "java.*" classes from jdeps parsing.
      */
@@ -84,7 +85,6 @@ abstract class BaseMojo extends SurefirePlugin implements StartsConstants {
      */
     @Parameter(property = "startsLogging", defaultValue = "CONFIG")
     protected String loggingLevel;
-
     private Classpath sureFireClassPath;
 
     protected void printResult(Set<String> set, String title) {
@@ -93,7 +93,7 @@ abstract class BaseMojo extends SurefirePlugin implements StartsConstants {
 
     public String getArtifactsDir() throws MojoExecutionException {
         if (artifactsDir == null) {
-            artifactsDir = basedir.getAbsolutePath() + FILE_SEPARATOR + STARTS_DIRECTORY_PATH;
+            artifactsDir = basedir.getAbsolutePath() + FILE_SEPARATOR + ".starts" + FILE_SEPARATOR;
             File file = new File(artifactsDir);
             if (!file.mkdirs() && !file.exists()) {
                 throw new MojoExecutionException("I could not create artifacts dir: " + artifactsDir);

@@ -28,7 +28,6 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 package edu.illinois.starts.asm;
-import edu.illinois.starts.constants.StartsConstants;
 
 
 /**
@@ -39,7 +38,7 @@ import edu.illinois.starts.constants.StartsConstants;
  * @author Eric Bruneton
  * @author Eugene Kuleshov
  */
-class MethodWriter extends MethodVisitor implements StartsConstants {
+class MethodWriter extends MethodVisitor {
 
     /**
      * Pseudo access flag used to denote constructors.

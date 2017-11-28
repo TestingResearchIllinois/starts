@@ -32,7 +32,6 @@ package edu.illinois.starts.asm;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
-import edu.illinois.starts.constants.StartsConstants;
 
 
 /**
@@ -42,7 +41,7 @@ import edu.illinois.starts.constants.StartsConstants;
  * @author Eric Bruneton
  * @author Chris Nokleberg
  */
-public class Type implements StartsConstants {
+public class Type {
 
     /**
      * The sort of the <tt>void</tt> type. See {@link #getSort getSort}.

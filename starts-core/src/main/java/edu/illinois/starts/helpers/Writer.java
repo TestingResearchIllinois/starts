@@ -36,6 +36,7 @@ import org.apache.commons.codec.binary.Hex;
  * Utility methods for writing various data to file.
  */
 public class Writer implements StartsConstants {
+    static final String STARS = "**********";
     private static final Logger LOGGER = Logger.getGlobal();
 
     public static void writeToFile(Collection col, String filename, String artifactsDir) {

@@ -32,7 +32,6 @@ package edu.illinois.starts.asm;
 
 import java.io.IOException;
 import java.io.InputStream;
-import edu.illinois.starts.constants.StartsConstants;
 
 /**
  * A Java class parser to make a {@link ClassVisitor} visit an existing class.
@@ -43,7 +42,7 @@ import edu.illinois.starts.constants.StartsConstants;
  * @author Eric Bruneton
  * @author Eugene Kuleshov
  */
-public class ClassReader implements StartsConstants {
+public class ClassReader {
 
     /**
      * True to enable signatures support.

@@ -28,7 +28,6 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 package edu.illinois.starts.asm;
-import edu.illinois.starts.constants.StartsConstants;
 
 
 /**
@@ -40,7 +39,7 @@ import edu.illinois.starts.constants.StartsConstants;
  *
  * @author Eric Bruneton
  */
-public class ClassWriter extends ClassVisitor implements StartsConstants {
+public class ClassWriter extends ClassVisitor {
 
     /**
      * Flag to automatically compute the maximum stack size and the maximum

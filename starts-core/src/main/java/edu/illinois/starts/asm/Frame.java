@@ -28,7 +28,6 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 package edu.illinois.starts.asm;
-import edu.illinois.starts.constants.StartsConstants;
 
 
 /**
@@ -36,7 +35,7 @@ import edu.illinois.starts.constants.StartsConstants;
  *
  * @author Eric Bruneton
  */
-final class Frame implements StartsConstants {
+final class Frame {
 
     /*
      * Frames are computed in a two steps process: during the visit of each

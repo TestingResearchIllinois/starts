@@ -26,8 +26,7 @@ import org.ekstazi.util.Types;
 
 
 public class ChecksumUtil implements StartsConstants {
-    public static final String JAVA_HOME = System.getProperty(JAVA_DOT_HOME);
-
+    public static final String JAVAHOME = System.getProperty(JAVA_HOME);
     private static final Logger LOGGER = Logger.getLogger(ChecksumUtil.class.getName());
 
     Hasher hasher;
@@ -86,7 +85,7 @@ public class ChecksumUtil implements StartsConstants {
      */
     public static boolean isWellKnownUrl(String klas) {
         return klas.contains("!/org/junit") || klas.contains("!/junit") || klas.contains("!/org/hamcrest")
-                || klas.contains("!/org/apache/maven") || klas.contains(JAVA_HOME);
+                || klas.contains("!/org/apache/maven") || klas.contains(JAVAHOME);
     }
 
     public static String toClassName(String fqn) {
