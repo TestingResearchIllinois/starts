@@ -52,6 +52,9 @@ public class TimeExtractor {
         //Read the file and parse it using Surefire's methods
         List<String> surefireStats = FileUtil.getFileContents(surefireStatsFile.toPath());
         Map<String, Integer> statisticsRuntimeMap = new HashMap<>();
+        if (surefireStats == null) {
+            return null;
+        }
         for (String line : surefireStats) {
             if (!line.startsWith("#")) {
                 RunEntryStatistics stats = RunEntryStatistics.fromString(line);
