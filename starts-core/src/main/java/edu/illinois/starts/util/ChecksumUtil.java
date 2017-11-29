@@ -24,7 +24,6 @@ import org.ekstazi.data.TxtStorer;
 import org.ekstazi.hash.Hasher;
 import org.ekstazi.util.Types;
 
-
 public class ChecksumUtil implements StartsConstants {
     public static final String JAVAHOME = System.getProperty(JAVA_HOME);
     private static final Logger LOGGER = Logger.getLogger(ChecksumUtil.class.getName());

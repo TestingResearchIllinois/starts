@@ -57,8 +57,7 @@ public final class MavenCFT implements ClassFileTransformer, StartsConstants {
 
     public byte[] transform(ClassLoader loader, String className, Class<?> classBeingRedefined,
                             ProtectionDomain protectionDomain, byte[] classfileBuffer) throws IllegalClassFormatException {
-        if (className.equals(ABSTRACT_SUREFIRE_MOJO_VM)
-                || className.equals(SUREFIRE_PLUGIN_VM)) {
+        if (className.equals(ABSTRACT_SUREFIRE_MOJO_VM) || className.equals(SUREFIRE_PLUGIN_VM)) {
             return addInterceptor(className, classfileBuffer, SUREFIRE_INTERCEPTOR_CLASS_VM);
         } else {
             return null;

@@ -27,8 +27,7 @@ public class JavaAgent implements StartsConstants {
         try {
             for (Class<?> clz : instrumentation.getAllLoadedClasses()) {
                 String name = clz.getName();
-                if (name.equals(ABSTRACT_SUREFIRE_MOJO_BIN)
-                        || name.equals(SUREFIRE_PLUGIN_BIN)) {
+                if (name.equals(ABSTRACT_SUREFIRE_MOJO_BIN) || name.equals(SUREFIRE_PLUGIN_BIN)) {
                     instrumentation.retransformClasses(clz);
                 }
             }
