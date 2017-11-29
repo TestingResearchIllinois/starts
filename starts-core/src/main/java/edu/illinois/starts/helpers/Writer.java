@@ -26,6 +26,7 @@ import java.util.Set;
 import java.util.logging.Level;
 
 import edu.illinois.starts.util.Logger;
+import edu.illinois.starts.util.Pair;
 import edu.illinois.yasgl.DirectedGraph;
 import edu.illinois.yasgl.Edge;
 import org.apache.commons.codec.binary.Hex;
@@ -205,6 +206,28 @@ public class Writer {
         }
 
         if (set.isEmpty()) {
+            logger.log(Level.INFO, title + " found no classes.");
+        }
+    }
+
+    //TODO come up with a better name for the list
+    public static void writeToLogWithTimes(List<Pair> testNameTimePairList, String title, Logger logger) {
+        logger.log(Level.INFO, "");
+        logger.log(Level.INFO, "********** " + title + " **********");
+
+        for (Pair listItem : testNameTimePairList) {
+            String predictedTime;
+            int time =  (Integer)listItem.getValue();
+            if (time < 0) {
+                predictedTime = " with no runtime prediction";
+            } else {
+                predictedTime = " with an estimated runtime of " + (Integer)listItem.getValue() / 1000.0 + "s";
+            }
+            String tmpString = listItem.getKey() + predictedTime;
+            logger.log(Level.INFO, tmpString);
+        }
+
+        if (testNameTimePairList.isEmpty()) {
             logger.log(Level.INFO, title + " found no classes.");
         }
     }

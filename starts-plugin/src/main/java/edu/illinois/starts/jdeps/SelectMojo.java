@@ -4,10 +4,15 @@
 
 package edu.illinois.starts.jdeps;
 
+
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
 
+
+import edu.illinois.starts.helpers.LocalRuntimesMaintainer;
+import edu.illinois.starts.helpers.TimeExtractor;
 import edu.illinois.starts.helpers.Writer;
 import edu.illinois.starts.util.Logger;
 import edu.illinois.starts.util.Pair;
@@ -39,7 +44,17 @@ public class SelectMojo extends DiffMojo {
         logger = Logger.getGlobal();
         long start = System.currentTimeMillis();
         Set<String> affectedTests = computeAffectedTests();
-        printResult(affectedTests, "AffectedTests");
+        //New code inserted here
+        List<Pair> testTimes = TimeExtractor.getEstimatedRuntimes(affectedTests, getBasedir(), getReportsDirectory(),
+                STARTS_DIRECTORY_PATH);
+        int totalTime = TimeExtractor.getTotalRuntime(testTimes);
+
+        //Update average runtimes
+        LocalRuntimesMaintainer.updateOrCreate(basedir, STARTS_DIRECTORY_PATH);
+
+        //printResult(affectedTests, "AffectedTests");
+        printResultsWithTimeEstimates(testTimes, "AffectedTests");
+        logger.log(Level.INFO, "Total estimated test runtime: " + (totalTime / 1000.0) + "s");
         long end = System.currentTimeMillis();
         logger.log(Level.FINE, "[PROFILE] RUN-MOJO-TOTAL: " + Writer.millsToSeconds(end - start));
         logger.log(Level.FINE, "[PROFILE] TEST-RUNNING-TIME: " + 0.0);

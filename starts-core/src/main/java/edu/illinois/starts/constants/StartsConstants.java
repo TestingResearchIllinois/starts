@@ -30,5 +30,11 @@ public interface StartsConstants {
     String ARGLINE_FIELD = "argLine";
     String EXCLUDES_FIELD = "excludes";
 
+    //runOrder is normally surefire.runOrder, but the prefix does not seem to be needed,
+    //and indeed does not seem to work, when run this way
+    String RUNORDER_FIELD = "runOrder";
+    String THREADCOUNT_FIELD = "threadCount";
+    String PARALLEL_FIELD = "parallel";
+
     String STARTS_EXCLUDE_PROPERTY = "STARTS_EXCLUDES";
 }

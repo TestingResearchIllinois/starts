@@ -23,6 +23,7 @@ import edu.illinois.starts.helpers.PomUtil;
 import edu.illinois.starts.helpers.RTSUtil;
 import edu.illinois.starts.helpers.Writer;
 import edu.illinois.starts.util.Logger;
+import edu.illinois.starts.util.Pair;
 import edu.illinois.yasgl.DirectedGraph;
 import org.apache.maven.artifact.DependencyResolutionRequiredException;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -89,6 +90,11 @@ abstract class BaseMojo extends SurefirePlugin implements StartsConstants {
 
     protected void printResult(Set<String> set, String title) {
         Writer.writeToLog(set, title, Logger.getGlobal());
+    }
+
+    //TODO come up with a better name for the list
+    protected void printResultsWithTimeEstimates(List<Pair> testNameTimePairList, String title) {
+        Writer.writeToLogWithTimes(testNameTimePairList, title, Logger.getGlobal());
     }
 
     public String getArtifactsDir() throws MojoExecutionException {

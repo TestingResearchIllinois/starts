@@ -20,6 +20,7 @@ public final class SurefireMojoInterceptor extends AbstractMojoInterceptor imple
         }
         checkSurefireVersion(mojo);
         try {
+            enableSurefireStatisticsFileCreation(mojo);
             updateExcludes(mojo);
         } catch (Exception ex) {
             throwMojoExecutionException(mojo, "Unsupported surefire version", ex);
@@ -45,6 +46,15 @@ public final class SurefireMojoInterceptor extends AbstractMojoInterceptor imple
             throwMojoExecutionException(mojo, "Unsupported surefire version. "
                      + "Try setting excludesFile in the surefire configuration.", ex);
         }
+    }
+
+    private static void enableSurefireStatisticsFileCreation(Object mojo) throws Exception {
+        //TODO see if we should use or check for previous values
+        //Set fields for surefire report file generation
+        //TODO use variables here, or are strings and integers fine?
+        setField(RUNORDER_FIELD, mojo, "balanced");
+        setField(THREADCOUNT_FIELD, mojo, 1);
+        setField(PARALLEL_FIELD, mojo, "suites");
     }
 
     private static void updateExcludes(Object mojo) throws Exception {
