@@ -54,17 +54,16 @@ public class UpdateMojo extends DiffMojo {
         logger.log(Level.INFO, "********** Update **********");
 
         Set<String> nonAffected = new HashSet<>();
-        String filenameNonAffected = getArtifactsDir() + File.separator + "non-affected-tests";
-        File fileNonAffected = new File(filenameNonAffected);
-        if (writeNonAffected && fileNonAffected.isFile()) {
+        String nonAffectedFilename = getArtifactsDir() + File.separator + "non-affected-tests";
+        File nonAffectedFile = new File(nonAffectedFilename);
+        if (writeNonAffected && nonAffectedFile.isFile()) {
             try {
-                List<String> testNames = Files.readAllLines(fileNonAffected.toPath(), StandardCharsets.UTF_8);
-                nonAffected.addAll(testNames);
+                nonAffected.addAll(Files.readAllLines(nonAffectedFile.toPath(), StandardCharsets.UTF_8));
             } catch (IOException ioe) {
                 ioe.printStackTrace();
             }
             long end = System.currentTimeMillis();
-            logger.log(Level.FINE, "[PROFILE] readFromFile " + filenameNonAffected + " : "
+            logger.log(Level.FINE, "[PROFILE] readFromFile " + nonAffectedFilename + " : "
                     + Writer.millsToSeconds(end - start));
         } else {
             Pair<Set<String>, Set<String>> data = computeChangeData();
@@ -80,18 +79,5 @@ public class UpdateMojo extends DiffMojo {
         long end = System.currentTimeMillis();
         System.setProperty("[PROFILE] END-OF-UPDATE-MOJO: ", Long.toString(end));
         logger.log(Level.FINE, "[PROFILE] UPDATE-MOJO-TOTAL: " + Writer.millsToSeconds(end - start));
-    }
-
-    public Set<String> readFromFile(File inFile, String artifactsDir) {
-        Set<String> result = new HashSet<>();
-        try (BufferedReader reader = new BufferedReader(new FileReader(inFile))) {
-            String className = null;
-            while ((className = reader.readLine()) != null) {
-                result.add(className);
-            }
-        } catch (IOException ioe) {
-            ioe.printStackTrace();
-        }
-        return result;
     }
 }
