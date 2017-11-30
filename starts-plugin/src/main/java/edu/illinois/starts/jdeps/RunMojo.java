@@ -65,6 +65,14 @@ public class RunMojo extends DiffMojo implements StartsConstants {
     @Parameter(property = "writeNonAffected", defaultValue = "false")
     protected boolean writeNonAffected;
 
+    /**
+     * Set this to "true" to invoke UpdateMojo in StartsMojo to update checksums and test dependencies.
+     * The default value of "false" will update test dependencies in RunMojo and will not invoke UpdateMojo.
+     * If updateRunChecksums is "false", this option will not affect any behaviour of "starts:starts".
+     */
+    @Parameter(property = "enableMojoExecutor", defaultValue = "false")
+    protected boolean enableMojoExecutor;
+
     protected Set<String> nonAffectedTests;
     protected Set<String> changedClasses;
     private Logger logger;
@@ -100,7 +108,7 @@ public class RunMojo extends DiffMojo implements StartsConstants {
             dynamicallyUpdateExcludes(excludePaths);
         }
         long startUpdateTime = System.currentTimeMillis();
-        if (updateRunChecksums) {
+        if (updateRunChecksums && !enableMojoExecutor) {
             updateForNextRun(nonAffectedTests);
         }
         long endUpdateTime = System.currentTimeMillis();

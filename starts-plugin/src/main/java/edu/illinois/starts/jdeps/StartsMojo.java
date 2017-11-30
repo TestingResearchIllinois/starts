@@ -40,25 +40,6 @@ public class StartsMojo extends RunMojo implements StartsConstants {
     private Logger logger;
 
     /**
-     * Set this option and the updateRunChecksums option to "false" together to prevent updating test dependencies
-     * on disk. The default value of "true" invokes UpdateMojo to run updateForNextRun() when updateRunChecksums
-     * is "false". If updateRunChecksums is "true", this option will not affect the behaviour of "starts:starts".
-     */
-    @Parameter(property = "enableMojoExecutor", defaultValue = "true")
-    private boolean enableMojoExecutor;
-    /**
-     * The project currently being build.
-     */
-    @Parameter(defaultValue = "${project}", readonly = true)
-    private MavenProject mavenProject;
-
-    /**
-     * The current Maven session.
-     */
-    @Parameter(defaultValue = "${session}", readonly = true)
-    private MavenSession mavenSession;
-
-    /**
      * The Maven BuildPluginManager component.
      */
     @Component
@@ -71,16 +52,16 @@ public class StartsMojo extends RunMojo implements StartsConstants {
         long end = System.currentTimeMillis();
         logger.log(Level.FINE, PROFILE_TEST_RUNNING_TIME + Writer.millsToSeconds(end - endOfRunMojo));
 
-        if (enableMojoExecutor && !updateRunChecksums) {
+        if (enableMojoExecutor && updateRunChecksums) {
             executeMojo(
                     plugin(
-                            groupId("edu.illinois"),
-                            artifactId("starts-maven-plugin"),
-                            version("1.4-SNAPSHOT")
+                            groupId(getProject().getGroupId()),
+                            artifactId(getProject().getArtifactId()),
+                            version(getProject().getVersion())
                     ),
                     goal("update"),
                     configuration(element(name("writeNonAffected"), String.valueOf(writeNonAffected))),
-                    executionEnvironment(mavenProject, mavenSession, pluginManager)
+                    executionEnvironment(getProject(), getSession(), pluginManager)
             );
         }
         end = System.currentTimeMillis();
