@@ -22,9 +22,9 @@ import org.junit.Test;
 
 public class TimeExtractorTest {
 
-    public static final String TEST_XML_FILE_PATH = "TEST-testTimeExtractor.xml";
-    public static final String TEST_SUREFIRE_FILE_PATH = ".surefire-ABRACADABRA";
-    public static final String ARTIFACTDIR = ".";
+    public static final String TEST_XML_FILE_PATH = "TEMP/TEST-testTimeExtractor.xml";
+    public static final String TEST_SUREFIRE_FILE_PATH = "TEMP/.surefire-ABRACADABRA";
+    public static final String ARTIFACTDIR = "TEMP";
     public static final String testName = "testTimeExtractor";
     public static final int totalRuntime = 12307;
     public static File xmlFile;
@@ -37,8 +37,13 @@ public class TimeExtractorTest {
 
     @Before
     public void setupOnce() throws Exception {
+        //Create new files
         xmlFile = new File(TEST_XML_FILE_PATH);
+        xmlFile.getParentFile().mkdirs();
+        xmlFile.createNewFile();
         surefireFile = new File(TEST_SUREFIRE_FILE_PATH);
+        surefireFile.getParentFile().mkdirs();
+        surefireFile.createNewFile();
         XMLFileWriter = Files.newBufferedWriter(xmlFile.toPath(), StandardCharsets.UTF_8);
         surefireFileWriter = Files.newBufferedWriter(surefireFile.toPath(), StandardCharsets.UTF_8);
         artifactDir = new File(ARTIFACTDIR);
