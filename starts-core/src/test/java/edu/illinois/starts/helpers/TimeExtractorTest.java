@@ -8,6 +8,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -22,9 +23,6 @@ import org.junit.Test;
 
 public class TimeExtractorTest {
 
-    public static final String TEST_XML_FILE_PATH = "TEMP/TEST-testTimeExtractor.xml";
-    public static final String TEST_SUREFIRE_FILE_PATH = "TEMP/.surefire-ABRACADABRA";
-    public static final String ARTIFACTDIR = "TEMP";
     public static final String testName = "testTimeExtractor";
     public static final int totalRuntime = 12307;
     public static File xmlFile;
@@ -34,19 +32,23 @@ public class TimeExtractorTest {
     public static BufferedWriter surefireFileWriter;
     public static final String newLine = System.lineSeparator();
     private static final Logger LOGGER = Logger.getGlobal();
+    public String artifactDirString;
+    public String testXMLFilePath;
+    public String testSurefireFilePath;
 
     @Before
     public void setupOnce() throws Exception {
+        artifactDirString = Files.createTempDirectory("TEMP").toAbsolutePath().toString();
+        testXMLFilePath = artifactDirString + "/TEST-testTimeExtractor.xml";
+        testSurefireFilePath = artifactDirString + "/.surefire-ABRACADABRA";
         //Create new files
-        xmlFile = new File(TEST_XML_FILE_PATH);
-        xmlFile.getParentFile().mkdirs();
+        xmlFile = new File(testXMLFilePath);
         xmlFile.createNewFile();
-        surefireFile = new File(TEST_SUREFIRE_FILE_PATH);
-        surefireFile.getParentFile().mkdirs();
+        surefireFile = new File(testSurefireFilePath);
         surefireFile.createNewFile();
         XMLFileWriter = Files.newBufferedWriter(xmlFile.toPath(), StandardCharsets.UTF_8);
         surefireFileWriter = Files.newBufferedWriter(surefireFile.toPath(), StandardCharsets.UTF_8);
-        artifactDir = new File(ARTIFACTDIR);
+        artifactDir = new File(artifactDirString);
         writeTestXMLFile();
         writeTestSurefireFile();
     }
