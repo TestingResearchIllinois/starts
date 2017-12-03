@@ -217,11 +217,10 @@ abstract class BaseMojo extends SurefirePlugin implements StartsConstants {
         // sfPathString (which we use in a number of other places)
         loadables.setSurefireClasspath(sfClassPath);
 
-        List<String> moreEdges = new ArrayList<String>();
         long loadMoreEdges = System.currentTimeMillis();
         Cache cache = new Cache(jdepsCache, m2Repo);
         // 1. Load non-reflection edges from third-party libraries in the classpath
-        cache.loadM2EdgesFromCache(moreEdges, sfPathString);
+        List<String> moreEdges = cache.loadM2EdgesFromCache(sfPathString);
         long loadM2EdgesFromCache = System.currentTimeMillis();
         // 2. Get non-reflection edges from CUT and SDK; use (1) to build graph
         loadables.create(new ArrayList<>(moreEdges), sfClassPath, computeUnreached);
