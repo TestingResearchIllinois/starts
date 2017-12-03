@@ -15,35 +15,20 @@ import static org.twdata.maven.mojoexecutor.MojoExecutor.name;
 import static org.twdata.maven.mojoexecutor.MojoExecutor.plugin;
 import static org.twdata.maven.mojoexecutor.MojoExecutor.version;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
 import java.util.concurrent.Semaphore;
 import java.util.logging.Level;
 
-import edu.illinois.starts.helpers.Writer;
 import edu.illinois.starts.util.Logger;
-import edu.illinois.starts.util.Pair;
+import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.BuildPluginManager;
 import org.apache.maven.plugin.MojoExecutionException;
-import org.apache.maven.plugin.surefire.SurefirePlugin;
 import org.apache.maven.plugins.annotations.Component;
-import org.apache.maven.plugins.annotations.Mojo;
-import org.apache.maven.plugins.annotations.Parameter;
-import org.apache.maven.plugins.annotations.ResolutionScope;
+import org.apache.maven.project.MavenProject;
 
 /**
  * Update class and test dependencies.
  */
-public class UpdateMojoRunnable extends SurefirePlugin implements Runnable {
+public class UpdateMojoRunnable implements Runnable {
     static Semaphore mutex = new Semaphore(1);
 
     /**
@@ -54,14 +39,27 @@ public class UpdateMojoRunnable extends SurefirePlugin implements Runnable {
     private boolean writeNonAffected;
 
     /**
+     * The project currently being build.
+     */
+    private MavenProject project;
+
+    /**
+     * The current Maven session.
+     */
+    private MavenSession session;
+
+    /**
      * The Maven BuildPluginManager component.
      */
-    @Component
     private BuildPluginManager pluginManager;
 
     private Logger logger;
 
-    public UpdateMojoRunnable(boolean writeNonAffected) {
+    public UpdateMojoRunnable(MavenProject project, MavenSession session, BuildPluginManager pluginManager,
+                              boolean writeNonAffected) {
+        this.project = project;
+        this.session = session;
+        this.pluginManager = pluginManager;
         this.writeNonAffected = writeNonAffected;
     }
 
@@ -69,15 +67,16 @@ public class UpdateMojoRunnable extends SurefirePlugin implements Runnable {
         try {
             executeMojo(
                     plugin(
-                            groupId(getProject().getGroupId()),
-                            artifactId(getProject().getArtifactId()),
-                            version(getProject().getVersion())
+                            groupId(project.getGroupId()),
+                            artifactId(project.getArtifactId()),
+                            version(project.getVersion())
                     ),
                     goal("update"),
                     configuration(element(name("writeNonAffected"), String.valueOf(writeNonAffected))),
-                    executionEnvironment(getProject(), getSession(), pluginManager)
+                    executionEnvironment(project, session, pluginManager)
             );
             mutex.release();
+            logger.log(Level.FINE, "available Semaphore permits: " + UpdateMojoRunnable.mutex.availablePermits());
         } catch (MojoExecutionException mee) {
             mee.printStackTrace();
         }

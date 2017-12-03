@@ -26,7 +26,9 @@ import edu.illinois.starts.helpers.Writer;
 import edu.illinois.starts.maven.AgentLoader;
 import edu.illinois.starts.util.Logger;
 import edu.illinois.starts.util.Pair;
+import org.apache.maven.plugin.BuildPluginManager;
 import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
@@ -73,6 +75,12 @@ public class RunMojo extends DiffMojo implements StartsConstants {
     @Parameter(property = "enableMojoExecutor", defaultValue = "false")
     protected boolean enableMojoExecutor;
 
+    /**
+     * The Maven BuildPluginManager component.
+     */
+    @Component
+    protected BuildPluginManager pluginManager;
+
     protected Set<String> nonAffectedTests;
     protected Set<String> changedClasses;
     private Logger logger;
@@ -112,8 +120,10 @@ public class RunMojo extends DiffMojo implements StartsConstants {
             updateForNextRun(nonAffectedTests);
         } else if (updateRunChecksums && enableMojoExecutor) {
             try {
+                logger.log(Level.FINE, "available Semaphore permits: " + UpdateMojoRunnable.mutex.availablePermits());
                 UpdateMojoRunnable.mutex.acquire();
-                Thread updateThread = new Thread(new UpdateMojoRunnable(writeNonAffected));
+                Thread updateThread = new Thread(new UpdateMojoRunnable(getProject(), getSession(), pluginManager,
+                        writeNonAffected));
                 updateThread.start();
             } catch (InterruptedException ie) {
                 ie.printStackTrace();
