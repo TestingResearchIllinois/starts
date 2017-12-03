@@ -53,17 +53,13 @@ public class StartsMojo extends RunMojo implements StartsConstants {
         logger.log(Level.FINE, PROFILE_TEST_RUNNING_TIME + Writer.millsToSeconds(end - endOfRunMojo));
 
         if (enableMojoExecutor && updateRunChecksums) {
-            executeMojo(
-                    plugin(
-                            groupId(getProject().getGroupId()),
-                            artifactId(getProject().getArtifactId()),
-                            version(getProject().getVersion())
-                    ),
-                    goal("update"),
-                    configuration(element(name("writeNonAffected"), String.valueOf(writeNonAffected))),
-                    executionEnvironment(getProject(), getSession(), pluginManager)
-            );
+            try {
+                UpdateMojoRunnable.mutex.acquire();
+            } catch (InterruptedException ie) {
+                ie.printStackTrace();
+            }
         }
+
         end = System.currentTimeMillis();
         logger.log(Level.FINE, "[PROFILE] STARTS-MOJO-TOTAL: " + Writer.millsToSeconds(end - endOfRunMojo));
     }
