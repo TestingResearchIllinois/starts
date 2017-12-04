@@ -29,7 +29,7 @@ public abstract class AbstractMojoInterceptor implements StartsConstants {
     }
 
     public static URL getResource(Class<?> clz) {
-        URL resource = clz.getResource("/" + clz.getName().replace('.', File.separatorChar) + ".class");
+        URL resource = clz.getResource("/" + clz.getName().replace('.', File.separatorChar) + CLASS_EXTENSION);
         return resource;
     }
 

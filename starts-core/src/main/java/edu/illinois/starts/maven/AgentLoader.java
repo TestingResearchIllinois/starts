@@ -7,12 +7,15 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 
+import edu.illinois.starts.constants.StartsConstants;
+
 /**
  * This class is duplicated from Ekstazi, with minor changes.
  */
-public final class AgentLoader {
+public final class AgentLoader implements StartsConstants {
     private static final String TOOLS_JAR_NAME = "tools.jar";
     private static final String CLASSES_JAR_NAME = "classes.jar";
+    private static final String LIB = "lib";
     private static final String AGENT_INIT = AgentLoader.class.getName() + " Initialized";
 
     public static boolean loadDynamicAgent() {
@@ -20,7 +23,7 @@ public final class AgentLoader {
             if (System.getProperty(AGENT_INIT) != null) {
                 return true;
             }
-            System.setProperty(AGENT_INIT, "");
+            System.setProperty(AGENT_INIT, EMPTY);
 
             URL agentJarURL = AbstractMojoInterceptor.class.getResource("JavaAgent.class");
             URL agentJarURLConnection = AbstractMojoInterceptor.extractJarURL(agentJarURL);
@@ -77,17 +80,17 @@ public final class AgentLoader {
     }
 
     private static URL findToolsJar() throws MalformedURLException {
-        String javaHome = System.getProperty("java.home");
+        String javaHome = System.getProperty(JAVA_HOME);
         File javaHomeFile = new File(javaHome);
-        File tjf = new File(javaHomeFile, "lib" + File.separator + TOOLS_JAR_NAME);
+        File tjf = new File(javaHomeFile, LIB + File.separator + TOOLS_JAR_NAME);
 
         if (!tjf.exists()) {
-            tjf = new File(System.getenv("java_home"), "lib" + File.separator + TOOLS_JAR_NAME);
+            tjf = new File(System.getenv("java_home"), LIB + File.separator + TOOLS_JAR_NAME);
         }
 
         if (!tjf.exists() && javaHomeFile.getAbsolutePath().endsWith(File.separator + "jre")) {
             javaHomeFile = javaHomeFile.getParentFile();
-            tjf = new File(javaHomeFile, "lib" + File.separator + TOOLS_JAR_NAME);
+            tjf = new File(javaHomeFile, LIB + File.separator + TOOLS_JAR_NAME);
         }
 
         if (!tjf.exists() && isMac() && javaHomeFile.getAbsolutePath().endsWith(File.separator + "Home")) {
