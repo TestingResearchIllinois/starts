@@ -88,7 +88,7 @@ public class ChecksumUtil implements StartsConstants {
     }
 
     public static String toClassName(String fqn) {
-        return fqn.replace(DOT, FILE_SEPARATOR) + CLASS_EXTENSION;
+        return fqn.replace(DOT, File.separator) + CLASS_EXTENSION;
     }
 
     public static void saveCheckSums(Map<String, Set<RegData>> newCheckSums, String artifactsDir) {

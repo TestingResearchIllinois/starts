@@ -81,7 +81,7 @@ public class EkstaziHelper implements StartsConstants {
         if (LOGGER.getLoggingLevel().intValue() > Level.FINEST.intValue()) {
             return changed;
         }
-        String outFilename = artifactsDir + FILE_SEPARATOR + CHANGED_CLASSES;
+        String outFilename = artifactsDir + File.separator + CHANGED_CLASSES;
         for (String line : Arrays.asList(baosErr.toString().split(lineSeparator))) {
             String ekstaziDiffMarker = "::Diff:: ";
             if (line.contains(ekstaziDiffMarker)) {
@@ -103,14 +103,14 @@ public class EkstaziHelper implements StartsConstants {
     }
 
     private static String getRootDirURI(File rootDir) {
-        String artifactsDir = rootDir.getAbsolutePath() + FILE_SEPARATOR + ".starts";
+        String artifactsDir = rootDir.getAbsolutePath() + File.separator + ".starts";
         return (new File(artifactsDir)).toURI().toString();
     }
 
     private static Set<String> toFQN(Set<String> diff) {
         Set<String> diffFQNs = new HashSet<>();
         for (String d : diff) {
-            diffFQNs.add(d.replace(".java", EMPTY).replace(FILE_SEPARATOR, DOT));
+            diffFQNs.add(d.replace(".java", EMPTY).replace(File.separator, DOT));
         }
         return diffFQNs;
     }

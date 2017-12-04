@@ -39,7 +39,7 @@ public class Writer implements StartsConstants {
     private static final Logger LOGGER = Logger.getGlobal();
 
     public static void writeToFile(Collection col, String filename, String artifactsDir) {
-        String outFilename = artifactsDir + FILE_SEPARATOR + filename;
+        String outFilename = artifactsDir + File.separator + filename;
         writeToFile(col, outFilename);
     }
 
@@ -107,7 +107,7 @@ public class Writer implements StartsConstants {
      */
     public static void writeGraph(DirectedGraph<String> graph, String artifactsDir, boolean print, String graphFile) {
         if (print) {
-            String outFilename = artifactsDir + FILE_SEPARATOR + graphFile;
+            String outFilename = artifactsDir + File.separator + graphFile;
             try (BufferedWriter writer = getWriter(outFilename)) {
                 if (graph == null) {
                     writer.write(EMPTY);
@@ -136,7 +136,7 @@ public class Writer implements StartsConstants {
     }
 
     public static void writeTCSimple(Map<String, Set<String>> testDeps, String artifactsDir, String tcFile) {
-        String outFilename = artifactsDir + FILE_SEPARATOR + tcFile;
+        String outFilename = artifactsDir + File.separator + tcFile;
         try (BufferedWriter writer = getWriter(outFilename)) {
             for (String test : testDeps.keySet()) {
                 writer.write(test + WHITE_SPACE + test);
@@ -193,7 +193,7 @@ public class Writer implements StartsConstants {
     }
 
     public static String fqnToExcludePath(String fqn) {
-        return fqn.replace(DOT, FILE_SEPARATOR) + ".*";
+        return fqn.replace(DOT, File.separator) + ".*";
     }
 
     public static void writeToLog(Set<String> set, String title, Logger logger) {
@@ -252,6 +252,6 @@ public class Writer implements StartsConstants {
      */
     public static String urlToFQN(String url) {
         // ASSUMPTION: "classes/" rarely occurs in the rest of the path
-        return url.split(CLASSES + FILE_SEPARATOR)[1].replace(CLASS_EXTENSION, EMPTY).replace(FILE_SEPARATOR, DOT);
+        return url.split(CLASSES + File.separator)[1].replace(CLASS_EXTENSION, EMPTY).replace(File.separator, DOT);
     }
 }

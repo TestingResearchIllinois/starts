@@ -81,20 +81,20 @@ public final class AgentLoader implements StartsConstants {
     private static URL findToolsJar() throws MalformedURLException {
         String javaHome = System.getProperty(JAVA_HOME);
         File javaHomeFile = new File(javaHome);
-        File tjf = new File(javaHomeFile, LIB + FILE_SEPARATOR + TOOLS_JAR_NAME);
+        File tjf = new File(javaHomeFile, LIB + File.separator + TOOLS_JAR_NAME);
 
         if (!tjf.exists()) {
-            tjf = new File(System.getenv("java_home"), LIB + FILE_SEPARATOR + TOOLS_JAR_NAME);
+            tjf = new File(System.getenv("java_home"), LIB + File.separator + TOOLS_JAR_NAME);
         }
 
-        if (!tjf.exists() && javaHomeFile.getAbsolutePath().endsWith(FILE_SEPARATOR + "jre")) {
+        if (!tjf.exists() && javaHomeFile.getAbsolutePath().endsWith(File.separator + "jre")) {
             javaHomeFile = javaHomeFile.getParentFile();
-            tjf = new File(javaHomeFile, LIB + FILE_SEPARATOR + TOOLS_JAR_NAME);
+            tjf = new File(javaHomeFile, LIB + File.separator + TOOLS_JAR_NAME);
         }
 
-        if (!tjf.exists() && isMac() && javaHomeFile.getAbsolutePath().endsWith(FILE_SEPARATOR + "Home")) {
+        if (!tjf.exists() && isMac() && javaHomeFile.getAbsolutePath().endsWith(File.separator + "Home")) {
             javaHomeFile = javaHomeFile.getParentFile();
-            tjf = new File(javaHomeFile, "Classes" + FILE_SEPARATOR + CLASSES_JAR_NAME);
+            tjf = new File(javaHomeFile, "Classes" + File.separator + CLASSES_JAR_NAME);
         }
 
         return tjf.toURI().toURL();

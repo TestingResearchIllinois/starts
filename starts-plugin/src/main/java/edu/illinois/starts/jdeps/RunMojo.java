@@ -166,8 +166,8 @@ public class RunMojo extends DiffMojo implements StartsConstants {
     private String getCleanClassPath(String cp) {
         String[] paths = cp.split(File.pathSeparator);
         StringBuilder sb = new StringBuilder();
-        String classes = FILE_SEPARATOR + TARGET +  FILE_SEPARATOR + CLASSES;
-        String testClasses = FILE_SEPARATOR + TARGET + FILE_SEPARATOR + TEST_CLASSES;
+        String classes = File.separator + TARGET +  File.separator + CLASSES;
+        String testClasses = File.separator + TARGET + File.separator + TEST_CLASSES;
         for (int i = 0; i < paths.length; i++) {
             if (paths[i].contains(classes)
                 || paths[i].contains(testClasses)

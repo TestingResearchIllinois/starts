@@ -35,7 +35,6 @@ public interface StartsConstants {
     String DOT = ".";
     String EMPTY = "";
     String COMMA = ",";
-    String FILE_SEPARATOR = File.separator;
     String COLON = ": ";
     String WHITE_SPACE = " ";
     String MILLISECOND = "ms";

@@ -18,7 +18,6 @@ import edu.illinois.starts.constants.StartsConstants;
 public abstract class AbstractMojoInterceptor implements StartsConstants {
 
     protected static final Logger LOGGER = Logger.getGlobal();
-    static final char FILE_SEPARATOR_CHAR = File.separatorChar;
 
     public static URL extractJarURL(URL url) throws IOException {
         JarURLConnection connection = (JarURLConnection) url.openConnection();
@@ -30,7 +29,7 @@ public abstract class AbstractMojoInterceptor implements StartsConstants {
     }
 
     public static URL getResource(Class<?> clz) {
-        URL resource = clz.getResource("/" + clz.getName().replace('.', FILE_SEPARATOR_CHAR) + CLASS_EXTENSION);
+        URL resource = clz.getResource("/" + clz.getName().replace('.', File.separatorChar) + CLASS_EXTENSION);
         return resource;
     }
 

@@ -118,7 +118,7 @@ public class Cache implements StartsConstants {
     }
 
     private File createCacheFile(String jar) {
-        String cachePath = jar.replace(m2Repo + FILE_SEPARATOR, EMPTY).replace(JAR_EXTENSION, GRAPH_EXTENSION);
+        String cachePath = jar.replace(m2Repo + File.separator, EMPTY).replace(JAR_EXTENSION, GRAPH_EXTENSION);
         return new File(jdepsCache, cachePath);
     }
 
