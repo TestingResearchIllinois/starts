@@ -54,11 +54,7 @@ public class StartsMojo extends RunMojo implements StartsConstants {
 
         if (enableMojoExecutor && updateRunChecksums) {
             executeMojo(
-                    plugin(
-                            groupId(getProject().getGroupId()),
-                            artifactId(getProject().getArtifactId()),
-                            version(getProject().getVersion())
-                    ),
+                    getPluginDescriptor().getPlugin(),
                     goal("update"),
                     configuration(element(name("writeNonAffected"), String.valueOf(writeNonAffected))),
                     executionEnvironment(getProject(), getSession(), pluginManager)
