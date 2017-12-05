@@ -20,6 +20,7 @@ import java.util.logging.Level;
 
 import edu.illinois.starts.util.Logger;
 import org.apache.maven.execution.MavenSession;
+import org.apache.maven.model.Plugin;
 import org.apache.maven.plugin.BuildPluginManager;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.Component;
@@ -39,6 +40,11 @@ public class UpdateMojoRunnable implements Runnable {
     private boolean writeNonAffected;
 
     /**
+     * The plugin currently being executed, which should be starts.
+     */
+    private Plugin plugin;
+
+    /**
      * The project currently being build.
      */
     private MavenProject project;
@@ -51,12 +57,14 @@ public class UpdateMojoRunnable implements Runnable {
     /**
      * The Maven BuildPluginManager component.
      */
+    @Component
     private BuildPluginManager pluginManager;
 
     private Logger logger;
 
-    public UpdateMojoRunnable(MavenProject project, MavenSession session, BuildPluginManager pluginManager,
+    public UpdateMojoRunnable(Plugin plugin, MavenProject project, MavenSession session, BuildPluginManager pluginManager,
                               boolean writeNonAffected) {
+        this.plugin = plugin;
         this.project = project;
         this.session = session;
         this.pluginManager = pluginManager;
@@ -66,19 +74,15 @@ public class UpdateMojoRunnable implements Runnable {
     public void run() {
         try {
             executeMojo(
-                    plugin(
-                            groupId(project.getGroupId()),
-                            artifactId(project.getArtifactId()),
-                            version(project.getVersion())
-                    ),
+                    plugin,
                     goal("update"),
                     configuration(element(name("writeNonAffected"), String.valueOf(writeNonAffected))),
                     executionEnvironment(project, session, pluginManager)
             );
             mutex.release();
-            logger.log(Level.FINE, "available Semaphore permits: " + UpdateMojoRunnable.mutex.availablePermits());
         } catch (MojoExecutionException mee) {
             mee.printStackTrace();
+            mutex.release();
         }
     }
 }
