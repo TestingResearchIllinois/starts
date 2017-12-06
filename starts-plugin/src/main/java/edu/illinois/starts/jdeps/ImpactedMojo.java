@@ -39,6 +39,14 @@ public class ImpactedMojo extends DiffMojo implements StartsConstants {
     private boolean updateImpactedChecksums;
 
     /**
+     * Set this to "true" to write the surefire classpath to disk.
+     * Note that the surefire classpath will also be written to disk
+     * at or below log Level.FINER
+     */
+    @Parameter(property = "writePath", defaultValue = "false")
+    private boolean writePath;
+
+    /**
      * Set to "true" to print newly-added classes: classes in the program that were not in the previous version.
      */
     @Parameter(property = "trackNewClasses", defaultValue = FALSE)
@@ -91,7 +99,7 @@ public class ImpactedMojo extends DiffMojo implements StartsConstants {
         ZLCHelper zlcHelper = new ZLCHelper();
         zlcHelper.updateZLCFile(result.getTestDeps(), loader, getArtifactsDir(), new HashSet<String>());
         long end = System.currentTimeMillis();
-        if (logger.getLoggingLevel().intValue() == Level.FINER.intValue()) {
+        if (writePath || logger.getLoggingLevel().intValue() <= Level.FINER.intValue()) {
             Writer.writeClassPath(sfPathString, getArtifactsDir());
         }
         if (logger.getLoggingLevel().intValue() <= Level.FINEST.intValue()) {
