@@ -61,7 +61,7 @@ public class VerifyUtil implements StartsConstants {
                     }
                 }
             }
+            directory.delete();
         }
-        directory.delete();
     }
 }
