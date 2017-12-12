@@ -39,7 +39,7 @@ public class Writer implements StartsConstants {
     private static final Logger LOGGER = Logger.getGlobal();
 
     public static void writeToFile(Collection col, String filename, String artifactsDir) {
-        String outFilename = artifactsDir + File.separator + filename;
+        String outFilename = Paths.get(artifactsDir, filename).toString();
         writeToFile(col, outFilename);
     }
 
@@ -107,7 +107,7 @@ public class Writer implements StartsConstants {
      */
     public static void writeGraph(DirectedGraph<String> graph, String artifactsDir, boolean print, String graphFile) {
         if (print) {
-            String outFilename = artifactsDir + File.separator + graphFile;
+            String outFilename = Paths.get(artifactsDir, graphFile).toString();
             try (BufferedWriter writer = getWriter(outFilename)) {
                 if (graph == null) {
                     writer.write(EMPTY);
@@ -136,7 +136,7 @@ public class Writer implements StartsConstants {
     }
 
     public static void writeTCSimple(Map<String, Set<String>> testDeps, String artifactsDir, String tcFile) {
-        String outFilename = artifactsDir + File.separator + tcFile;
+        String outFilename = Paths.get(artifactsDir, tcFile).toString();
         try (BufferedWriter writer = getWriter(outFilename)) {
             for (String test : testDeps.keySet()) {
                 writer.write(test + WHITE_SPACE + test);

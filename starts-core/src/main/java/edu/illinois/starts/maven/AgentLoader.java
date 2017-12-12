@@ -6,6 +6,7 @@ import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.nio.file.Paths;
 
 import edu.illinois.starts.constants.StartsConstants;
 
@@ -82,20 +83,20 @@ public final class AgentLoader implements StartsConstants {
     private static URL findToolsJar() throws MalformedURLException {
         String javaHome = System.getProperty(JAVA_HOME);
         File javaHomeFile = new File(javaHome);
-        File tjf = new File(javaHomeFile, LIB + File.separator + TOOLS_JAR_NAME);
+        File tjf = new File(javaHomeFile, Paths.get(LIB, TOOLS_JAR_NAME).toString());
 
         if (!tjf.exists()) {
-            tjf = new File(System.getenv("java_home"), LIB + File.separator + TOOLS_JAR_NAME);
+            tjf = new File(System.getenv("java_home"), Paths.get(LIB, TOOLS_JAR_NAME).toString());
         }
 
         if (!tjf.exists() && javaHomeFile.getAbsolutePath().endsWith(File.separator + "jre")) {
             javaHomeFile = javaHomeFile.getParentFile();
-            tjf = new File(javaHomeFile, LIB + File.separator + TOOLS_JAR_NAME);
+            tjf = new File(javaHomeFile, Paths.get(LIB, TOOLS_JAR_NAME).toString());
         }
 
         if (!tjf.exists() && isMac() && javaHomeFile.getAbsolutePath().endsWith(File.separator + "Home")) {
             javaHomeFile = javaHomeFile.getParentFile();
-            tjf = new File(javaHomeFile, "Classes" + File.separator + CLASSES_JAR_NAME);
+            tjf = new File(javaHomeFile, Paths.get("Classes", CLASSES_JAR_NAME).toString());
         }
 
         return tjf.toURI().toURL();

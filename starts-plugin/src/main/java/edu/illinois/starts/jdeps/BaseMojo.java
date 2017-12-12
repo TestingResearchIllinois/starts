@@ -8,6 +8,7 @@ import java.io.File;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -93,7 +94,7 @@ abstract class BaseMojo extends SurefirePlugin implements StartsConstants {
 
     public String getArtifactsDir() throws MojoExecutionException {
         if (artifactsDir == null) {
-            artifactsDir = basedir.getAbsolutePath() + File.separator + STARTS_DIRECTORY_PATH;
+            artifactsDir = Paths.get(basedir.getAbsolutePath(), STARTS_DIRECTORY_PATH).toString();
             File file = new File(artifactsDir);
             if (!file.mkdirs() && !file.exists()) {
                 throw new MojoExecutionException("I could not create artifacts dir: " + artifactsDir);
