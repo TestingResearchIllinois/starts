@@ -9,6 +9,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
@@ -81,7 +82,7 @@ public class EkstaziHelper implements StartsConstants {
         if (LOGGER.getLoggingLevel().intValue() > Level.FINEST.intValue()) {
             return changed;
         }
-        String outFilename = artifactsDir + File.separator + CHANGED_CLASSES;
+        String outFilename = Paths.get(artifactsDir, CHANGED_CLASSES).toString();
         for (String line : Arrays.asList(baosErr.toString().split(lineSeparator))) {
             String ekstaziDiffMarker = "::Diff:: ";
             if (line.contains(ekstaziDiffMarker)) {
@@ -103,7 +104,7 @@ public class EkstaziHelper implements StartsConstants {
     }
 
     private static String getRootDirURI(File rootDir) {
-        String artifactsDir = rootDir.getAbsolutePath() + File.separator + ".starts";
+        String artifactsDir = Paths.get(rootDir.getAbsolutePath(), ".starts").toString();
         return (new File(artifactsDir)).toURI().toString();
     }
 

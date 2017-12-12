@@ -6,6 +6,7 @@ package edu.illinois.starts.helpers;
 
 
 import java.io.File;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -187,7 +188,7 @@ public class Loadables implements StartsConstants {
         LOGGER.log(Level.FINEST, "JDEPS CMD: " + args);
         Map<String, Set<String>> depMap = RTSUtil.runJdeps(args);
         if (LOGGER.getLoggingLevel().intValue() == Level.FINEST.intValue()) {
-            Writer.writeMapToFile(depMap, artifactsDir + File.separator + "jdeps-out");
+            Writer.writeMapToFile(depMap, Paths.get(artifactsDir, "jdeps-out").toString());
         }
         return depMap;
     }
