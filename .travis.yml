@@ -8,7 +8,7 @@ matrix:
       jdk: oraclejdk8
 
 script:
-    - mvn verify -B
+    - mvn clean verify -B
 
 cache:
     directories:
