@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Copyright (c) 2015 - Present. The STARTS Team. All Rights Reserved.
+  -->
+
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>starts.plugin.it</groupId>
+    <artifactId>parent-pom</artifactId>
+    <version>1.0-SNAPSHOT</version>
+    <relativePath>../parent-pom.xml</relativePath>
+  </parent>
+
+  <artifactId>multiple-is-a-it</artifactId>
+  <description>This integration test would test code that has multiple layers of is-a OOP relationship to see if STARTS is able to successfully
+  detect affected tests when the source code has this relationship.</description>
+</project>
