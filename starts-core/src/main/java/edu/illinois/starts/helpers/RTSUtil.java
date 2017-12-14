@@ -17,6 +17,7 @@ import java.util.Set;
 import java.util.logging.Level;
 
 import com.sun.tools.jdeps.Main;
+import edu.illinois.starts.constants.StartsConstants;
 import edu.illinois.starts.util.ChecksumUtil;
 import edu.illinois.starts.util.Logger;
 import edu.illinois.yasgl.DirectedGraph;
@@ -26,7 +27,7 @@ import org.ekstazi.data.RegData;
 /**
  * Some utility methods that are needed for RTS.
  */
-public class RTSUtil {
+public class RTSUtil implements StartsConstants {
     private static final Logger LOGGER = Logger.getGlobal();
 
     public static void saveForNextRun(String artifactsDir, DirectedGraph<String> graph,
@@ -34,7 +35,7 @@ public class RTSUtil {
         long start = System.currentTimeMillis();
         Writer.writeGraph(graph, artifactsDir, printGraph, graphFile);
         long end = System.currentTimeMillis();
-        LOGGER.log(Level.FINEST, "[TIME]WRITING FILES: " + (end - start) + "ms");
+        LOGGER.log(Level.FINEST, "[TIME]WRITING FILES: " + (end - start) + MILLISECOND);
     }
 
     public static void computeAndSaveNewCheckSums(String artifactsDir,
@@ -46,7 +47,7 @@ public class RTSUtil {
         start = System.currentTimeMillis();
         Map<String, Set<RegData>> newCheckSums = ChecksumUtil.makeCheckSumMap(loader, testDeps, affectedTests);
         end = System.currentTimeMillis();
-        LOGGER.log(Level.FINEST, "[TIME]UPDATING CHECKSUMS: " + (end - start) + "ms");
+        LOGGER.log(Level.FINEST, "[TIME]UPDATING CHECKSUMS: " + (end - start) + MILLISECOND);
         start = System.currentTimeMillis();
         ChecksumUtil.saveCheckSums(newCheckSums, artifactsDir);
         try {
@@ -55,7 +56,7 @@ public class RTSUtil {
             throw new MojoExecutionException(ioe.getMessage());
         }
         end = System.currentTimeMillis();
-        LOGGER.log(Level.FINEST, "[TIME]RE-SAVING CHECKSUMS: " + (end - start) + "ms");
+        LOGGER.log(Level.FINEST, "[TIME]RE-SAVING CHECKSUMS: " + (end - start) + MILLISECOND);
     }
 
     /**
@@ -68,7 +69,7 @@ public class RTSUtil {
         Set<String> affectedTests = new HashSet<>(allTests);
         affectedTests.removeAll(nonAffected);
         long end = System.currentTimeMillis();
-        LOGGER.log(Level.FINEST, "[TIME]COMPUTING AFFECTED: " + (end - start) + "ms");
+        LOGGER.log(Level.FINEST, "[TIME]COMPUTING AFFECTED: " + (end - start) + MILLISECOND);
         return affectedTests;
     }
 
@@ -86,10 +87,10 @@ public class RTSUtil {
         for (String line : lines) {
             String[] parts = line.split("->");
             String left = parts[0].trim();
-            if (left.startsWith("classes") || left.startsWith("test-classes") || left.endsWith(".jar")) {
+            if (left.startsWith(CLASSES) || left.startsWith(TEST_CLASSES) || left.endsWith(JAR_EXTENSION)) {
                 continue;
             }
-            String right = parts[1].trim().split(" ")[0];
+            String right = parts[1].trim().split(WHITE_SPACE)[0];
             if (deps.keySet().contains(left)) {
                 deps.get(left).add(right);
             } else {

@@ -15,12 +15,14 @@ import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
 
+import edu.illinois.starts.constants.StartsConstants;
 import edu.illinois.starts.util.Logger;
 
 /** Utility methods for dealing with cached files. */
 
-public class Cache {
+public class Cache implements StartsConstants {
     private static final Logger LOGGER = Logger.getGlobal();
+    private static final String GRAPH_EXTENSION = ".graph";
 
     File jdepsCache;
     String m2Repo;
@@ -64,7 +66,7 @@ public class Cache {
         for (String jar : missing) {
             File missingFile = new File(jar);
             String fileName = missingFile.getName();
-            File jdkJarGraphFile = new File(jdepsCache, fileName.replace(".jar", ".graph"));
+            File jdkJarGraphFile = new File(jdepsCache, fileName.replace(JAR_EXTENSION, GRAPH_EXTENSION));
             if (jdkJarGraphFile.exists()) {
                 found.add(jdkJarGraphFile.getName());
             } else {
@@ -116,7 +118,7 @@ public class Cache {
     }
 
     private File createCacheFile(String jar) {
-        String cachePath = jar.replace(m2Repo + File.separator, "").replace(".jar", ".graph");
+        String cachePath = jar.replace(m2Repo + File.separator, EMPTY).replace(JAR_EXTENSION, GRAPH_EXTENSION);
         return new File(jdepsCache, cachePath);
     }
 
@@ -127,7 +129,7 @@ public class Cache {
         Set<String> jars = new HashSet<>();
         String[] splitCP = sfPathString.split(File.pathSeparator);
         for (int i = 0; i < splitCP.length; i++) {
-            if (splitCP[i].endsWith(".jar")) {
+            if (splitCP[i].endsWith(JAR_EXTENSION)) {
                 jars.add(splitCP[i]);
             }
         }

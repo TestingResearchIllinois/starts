@@ -41,10 +41,11 @@ import org.apache.maven.surefire.util.DefaultScanResult;
  * Base MOJO for the JDeps-Based STARTS.
  */
 abstract class BaseMojo extends SurefirePlugin implements StartsConstants {
+    static final String STAR = "*";
     /**
      * Set this to "false" to not filter out "sun.*" and "java.*" classes from jdeps parsing.
      */
-    @Parameter(property = "filterLib", defaultValue = "false")
+    @Parameter(property = "filterLib", defaultValue = FALSE)
     protected boolean filterLib;
 
     /**
@@ -71,7 +72,7 @@ abstract class BaseMojo extends SurefirePlugin implements StartsConstants {
      * Set this to "false" to not print the graph obtained from jdeps parsing.
      * When "true" the graph is written to file after the run.
      */
-    @Parameter(property = "printGraph", defaultValue = "true")
+    @Parameter(property = "printGraph", defaultValue = TRUE)
     protected boolean printGraph;
 
     /**
@@ -85,7 +86,6 @@ abstract class BaseMojo extends SurefirePlugin implements StartsConstants {
      */
     @Parameter(property = "startsLogging", defaultValue = "CONFIG")
     protected String loggingLevel;
-
     private Classpath sureFireClassPath;
 
     protected void printResult(Set<String> set, String title) {
@@ -261,8 +261,8 @@ abstract class BaseMojo extends SurefirePlugin implements StartsConstants {
     }
 
     protected List<String> getAllClasses() {
-        DirectoryScanner testScanner = new DirectoryScanner(getTestClassesDirectory(), new TestListResolver("*"));
-        DirectoryScanner classScanner = new DirectoryScanner(getClassesDirectory(), new TestListResolver("*"));
+        DirectoryScanner testScanner = new DirectoryScanner(getTestClassesDirectory(), new TestListResolver(STAR));
+        DirectoryScanner classScanner = new DirectoryScanner(getClassesDirectory(), new TestListResolver(STAR));
         DefaultScanResult scanResult = classScanner.scan().append(testScanner.scan());
         return scanResult.getFiles();
     }

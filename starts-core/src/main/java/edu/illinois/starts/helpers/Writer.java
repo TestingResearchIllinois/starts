@@ -25,6 +25,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 
+import edu.illinois.starts.constants.StartsConstants;
 import edu.illinois.starts.util.Logger;
 import edu.illinois.starts.util.Pair;
 import edu.illinois.yasgl.DirectedGraph;
@@ -34,7 +35,8 @@ import org.apache.commons.codec.binary.Hex;
 /**
  * Utility methods for writing various data to file.
  */
-public class Writer {
+public class Writer implements StartsConstants {
+    static final String STARS = "**********";
     private static final Logger LOGGER = Logger.getGlobal();
 
     public static void writeToFile(Collection col, String filename, String artifactsDir) {
@@ -45,7 +47,7 @@ public class Writer {
     public static void writeToFile(Collection col, String filename) {
         try (BufferedWriter writer = getWriter(filename)) {
             if (col.isEmpty()) {
-                writer.write("");
+                writer.write(EMPTY);
                 return;
             }
             for (Object elem : col) {
@@ -59,11 +61,11 @@ public class Writer {
     public static void writeMapToFile(Map map, String filename) {
         try (BufferedWriter writer = getWriter(filename)) {
             if (map.isEmpty()) {
-                writer.write("");
+                writer.write(EMPTY);
                 return;
             }
             for (Object key : map.keySet()) {
-                writer.write(key.toString() + "," + map.get(key) + System.lineSeparator());
+                writer.write(key.toString() + COMMA + map.get(key) + System.lineSeparator());
             }
         } catch (IOException ioe) {
             ioe.printStackTrace();
@@ -71,7 +73,7 @@ public class Writer {
     }
 
     public static void writeClassPath(String sfPathString, String artifactsDir) {
-        String outFilename = Paths.get(artifactsDir, "sf-classpath").toString();
+        String outFilename = Paths.get(artifactsDir, SF_CLASSPATH).toString();
         try (BufferedWriter writer = getWriter(outFilename)) {
             writer.write(sfPathString + System.lineSeparator());
         } catch (IOException ioe) {
@@ -80,7 +82,7 @@ public class Writer {
     }
 
     public static void writeJarChecksums(String sfPathString, String artifactsDir) {
-        String outFilename = Paths.get(artifactsDir, "jar-checksums").toString();
+        String outFilename = Paths.get(artifactsDir, JAR_CHECKSUMS).toString();
         try (BufferedWriter writer = getWriter(outFilename)) {
             String[] jarsList = sfPathString.split(File.pathSeparator);
             for (int i = 0; i < jarsList.length; i++) {
@@ -109,12 +111,12 @@ public class Writer {
             String outFilename = artifactsDir + File.separator + graphFile;
             try (BufferedWriter writer = getWriter(outFilename)) {
                 if (graph == null) {
-                    writer.write("");
+                    writer.write(EMPTY);
                     return;
                 }
                 // write all the edges in the graph
                 for (Edge<String> edge : graph.getEdges()) {
-                    writer.write(edge.getSource() + " " + edge.getDestination() + System.lineSeparator());
+                    writer.write(edge.getSource() + WHITE_SPACE + edge.getDestination() + System.lineSeparator());
                 }
             } catch (IOException ioe) {
                 ioe.printStackTrace();
@@ -126,7 +128,7 @@ public class Writer {
         try (BufferedWriter writer = getWriter(fileName)) {
             for (String key : deps.keySet()) {
                 for (String value : deps.get(key)) {
-                    writer.write(key + " " + value + System.lineSeparator());
+                    writer.write(key + WHITE_SPACE + value + System.lineSeparator());
                 }
             }
         } catch (IOException ioe) {
@@ -138,10 +140,10 @@ public class Writer {
         String outFilename = artifactsDir + File.separator + tcFile;
         try (BufferedWriter writer = getWriter(outFilename)) {
             for (String test : testDeps.keySet()) {
-                writer.write(test + " " + test);
+                writer.write(test + WHITE_SPACE + test);
                 Iterator<String> it = testDeps.get(test).iterator();
                 while (it.hasNext()) {
-                    writer.write("," + it.next());
+                    writer.write(COMMA + it.next());
                 }
                 writer.newLine();
             }
@@ -192,14 +194,14 @@ public class Writer {
     }
 
     public static String fqnToExcludePath(String fqn) {
-        return fqn.replace(".", File.separator) + ".*";
+        return fqn.replace(DOT, File.separator) + ".*";
     }
 
     public static void writeToLog(Set<String> set, String title, Logger logger) {
         List<String> list = new ArrayList<>(set);
         Collections.sort(list);
-        logger.log(Level.INFO, "");
-        logger.log(Level.INFO, "********** " + title + " **********");
+        logger.log(Level.INFO, EMPTY);
+        logger.log(Level.INFO, STARS + WHITE_SPACE + title + WHITE_SPACE + STARS);
 
         for (String listItem : list) {
             logger.log(Level.INFO, listItem);
@@ -257,7 +259,7 @@ public class Writer {
                 size = is.read(bytes, 0, bufSize);
             }
             String hex = Hex.encodeHexString(md.digest());
-            sb.append(jar).append(",").append(hex);
+            sb.append(jar).append(COMMA).append(hex);
         } catch (IOException ioe) {
             ioe.printStackTrace();
         } catch (NoSuchAlgorithmException nsae) {
@@ -273,6 +275,6 @@ public class Writer {
      */
     public static String urlToFQN(String url) {
         // ASSUMPTION: "classes/" rarely occurs in the rest of the path
-        return url.split("classes" + File.separator)[1].replace(".class", "").replace(File.separator, ".");
+        return url.split(CLASSES + File.separator)[1].replace(CLASS_EXTENSION, EMPTY).replace(File.separator, DOT);
     }
 }

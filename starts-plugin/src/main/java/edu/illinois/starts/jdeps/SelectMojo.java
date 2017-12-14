@@ -4,13 +4,12 @@
 
 package edu.illinois.starts.jdeps;
 
-
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
 
-
+import edu.illinois.starts.constants.StartsConstants;
 import edu.illinois.starts.helpers.LocalRuntimesMaintainer;
 import edu.illinois.starts.helpers.TimeExtractor;
 import edu.illinois.starts.helpers.Writer;
@@ -28,13 +27,13 @@ import org.apache.maven.plugins.annotations.ResolutionScope;
  */
 @Mojo(name = "select", requiresDirectInvocation = true, requiresDependencyResolution = ResolutionScope.TEST)
 @Execute(phase = LifecyclePhase.TEST_COMPILE)
-public class SelectMojo extends DiffMojo {
+public class SelectMojo extends DiffMojo implements StartsConstants {
     /**
      * Set this to "true" to update test dependencies on disk. The default value of
      * "false" is useful for "dry runs" where one may want to see the affected
      * tests, without updating test dependencies.
      */
-    @Parameter(property = "updateSelectChecksums", defaultValue = "false")
+    @Parameter(property = "updateSelectChecksums", defaultValue = FALSE)
     private boolean updateSelectChecksums;
 
     private Logger logger;
@@ -56,27 +55,27 @@ public class SelectMojo extends DiffMojo {
         printResultsWithTimeEstimates(testTimes, "AffectedTests");
         logger.log(Level.INFO, "Total estimated test runtime: " + (totalTime / 1000.0) + "s");
         long end = System.currentTimeMillis();
-        logger.log(Level.FINE, "[PROFILE] RUN-MOJO-TOTAL: " + Writer.millsToSeconds(end - start));
-        logger.log(Level.FINE, "[PROFILE] TEST-RUNNING-TIME: " + 0.0);
+        logger.log(Level.FINE, PROFILE_RUN_MOJO_TOTAL + Writer.millsToSeconds(end - start));
+        logger.log(Level.FINE, PROFILE_TEST_RUNNING_TIME + 0.0);
     }
 
     private Set<String> computeAffectedTests() throws MojoExecutionException {
         setIncludesExcludes();
-        Set<String> allTests = new HashSet<>(getTestClasses("checkIfAllAffected"));
+        Set<String> allTests = new HashSet<>(getTestClasses(CHECK_IF_ALL_AFFECTED));
         Set<String> affectedTests = new HashSet<>(allTests);
         Pair<Set<String>, Set<String>> data = computeChangeData();
         Set<String> nonAffectedTests = data == null ? new HashSet<String>() : data.getKey();
         affectedTests.removeAll(nonAffectedTests);
         if (allTests.equals(nonAffectedTests)) {
-            logger.log(Level.INFO, "********** Run **********");
-            logger.log(Level.INFO, "No tests are selected to run.");
+            logger.log(Level.INFO, STARS_RUN_STARS);
+            logger.log(Level.INFO, NO_TESTS_ARE_SELECTED_TO_RUN);
         }
         long startUpdate = System.currentTimeMillis();
         if (updateSelectChecksums) {
             updateForNextRun(nonAffectedTests);
         }
         long endUpdate = System.currentTimeMillis();
-        logger.log(Level.FINE, "[PROFILE] STARTS-MOJO-UPDATE-TIME: " + Writer.millsToSeconds(endUpdate - startUpdate));
+        logger.log(Level.FINE, PROFILE_STARTS_MOJO_UPDATE_TIME + Writer.millsToSeconds(endUpdate - startUpdate));
         return affectedTests;
     }
 }
