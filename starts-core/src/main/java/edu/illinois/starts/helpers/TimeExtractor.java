@@ -25,6 +25,11 @@ public class TimeExtractor {
         boolean useLocalRuntimesMaintainer = false;
 
         //Check if the statistics file exists. If it does not, use the XML files generated for each test instead
+        File averagesFile = LocalRuntimesMaintainer.getAverageRuntimesFile(baseDir, startsDirectoryPath);
+        if (averagesFile != null) {
+            useLocalRuntimesMaintainer = true;
+        }
+
         File surefireStatsFile = getSurefireStatsFile(baseDir);
         if (surefireStatsFile != null) {
             statisticsMap = getPrevTestRunTimeMapFromFile(surefireStatsFile);
@@ -33,14 +38,18 @@ public class TimeExtractor {
             }
         }
 
+        //Calculate and store previous runtimes
         for (String currTestName : affectedTests) {
             int prevTime = -1;
             if (useLocalRuntimesMaintainer) {
-                prevTime = LocalRuntimesMaintainer.getAverageRuntime(baseDir, startsDirectoryPath, currTestName);
-            } else if (useStatisticsMap) {
-                prevTime = getPrevTestRuntimeFromStatsMap(statisticsMap, currTestName);
-            } else {
-                prevTime = getPrevTestRuntimeFromXML(reportsDir, currTestName);
+                prevTime = LocalRuntimesMaintainer.getAverageRuntime(averagesFile, currTestName);
+            }
+            if (prevTime == -1) {
+                if (useStatisticsMap) {
+                    prevTime = getPrevTestRuntimeFromStatsMap(statisticsMap, currTestName);
+                } else {
+                    prevTime = getPrevTestRuntimeFromXML(reportsDir, currTestName);
+                }
             }
             testTimes.add(new Pair(currTestName, prevTime));
         }
