@@ -6,6 +6,7 @@ package edu.illinois.starts.jdeps;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.Throwable;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -63,5 +64,35 @@ public class VerifyUtil implements StartsConstants {
             }
             directory.delete();
         }
+    }
+
+    public static void backupDeps(File depsFile, File oldDepsFile) {
+        Path source = depsFile.toPath();
+        Path target = oldDepsFile.toPath();
+        System.out.println("source: " + source.toString());
+        System.out.println("target: " + target.toString());
+        try {
+            Files.copy(source, target);
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+    }
+
+    public static int compareDeps(File depsFile, File oldDepsFile) {
+        List<String> oldDeps = null;
+        List<String> newDeps = null;
+        try {
+            oldDeps = Files.readAllLines(oldDepsFile.toPath(), Charset.defaultCharset());
+            newDeps = Files.readAllLines(depsFile.toPath(), Charset.defaultCharset());
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        if (oldDeps == null) {
+            System.out.println("oldDeps is null");
+        }
+        if (oldDeps != null && newDeps != null  && (oldDeps.size() == newDeps.size())) {
+            oldDeps.removeAll(newDeps);
+        }
+        return oldDeps.size();
     }
 }
