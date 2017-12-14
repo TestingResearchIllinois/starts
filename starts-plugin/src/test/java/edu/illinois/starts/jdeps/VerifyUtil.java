@@ -69,8 +69,6 @@ public class VerifyUtil implements StartsConstants {
     public static void backupDeps(File depsFile, File oldDepsFile) {
         Path source = depsFile.toPath();
         Path target = oldDepsFile.toPath();
-        System.out.println("source: " + source.toString());
-        System.out.println("target: " + target.toString());
         try {
             Files.copy(source, target);
         } catch (Exception ex) {
@@ -86,9 +84,6 @@ public class VerifyUtil implements StartsConstants {
             newDeps = Files.readAllLines(depsFile.toPath(), Charset.defaultCharset());
         } catch (Exception ex) {
             ex.printStackTrace();
-        }
-        if (oldDeps == null) {
-            System.out.println("oldDeps is null");
         }
         if (oldDeps != null && newDeps != null  && (oldDeps.size() == newDeps.size())) {
             oldDeps.removeAll(newDeps);
