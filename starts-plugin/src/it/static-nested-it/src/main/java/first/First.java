@@ -11,5 +11,5 @@ public class First {
         public static String getNestedNumberAsString() {
             return number.toString();
         }
-     }
+    }
 }
