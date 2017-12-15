@@ -14,7 +14,7 @@
     <relativePath>../parent-pom.xml</relativePath>
   </parent>
 
-  <artifactId>static-nested-first-it</artifactId>
+  <artifactId>static-nested-it</artifactId>
   <description>This integration test would test the basic case with
   code change: if there is a change between two versions, then the
   affected test should be run the second time as well. The added caveat is that the changed code is in a static nested class.</description>
