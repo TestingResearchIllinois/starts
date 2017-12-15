@@ -4,10 +4,10 @@
 
 import edu.illinois.starts.jdeps.SetupUtil;
 
-firstRun = new File(basedir, "first-run.txt");
+firstRun = new File(basedir, "first-run.txt")
 
-if (firstRun.exists()){
+if (firstRun.exists()) {
     setupUtil = new SetupUtil(new File(basedir, ".starts/deps.zlc"))
-    file = new File(basedir, "src/main/java/base/Child.java");
+    file = new File(basedir, "src/main/java/base/Child.java")
     setupUtil.replaceAllInFile(file, "Set<Integer>", "Set")
 }
