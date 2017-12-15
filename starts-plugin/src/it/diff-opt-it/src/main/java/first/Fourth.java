@@ -1,8 +1,7 @@
 package first;
 
 public class Fourth extends Third {
-
-    public Short fourthInt = new Short((short)0);
+    public Short fourthInt;
 
     public Fourth() {
         fourthInt = (short)3;
