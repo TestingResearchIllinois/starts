@@ -26,7 +26,9 @@ import edu.illinois.starts.helpers.Writer;
 import edu.illinois.starts.maven.AgentLoader;
 import edu.illinois.starts.util.Logger;
 import edu.illinois.starts.util.Pair;
+import org.apache.maven.plugin.BuildPluginManager;
 import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
@@ -65,6 +67,21 @@ public class RunMojo extends DiffMojo implements StartsConstants {
     @Parameter(property = "writeNonAffected", defaultValue = "false")
     protected boolean writeNonAffected;
 
+    /**
+     * Set this to "true" to spawn another thread that executes UpdateMojo to update test dependencies
+     * in parallel with Maven test phase execution.
+     * The default value of "false" will update test dependencies before Maven test phase.
+     * If updateRunChecksums is "false", this option will not affect any behaviour of "starts:starts".
+     */
+    @Parameter(property = "offlineMode", defaultValue = "false")
+    protected boolean offlineMode;
+
+    /**
+     * The Maven BuildPluginManager component.
+     */
+    @Component
+    protected BuildPluginManager pluginManager;
+
     protected Set<String> nonAffectedTests;
     protected Set<String> changedClasses;
     private Logger logger;
@@ -99,13 +116,29 @@ public class RunMojo extends DiffMojo implements StartsConstants {
         } else {
             dynamicallyUpdateExcludes(excludePaths);
         }
-        long startUpdateTime = System.currentTimeMillis();
         if (updateRunChecksums) {
-            updateForNextRun(nonAffectedTests);
+            if (offlineMode) {
+                long updateStart = System.currentTimeMillis();
+                System.setProperty("[PROFILE] START-OF-PARALLEL-UPDATE-MOJO: ", Long.toString(updateStart));
+                try {
+                    logger.log(Level.FINEST, "Starting a parallel thread for UpdateMojo. Semaphore permits: "
+                            + UpdateMojoRunnable.mutex.availablePermits());
+                    UpdateMojoRunnable.mutex.acquire();
+                    Thread updateThread = new Thread(new UpdateMojoRunnable(getPluginDescriptor().getPlugin(),
+                            getProject(), getSession(), pluginManager, writeNonAffected));
+                    updateThread.start();
+                } catch (InterruptedException ie) {
+                    ie.printStackTrace();
+                    UpdateMojoRunnable.mutex.release();
+                }
+            } else {
+                long startUpdateTime = System.currentTimeMillis();
+                updateForNextRun(nonAffectedTests);
+                long endUpdateTime = System.currentTimeMillis();
+                logger.log(Level.FINE, PROFILE_STARTS_MOJO_UPDATE_TIME
+                        + Writer.millsToSeconds(endUpdateTime - startUpdateTime));
+            }
         }
-        long endUpdateTime = System.currentTimeMillis();
-        logger.log(Level.FINE, PROFILE_STARTS_MOJO_UPDATE_TIME
-                + Writer.millsToSeconds(endUpdateTime - startUpdateTime));
     }
 
     private void dynamicallyUpdateExcludes(List<String> excludePaths) throws MojoExecutionException {
