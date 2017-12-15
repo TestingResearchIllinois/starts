@@ -4,5 +4,5 @@
 
 import groovy.io.FileType;
 
-def dir = new File(basedir, ".starts")
-assert (dir.exists() == false)
+def startsDir = new File(basedir, ".starts")
+assert (startsDir.exists() == false)
