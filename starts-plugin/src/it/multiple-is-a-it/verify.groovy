@@ -2,24 +2,29 @@
  * Copyright (c) 2015 - Present. The STARTS Team. All Rights Reserved.
  */
 
-import edu.illinois.starts.jdeps.VerifyUtil;
+import edu.illinois.starts.jdeps.VerifyUtil
 
-targetDir = new File(basedir, "target");
-firstRun = new File(basedir, "first-run.txt");
-verifyUtil = new VerifyUtil(new File(basedir, "build.log"));
+firstRun = new File(basedir, "first-run.txt")
+verifyUtil = new VerifyUtil(new File(basedir, "build.log"))
 
 if (!firstRun.exists()) {
-    firstRun.createNewFile();
-    verifyUtil.assertCorrectlyAffected("7");
+    verifyUtil.assertCorrectlyAffected("7")
+    firstRun.createNewFile()
 } else {
-    verifyUtil.assertCorrectlyAffected("5");
-    verifyUtil.deleteFile(firstRun);
-    verifyUtil.deleteFile(new File(basedir, ".starts/deps.zlc"));
-    file = new File(basedir, "src/main/java/first/Fourth.java");
-    verifyUtil.replaceAllInFileStatic(file, "long", "short");
-    verifyUtil.replaceAllInFileStatic(file, "Long", "Short");
-    file = new File(basedir, "src/main/java/first/Second.java");
-    verifyUtil.replaceAllInFileStatic(file, "long", "short");
-    verifyUtil.replaceAllInFileStatic(file, "Long", "Short");
-    verifyUtil.deleteFolder(targetDir);
+    verifyUtil.assertCorrectlyAffected("5")
+    resetIT()
+}
+
+def resetIT() {
+    firstChangedFile = new File(basedir, "src/main/java/first/Fourth.java")
+    verifyUtil.replaceAllInFileStatic(firstChangedFile, "long", "short")
+    verifyUtil.replaceAllInFileStatic(firstChangedFile, "Long", "Short")
+
+    secondChangedFile = new File(basedir, "src/main/java/first/Second.java")
+    verifyUtil.replaceAllInFileStatic(secondChangedFile, "long", "short")
+    verifyUtil.replaceAllInFileStatic(secondChangedFile, "Long", "Short")
+
+    verifyUtil.deleteFile(firstRun)
+    verifyUtil.deleteFile(new File(basedir, ".starts/deps.zlc"))
+    verifyUtil.deleteFolder(new File(basedir, "target"))
 }
