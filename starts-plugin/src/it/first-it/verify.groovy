@@ -2,7 +2,7 @@
  * Copyright (c) 2015 - Present. The STARTS Team. All Rights Reserved.
  */
 
-import edu.illinois.starts.jdeps.VerifyUtil;
+import edu.illinois.starts.jdeps.VerifyUtil
 
 firstRun = new File(basedir, "first-run.txt")
 verifyUtil = new VerifyUtil(new File(basedir, "build.log"))

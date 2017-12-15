@@ -2,7 +2,7 @@
  * Copyright (c) 2015 - Present. The STARTS Team. All Rights Reserved.
  */
 
-import edu.illinois.starts.jdeps.SetupUtil;
+import edu.illinois.starts.jdeps.SetupUtil
 
 firstRun = new File(basedir, "first-run.txt")
 
