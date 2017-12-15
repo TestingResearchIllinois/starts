@@ -4,18 +4,20 @@
 
 import edu.illinois.starts.jdeps.VerifyUtil;
 
-targetDir = new File(basedir, "target");
-firstRun = new File(basedir, "first-run.txt");
-verifyUtil = new VerifyUtil(new File(basedir, "build.log"));
+firstRun = new File(basedir, "first-run.txt")
+verifyUtil = new VerifyUtil(new File(basedir, "build.log"))
 
 if (!firstRun.exists()) {
-    firstRun.createNewFile();
-    verifyUtil.assertCorrectlyAffected("4");
+    verifyUtil.assertCorrectlyAffected("4")
+    firstRun.createNewFile()
 } else {
-    verifyUtil.assertCorrectlyAffected("2");
-    verifyUtil.deleteFile(firstRun);
-    verifyUtil.deleteFile(new File(basedir, ".starts/deps.zlc"));
-    file = new File(basedir, "src/main/java/inter/Child.java");
-    VerifyUtil.replaceAllInFileStatic(file, "Set g", "Set<Integer> g");
-    verifyUtil.deleteFolder(targetDir);
+    verifyUtil.assertCorrectlyAffected("2")
+    changedFile = new File(basedir, "src/main/java/inter/Child.java")
+    VerifyUtil.replaceAllInFileStatic(changedFile, "Set g", "Set<Integer> g")
+}
+
+def resetIT() {
+    verifyUtil.deleteFile(firstRun)
+    verifyUtil.deleteFile(new File(basedir, ".starts/deps.zlc"))
+    verifyUtil.deleteFolder(new File(basedir, "target"))
 }
