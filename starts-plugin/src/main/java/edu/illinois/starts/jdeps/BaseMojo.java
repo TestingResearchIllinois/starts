@@ -205,8 +205,10 @@ abstract class BaseMojo extends SurefirePlugin implements StartsConstants {
         return sureFireClassPath;
     }
 
-    public Result prepareForNextRun(String sfPathString, Classpath sfClassPath, List<String> classesToAnalyze,
-                                    Set<String> nonAffected, boolean computeUnreached) throws MojoExecutionException {
+    public Result prepareForNextRun(String sfPathString, Classpath sfClassPath, List<String> changedClasses,
+                                    List<String> newClasses, Set<String> affectedTests, Set<String> nonAffected,
+                                    boolean computeUnreached, boolean incrementalUpdate)
+            throws MojoExecutionException {
         long start = System.currentTimeMillis();
         String m2Repo = getLocalRepository().getBasedir();
         File jdepsCache = new File(graphCache);
@@ -214,8 +216,12 @@ abstract class BaseMojo extends SurefirePlugin implements StartsConstants {
         // jdk.graph being the file that merges all the graphs for all standard
         // library jars.
         File libraryFile = new File(jdepsCache, "jdk.graph");
+        // for computation of unreached
+        List<String> allTests = new ArrayList<>(affectedTests);
+        allTests.addAll(nonAffected);
         // Create the Loadables object early so we can use its helpers
-        Loadables loadables = new Loadables(classesToAnalyze, artifactsDir, sfPathString, filterLib, jdepsCache);
+        Loadables loadables = new Loadables(new ArrayList<>(affectedTests), allTests, changedClasses, newClasses,
+                artifactsDir, sfPathString, filterLib, jdepsCache);
         // Surefire Classpath object is easier to iterate over without de-constructing
         // sfPathString (which we use in a number of other places)
         loadables.setSurefireClasspath(sfClassPath);
@@ -227,7 +233,7 @@ abstract class BaseMojo extends SurefirePlugin implements StartsConstants {
         cache.loadM2EdgesFromCache(moreEdges, sfPathString);
         long loadM2EdgesFromCache = System.currentTimeMillis();
         // 2. Get non-reflection edges from CUT and SDK; use (1) to build graph
-        loadables.create(new ArrayList<>(moreEdges), sfClassPath, computeUnreached);
+        loadables.create(new ArrayList<>(moreEdges), sfClassPath, computeUnreached, incrementalUpdate);
 
         Map<String, Set<String>> transitiveClosure = loadables.getTransitiveClosure();
         long createLoadables = System.currentTimeMillis();
@@ -238,7 +244,7 @@ abstract class BaseMojo extends SurefirePlugin implements StartsConstants {
         // for CLZ which does not encode information about *. ZLC already encodes and reasons about * when it finds
         // nonAffected tests.
         Set<String> affected = depFormat == DependencyFormat.ZLC ? null
-                : RTSUtil.computeAffectedTests(new HashSet<>(classesToAnalyze),
+                : RTSUtil.computeAffectedTests(new HashSet<>(allTests),
                 nonAffected, transitiveClosure);
         long end = System.currentTimeMillis();
         Logger.getGlobal().log(Level.FINE, "[PROFILE] prepareForNextRun(loadMoreEdges): "

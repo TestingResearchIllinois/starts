@@ -52,6 +52,7 @@ public class SelectMojo extends DiffMojo implements StartsConstants {
         Set<String> affectedTests = new HashSet<>(allTests);
         Pair<Set<String>, Set<String>> data = computeChangeData();
         Set<String> nonAffectedTests = data == null ? new HashSet<String>() : data.getKey();
+        Set<String> changedClasses = data == null ? new HashSet<String>() : data.getValue();
         affectedTests.removeAll(nonAffectedTests);
         if (allTests.equals(nonAffectedTests)) {
             logger.log(Level.INFO, STARS_RUN_STARS);
@@ -59,7 +60,7 @@ public class SelectMojo extends DiffMojo implements StartsConstants {
         }
         long startUpdate = System.currentTimeMillis();
         if (updateSelectChecksums) {
-            updateForNextRun(nonAffectedTests);
+            updateForNextRun(nonAffectedTests, changedClasses);
         }
         long endUpdate = System.currentTimeMillis();
         logger.log(Level.FINE, PROFILE_STARTS_MOJO_UPDATE_TIME + Writer.millsToSeconds(endUpdate - startUpdate));

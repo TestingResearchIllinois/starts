@@ -4,7 +4,7 @@
 
 package edu.illinois.starts.jdeps;
 
-import java.io.File;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -13,6 +13,7 @@ import java.util.logging.Level;
 
 import edu.illinois.starts.constants.StartsConstants;
 import edu.illinois.starts.enums.DependencyFormat;
+import edu.illinois.starts.helpers.Cache;
 import edu.illinois.starts.helpers.EkstaziHelper;
 import edu.illinois.starts.helpers.RTSUtil;
 import edu.illinois.starts.helpers.Writer;
@@ -43,6 +44,13 @@ public class DiffMojo extends BaseMojo implements StartsConstants {
     @Parameter(property = "cleanBytes", defaultValue = TRUE)
     protected boolean cleanBytes;
 
+    // TODO: set this boolean to true only for static reflectionAnalyses with * (border, string, naive)?
+    @Parameter(property = "computeUnreached", defaultValue = "false")
+    protected boolean computeUnreached;
+
+    @Parameter(property = "incrementalUpdate", defaultValue = "false")
+    protected boolean incrementalUpdate;
+
     /**
      * Set this to "true" to update test dependencies on disk. The default value of "false"
      * is useful for "dry runs" where one may want to see the diff without updating
@@ -66,7 +74,7 @@ public class DiffMojo extends BaseMojo implements StartsConstants {
         }
         printResult(changed, "ChangedClasses" + extraText);
         if (updateDiffChecksums) {
-            updateForNextRun(nonAffected);
+            updateForNextRun(nonAffected, changed);
         }
     }
 
@@ -74,7 +82,7 @@ public class DiffMojo extends BaseMojo implements StartsConstants {
         long start = System.currentTimeMillis();
         Pair<Set<String>, Set<String>> data = null;
         if (depFormat == DependencyFormat.ZLC) {
-            ZLCHelper zlcHelper = new ZLCHelper();
+            ZLCHelper zlcHelper = new ZLCHelper();// called to clear the static zlcDataMap
             data = zlcHelper.getChangedData(getArtifactsDir(), cleanBytes);
         } else if (depFormat == DependencyFormat.CLZ) {
             data = EkstaziHelper.getNonAffectedTests(getArtifactsDir());
@@ -88,7 +96,8 @@ public class DiffMojo extends BaseMojo implements StartsConstants {
         return data;
     }
 
-    protected void updateForNextRun(Set<String> nonAffected) throws MojoExecutionException {
+    protected void updateForNextRun(Set<String> nonAffected, Set<String> changedData)
+            throws MojoExecutionException {
         long start = System.currentTimeMillis();
         Classpath sfClassPath = getSureFireClassPath();
         String sfPathString = Writer.pathToString(sfClassPath.getClassPath());
@@ -98,16 +107,21 @@ public class DiffMojo extends BaseMojo implements StartsConstants {
         affectedTests.removeAll(nonAffected);
         DirectedGraph<String> graph = null;
         if (!affectedTests.isEmpty()) {
+            // get new classes in project
+            Set<String> newClasses = new HashSet<>(getAllClasses());
+            newClasses.removeAll(ZLCHelper.getExistingClasses(getArtifactsDir()));
+            // get changed classes in project
+            Set<String> changedClasses = ZLCHelper.getChangedClasses(changedData);
+
             ClassLoader loader = createClassLoader(sfClassPath);
-            //TODO: set this boolean to true only for static reflectionAnalyses with * (border, string, naive)?
-            boolean computeUnreached = true;
-            Result result = prepareForNextRun(sfPathString, sfClassPath, allTests, nonAffected, computeUnreached);
+            Result result = prepareForNextRun(sfPathString, sfClassPath, new ArrayList<>(changedClasses),
+                    new ArrayList<>(newClasses), affectedTests, nonAffected, computeUnreached, incrementalUpdate);
             Map<String, Set<String>> testDeps = result.getTestDeps();
             graph = result.getGraph();
             Set<String> unreached = computeUnreached ? result.getUnreachedDeps() : new HashSet<String>();
             if (depFormat == DependencyFormat.ZLC) {
-                ZLCHelper zlcHelper = new ZLCHelper();
-                zlcHelper.updateZLCFile(testDeps, loader, getArtifactsDir(), unreached);
+                ZLCHelper.updateZLCFile(testDeps, loader, getArtifactsDir(), changedData, newClasses,
+                        incrementalUpdate);
             } else if (depFormat == DependencyFormat.CLZ) {
                 // The next line is not needed with ZLC because '*' is explicitly tracked in ZLC
                 affectedTests = result.getAffectedTests();

@@ -101,7 +101,7 @@ public class RunMojo extends DiffMojo implements StartsConstants {
         }
         long startUpdateTime = System.currentTimeMillis();
         if (updateRunChecksums) {
-            updateForNextRun(nonAffectedTests);
+            updateForNextRun(nonAffectedTests, changedClasses);
         }
         long endUpdateTime = System.currentTimeMillis();
         logger.log(Level.FINE, PROFILE_STARTS_MOJO_UPDATE_TIME

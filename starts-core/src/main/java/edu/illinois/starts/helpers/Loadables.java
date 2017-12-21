@@ -31,7 +31,10 @@ public class Loadables implements StartsConstants {
 
     Map<String, Set<String>> deps;
     List<String> extraEdges;
-    private List<String> classesToAnalyze;
+    private List<String> changedClasses;
+    private List<String> newClasses;
+    private List<String> affectedTests;
+    private List<String> allTests;
     private File cache;
     private String sfPathString;
     private DirectedGraph<String> graph;
@@ -41,9 +44,13 @@ public class Loadables implements StartsConstants {
     private Classpath surefireClasspath;
     private String artifactsDir;
 
-    public Loadables(List<String> classesToAnalyze, String artifactsDir, String sfPathString,
+    public Loadables(List<String> affectedTests, List<String> allTests, List<String> changedClasses,
+                     List<String> newClasses, String artifactsDir, String sfPathString,
                      boolean filterLib, File cache) {
-        this.classesToAnalyze = classesToAnalyze;
+        this.affectedTests = affectedTests;
+        this.allTests = allTests;
+        this.changedClasses = changedClasses;
+        this.newClasses = newClasses;
         this.artifactsDir = artifactsDir;
         this.sfPathString = sfPathString;
         this.filterLib = filterLib;
@@ -77,19 +84,28 @@ public class Loadables implements StartsConstants {
     }
 
     public Loadables create(List<String> moreEdges, Classpath sfClassPath,
-                            boolean computeUnreached) {
+                            boolean computeUnreached, boolean incrementalUpdate) {
         setSurefireClasspath(sfClassPath);
         LOGGER.log(Level.FINEST, "More: " + moreEdges.size());
         extraEdges = moreEdges;
         long startTime = System.currentTimeMillis();
-        deps = getDepMap(sfPathString, classesToAnalyze);
+        deps = getDepMap(sfPathString, changedClasses, newClasses, incrementalUpdate);
         long jdepsTime = System.currentTimeMillis();
         graph = makeGraph(deps, extraEdges);
         long graphBuildingTime = System.currentTimeMillis();
-        transitiveClosure = getTransitiveClosurePerClass(graph, classesToAnalyze);
+        if (incrementalUpdate) {
+            transitiveClosure = getTransitiveClosurePerClass(graph, affectedTests);
+        } else {
+            transitiveClosure = getTransitiveClosurePerClass(graph, allTests);
+        }
         long transitiveClosureTime = System.currentTimeMillis();
         if (computeUnreached) {
-            unreached = findUnreached(deps, transitiveClosure);
+            // TODO: findUnreached may be affected by incrementally finding test dependencies
+            Map<String, Set<String>> allTransitiveClosure = transitiveClosure;
+            if (incrementalUpdate) {
+                allTransitiveClosure = getTransitiveClosurePerClass(graph, allTests);
+            }
+            unreached = findUnreached(deps, allTransitiveClosure);
             LOGGER.log(Level.INFO, "UNREACHED(count): " + unreached.size());
         }
         long findUnreachedTime = System.currentTimeMillis();
@@ -158,9 +174,10 @@ public class Loadables implements StartsConstants {
         return builder;
     }
 
-    public Map<String, Set<String>> getDepMap(String pathToUse, List<String> classes)
-            throws IllegalArgumentException {
-        if (classes.isEmpty()) {
+    public Map<String, Set<String>> getDepMap(String pathToUse, List<String> changedClasses, List<String> newClasses,
+                                              boolean incrementalUpdate) throws IllegalArgumentException {
+        if ((incrementalUpdate && changedClasses.isEmpty() && newClasses.isEmpty())
+                || (!incrementalUpdate && allTests.isEmpty())) {
             //There are no test classes, no need to waste time with jdeps
             return null;
         }
@@ -183,11 +200,22 @@ public class Loadables implements StartsConstants {
             jdepsClassPath = Writer.pathToString(localPaths);
         }
         args.addAll(Arrays.asList("-cp", jdepsClassPath));
-        args.addAll(localPaths);
+        if (incrementalUpdate) {
+            args.addAll(changedClasses);
+            args.addAll(newClasses);
+        } else {
+            args.addAll(localPaths);
+        }
         LOGGER.log(Level.FINEST, "JDEPS CMD: " + args);
         Map<String, Set<String>> depMap = RTSUtil.runJdeps(args);
-        if (LOGGER.getLoggingLevel().intValue() == Level.FINEST.intValue()) {
-            Writer.writeMapToFile(depMap, artifactsDir + File.separator + "jdeps-out");
+        if (incrementalUpdate) {
+            // load jdeps dependencies from last revision
+            RTSUtil.addDepsFromJdepsFile(depMap, new HashSet<>(changedClasses),
+                    new HashSet<>(newClasses), artifactsDir + File.separator + "jdeps-out");
+        }
+        if (LOGGER.getLoggingLevel().intValue() == Level.FINEST.intValue() || incrementalUpdate) {
+            // store jdeps dependencies in this revision for future use
+            Writer.writeDepsToFile(depMap, artifactsDir + File.separator + "jdeps-out");
         }
         return depMap;
     }

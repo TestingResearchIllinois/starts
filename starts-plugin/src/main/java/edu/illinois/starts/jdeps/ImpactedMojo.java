@@ -4,6 +4,7 @@
 
 package edu.illinois.starts.jdeps;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -95,9 +96,11 @@ public class ImpactedMojo extends DiffMojo implements StartsConstants {
         Classpath sfClassPath = getSureFireClassPath();
         String sfPathString = Writer.pathToString(sfClassPath.getClassPath());
         ClassLoader loader = createClassLoader(sfClassPath);
-        Result result = prepareForNextRun(sfPathString, sfClassPath, allClasses, new HashSet<String>(), false);
-        ZLCHelper zlcHelper = new ZLCHelper();
-        zlcHelper.updateZLCFile(result.getTestDeps(), loader, getArtifactsDir(), new HashSet<String>());
+        List<String> allTests = getTestClasses("updateForNextRun");
+        Result result = prepareForNextRun(sfPathString, sfClassPath, new ArrayList<String>(), allClasses,
+                new HashSet<>(allClasses), new HashSet<String>(), false, incrementalUpdate);
+        ZLCHelper.updateZLCFile(result.getTestDeps(), loader, getArtifactsDir(),
+                new HashSet<String>(), new HashSet<>(allClasses), incrementalUpdate);
         long end = System.currentTimeMillis();
         if (writePath || logger.getLoggingLevel().intValue() <= Level.FINER.intValue()) {
             Writer.writeClassPath(sfPathString, getArtifactsDir());
