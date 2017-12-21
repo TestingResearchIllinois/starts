@@ -87,10 +87,7 @@ public class ZLCHelper implements StartsConstants {
                 continue;
             }
             URL url = loader.getResource(klas);
-            if (url == null) {
-                throw new NullPointerException("resource cannot be found: " + klas);
-            }
-            if (ChecksumUtil.isWellKnownUrl(url.toExternalForm())) {
+            if (url == null || ChecksumUtil.isWellKnownUrl(url.toExternalForm())) {
                 continue;
             }
             String checksum = checksumUtil.computeSingleCheckSum(url);
