@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
 
-import edu.illinois.starts.helpers.Cache;
+import edu.illinois.starts.constants.StartsConstants;
 import edu.illinois.starts.helpers.RTSUtil;
 import edu.illinois.starts.helpers.Writer;
 import edu.illinois.starts.helpers.ZLCHelper;
@@ -30,19 +30,27 @@ import org.apache.maven.surefire.booter.Classpath;
  */
 @Mojo(name = "impacted", requiresDirectInvocation = true, requiresDependencyResolution = ResolutionScope.TEST)
 @Execute(phase = LifecyclePhase.TEST_COMPILE)
-public class ImpactedMojo extends DiffMojo {
+public class ImpactedMojo extends DiffMojo implements StartsConstants {
     /**
      * Set this to "true" to update test dependencies on disk. The default value of "false"
      * is useful for "dry runs" where one may want to see the diff without updating
      * the test dependencies.
      */
-    @Parameter(property = "updateImpactedChecksums", defaultValue = "false")
+    @Parameter(property = "updateImpactedChecksums", defaultValue = FALSE)
     private boolean updateImpactedChecksums;
+
+    /**
+     * Set this to "true" to write the surefire classpath to disk.
+     * Note that the surefire classpath will also be written to disk
+     * at or below log Level.FINER
+     */
+    @Parameter(property = "writePath", defaultValue = "false")
+    private boolean writePath;
 
     /**
      * Set to "true" to print newly-added classes: classes in the program that were not in the previous version.
      */
-    @Parameter(property = "trackNewClasses", defaultValue = "false")
+    @Parameter(property = "trackNewClasses", defaultValue = FALSE)
     private boolean trackNewClasses;
     private Logger logger;
 
@@ -79,7 +87,7 @@ public class ImpactedMojo extends DiffMojo {
             updateForNextRun(allClasses);
         }
         // 4. Print impacted and/or write to file
-        Writer.writeToFile(changed, "changed-classes", getArtifactsDir());
+        Writer.writeToFile(changed, CHANGED_CLASSES, getArtifactsDir());
         Writer.writeToFile(impacted, "impacted-classes", getArtifactsDir());
     }
 
@@ -95,13 +103,13 @@ public class ImpactedMojo extends DiffMojo {
         ZLCHelper.updateZLCFile(result.getTestDeps(), loader, getArtifactsDir(),
                 new HashSet<String>(), new HashSet<>(allClasses), incrementalUpdate);
         long end = System.currentTimeMillis();
-        if (logger.getLoggingLevel().intValue() == Level.FINER.intValue()) {
+        if (writePath || logger.getLoggingLevel().intValue() <= Level.FINER.intValue()) {
             Writer.writeClassPath(sfPathString, getArtifactsDir());
         }
         if (logger.getLoggingLevel().intValue() <= Level.FINEST.intValue()) {
             save(getArtifactsDir(), result.getGraph());
         }
-        Logger.getGlobal().log(Level.FINE, "[PROFILE] updateForNextRun(total): " + Writer.millsToSeconds(end - start));
+        Logger.getGlobal().log(Level.FINE, PROFILE_UPDATE_FOR_NEXT_RUN_TOTAL + Writer.millsToSeconds(end - start));
     }
 
     private void save(String artifactsDir, DirectedGraph<String> graph) {

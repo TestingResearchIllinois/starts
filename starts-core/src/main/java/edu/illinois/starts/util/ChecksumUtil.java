@@ -18,14 +18,14 @@ import java.util.TreeSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import edu.illinois.starts.constants.StartsConstants;
 import org.ekstazi.data.RegData;
 import org.ekstazi.data.TxtStorer;
 import org.ekstazi.hash.Hasher;
 import org.ekstazi.util.Types;
 
-public class ChecksumUtil {
-    public static final String JAVA_HOME = System.getProperty("java.home");
-
+public class ChecksumUtil implements StartsConstants {
+    public static final String JAVAHOME = System.getProperty(JAVA_HOME);
     private static final Logger LOGGER = Logger.getLogger(ChecksumUtil.class.getName());
 
     Hasher hasher;
@@ -70,7 +70,7 @@ public class ChecksumUtil {
                 }
             }
             long end = System.currentTimeMillis();
-            LOGGER.log(Level.FINEST, "LOADED RESOURCES: " + (end - start) + "ms");
+            LOGGER.log(Level.FINEST, "LOADED RESOURCES: " + (end - start) + MILLISECOND);
         }
         return checksums;
     }
@@ -84,11 +84,11 @@ public class ChecksumUtil {
      */
     public static boolean isWellKnownUrl(String klas) {
         return klas.contains("!/org/junit") || klas.contains("!/junit") || klas.contains("!/org/hamcrest")
-                || klas.contains("!/org/apache/maven") || klas.contains(JAVA_HOME);
+                || klas.contains("!/org/apache/maven") || klas.contains(JAVAHOME);
     }
 
     public static String toClassName(String fqn) {
-        return fqn.replace(".", "/") + ".class";
+        return fqn.replace(DOT, File.separator) + CLASS_EXTENSION;
     }
 
     public static void saveCheckSums(Map<String, Set<RegData>> newCheckSums, String artifactsDir) {

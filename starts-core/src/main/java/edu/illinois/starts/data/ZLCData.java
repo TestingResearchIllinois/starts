@@ -10,10 +10,12 @@ import java.net.URL;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import edu.illinois.starts.constants.StartsConstants;
+
 /**
  * This class creates objects that represent one row in the .zlc file.
  */
-public class ZLCData {
+public class ZLCData implements StartsConstants {
     private URL url;
     private String checksum;
     private Set<String> tests;
@@ -29,15 +31,15 @@ public class ZLCData {
         //we track dependencies that are not reached by any test because of *
         String data;
         if (tests.isEmpty()) {
-            data = join(" ", url.toExternalForm(), checksum);
+            data = join(WHITE_SPACE, url.toExternalForm(), checksum);
         } else {
-            data = join(" ", url.toExternalForm(), checksum, toCSV(tests));
+            data = join(WHITE_SPACE, url.toExternalForm(), checksum, toCSV(tests));
         }
         return data;
     }
 
     private String toCSV(Set<String> tests) {
-        return tests.stream().collect(Collectors.joining(","));
+        return tests.stream().collect(Collectors.joining(COMMA));
     }
 
     @Override

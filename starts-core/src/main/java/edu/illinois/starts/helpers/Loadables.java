@@ -15,6 +15,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 
+import edu.illinois.starts.constants.StartsConstants;
 import edu.illinois.starts.util.ChecksumUtil;
 import edu.illinois.starts.util.Logger;
 import edu.illinois.yasgl.DirectedGraph;
@@ -25,7 +26,7 @@ import org.ekstazi.util.Types;
 /**
  * Utility methods for loading several things from disk.
  */
-public class Loadables {
+public class Loadables implements StartsConstants {
     private static final Logger LOGGER = Logger.getGlobal();
 
     Map<String, Set<String>> deps;
@@ -71,7 +72,7 @@ public class Loadables {
         List<String> localPaths = new ArrayList<>();
         if (surefireClasspath != null) {
             for (String path : surefireClasspath.getClassPath()) {
-                if (!path.endsWith(".jar") && new File(path).exists()) {
+                if (!path.endsWith(JAR_EXTENSION) && new File(path).exists()) {
                     localPaths.add(path);
                 }
             }
@@ -218,7 +219,7 @@ public class Loadables {
 
     private void addEdgesToGraphBuilder(DirectedGraphBuilder<String> builder, List<String> edges) {
         for (String edge : edges) {
-            String[] parts = edge.split(" ");
+            String[] parts = edge.split(WHITE_SPACE);
             if (parts.length != 2) {
                 LOGGER.log(Level.SEVERE, "@@BrokenEdge: " + edge);
                 continue;

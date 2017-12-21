@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.zip.GZIPInputStream;
 
+import edu.illinois.starts.constants.StartsConstants;
 import edu.illinois.yasgl.DirectedGraph;
 import edu.illinois.yasgl.DirectedGraphBuilder;
 import edu.illinois.yasgl.GraphVertexVisitor;
@@ -23,7 +24,7 @@ import edu.illinois.yasgl.GraphVertexVisitor;
 /**
  * Utility methods for interacting with YASGL.
  */
-public class YasglHelper {
+public class YasglHelper implements StartsConstants {
     private List<String> lines = new ArrayList<>();
 
     public static Set<String> computeReachabilityFromChangedClasses(Set<String> changed, DirectedGraph<String> graph) {
@@ -62,7 +63,7 @@ public class YasglHelper {
     }
 
     public static void addEdgeToGraph(DirectedGraphBuilder<String> builder, String str) {
-        String[] edge = str.split(" ");
+        String[] edge = str.split(WHITE_SPACE);
         if (edge.length != 2) {
             throw new IllegalArgumentException("@@@NoEdgeTarget: " + str);
         }
@@ -88,7 +89,7 @@ public class YasglHelper {
         }
 
         try {
-            System.out.print(".");
+            System.out.print(DOT);
             if (noGZ) {
                 lines = Files.readAllLines(graphFile.toPath(), Charset.defaultCharset());
                 for (String line : lines) {

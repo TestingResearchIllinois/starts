@@ -6,11 +6,6 @@ matrix:
   include:
     - os: linux
       jdk: oraclejdk8
-    - os: osx
-      osx_image: xcode8
-  allow_failures:
-    - os: osx
-  fast_finish: true
 
 script:
     - mvn verify -B

@@ -12,17 +12,17 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 
+import edu.illinois.starts.constants.StartsConstants;
 import edu.illinois.starts.util.Logger;
 
 /** Utility methods for dealing with cached files. */
 
-public class Cache {
+public class Cache implements StartsConstants {
     private static final Logger LOGGER = Logger.getGlobal();
-    private static Set<String> newJarClasses;
+    private static final String GRAPH_EXTENSION = ".graph";
 
     File jdepsCache;
     String m2Repo;
@@ -32,7 +32,6 @@ public class Cache {
     public Cache(File jdepsCache, String m2Repo) {
         this.jdepsCache = jdepsCache;
         this.m2Repo = m2Repo;
-        newJarClasses = new HashSet<>();// only place to clear new jar classes. carefully call this
     }
 
     public void loadM2EdgesFromCache(List<String> moreEdges, String pathString) {
@@ -52,10 +51,6 @@ public class Cache {
         moreEdges.addAll(loadCachedEdges(jarsInCache));
     }
 
-    public static Set<String> getNewJarClasses() {
-        return newJarClasses;
-    }
-
     private HashSet<String> getJarsMissingFromCache(Set<String> jarsInCache) {
         HashSet<String> missing = new HashSet<>();
         if (!cpJars.equals(jarsInCache)) {
@@ -71,7 +66,7 @@ public class Cache {
         for (String jar : missing) {
             File missingFile = new File(jar);
             String fileName = missingFile.getName();
-            File jdkJarGraphFile = new File(jdepsCache, fileName.replace(".jar", ".graph"));
+            File jdkJarGraphFile = new File(jdepsCache, fileName.replace(JAR_EXTENSION, GRAPH_EXTENSION));
             if (jdkJarGraphFile.exists()) {
                 found.add(jdkJarGraphFile.getName());
             } else {
@@ -82,10 +77,7 @@ public class Cache {
         for (String jar : notFound) {
             //1. parse with jdeps and store in the cache
             List<String> args = new ArrayList<>(Arrays.asList("-v", jar));
-            Map<String, Set<String>> jdepsOutput = RTSUtil.runJdeps(args);
-            // add new jar classes
-            newJarClasses.addAll(jdepsOutput.keySet());
-            Writer.writeDepsToFile(jdepsOutput, createCacheFile(jar).getAbsolutePath());
+            Writer.writeDepsToFile(RTSUtil.runJdeps(args), createCacheFile(jar).getAbsolutePath());
             newlyCreated.add(jar);
         }
         //2. add newly-created graphs to list of jars that were previously found in cache
@@ -126,7 +118,7 @@ public class Cache {
     }
 
     private File createCacheFile(String jar) {
-        String cachePath = jar.replace(m2Repo + File.separator, "").replace(".jar", ".graph");
+        String cachePath = jar.replace(m2Repo + File.separator, EMPTY).replace(JAR_EXTENSION, GRAPH_EXTENSION);
         return new File(jdepsCache, cachePath);
     }
 
@@ -137,7 +129,7 @@ public class Cache {
         Set<String> jars = new HashSet<>();
         String[] splitCP = sfPathString.split(File.pathSeparator);
         for (int i = 0; i < splitCP.length; i++) {
-            if (splitCP[i].endsWith(".jar")) {
+            if (splitCP[i].endsWith(JAR_EXTENSION)) {
                 jars.add(splitCP[i]);
             }
         }

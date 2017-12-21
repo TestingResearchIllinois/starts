@@ -10,7 +10,9 @@ package edu.illinois.starts.util;
 import java.io.PrintStream;
 import java.util.logging.Level;
 
-public class Logger {
+import edu.illinois.starts.constants.StartsConstants;
+
+public class Logger implements StartsConstants {
 
     private static final Logger INSTANCE = new Logger();
     private PrintStream out = System.out;
@@ -32,7 +34,7 @@ public class Logger {
         if (lev.intValue() < this.level.intValue()) {
             return;
         }
-        this.out.println(lev.toString() + ": " + msg);
+        this.out.println(lev.toString() + COLON + msg);
         this.out.println(thr);
     }
 
@@ -40,7 +42,7 @@ public class Logger {
         if (lev.intValue() < this.level.intValue()) {
             return;
         }
-        this.out.println(lev.toString() + ": " + msg);
+        this.out.println(lev.toString() + COLON + msg);
     }
 }
 

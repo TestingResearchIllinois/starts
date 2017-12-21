@@ -20,7 +20,9 @@ import org.codehaus.plexus.util.xml.Xpp3Dom;
 /**
  * Utility methods for manipulating pom.xml files.
  */
-public class PomUtil implements StartsConstants {
+public class PomUtil {
+    static final String MIN_SUREFIRE_VERSION = "2.13";
+
     public static String extractParamValue(Plugin plugin, String elem) throws MojoExecutionException {
         String value = null;
         Xpp3Dom dom = (Xpp3Dom) plugin.getConfiguration();
@@ -62,9 +64,9 @@ public class PomUtil implements StartsConstants {
         }
 
         String version = sfPlugin.getVersion();
-        if (StartsConstants.MIN_SUREFIRE_VERSION.compareTo(version) > 0) {
+        if (MIN_SUREFIRE_VERSION.compareTo(version) > 0) {
             throw new MojoExecutionException("Unsupported Surefire version: " + version
-                    + ". Use version " + StartsConstants.MIN_SUREFIRE_VERSION + " and above.");
+                    + ". Use version " + MIN_SUREFIRE_VERSION + " and above.");
         }
     }
 
@@ -75,6 +77,17 @@ public class PomUtil implements StartsConstants {
             if (p.getKey().equalsIgnoreCase(name)) {
                 plugin = p;
                 break;
+            }
+        }
+        // Did not find plugin under <build><plugins>,
+        // check under <build><pluginManagement><plugins>
+        if (plugin == null) {
+            plugins = project.getPluginManagement().getPlugins();
+            for (Plugin p : plugins) {
+                if (p.getKey().equalsIgnoreCase(name)) {
+                    plugin = p;
+                    break;
+                }
             }
         }
         return plugin;

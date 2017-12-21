@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
 
+import edu.illinois.starts.constants.StartsConstants;
 import edu.illinois.starts.util.Logger;
 import edu.illinois.starts.util.Pair;
 import org.ekstazi.check.AffectedChecker;
@@ -22,7 +23,7 @@ import org.ekstazi.check.AffectedChecker;
 /**
  * Utility methods for interacting with Ekstazi.
  */
-public class EkstaziHelper {
+public class EkstaziHelper implements StartsConstants {
     public static final Logger LOGGER = Logger.getGlobal();
     public static String notFirstRunMarker = "not-first-run.clz";
     public static String lineSeparator = System.getProperty("line.separator");
@@ -48,7 +49,7 @@ public class EkstaziHelper {
         Set<String> changed = processEkstaziDebugInfo(baosErr, artifactsDir);
         Set<String> nonAffected = new HashSet<>(Arrays.asList(baosOut.toString().split(lineSeparator)));
         long end = System.currentTimeMillis();
-        LOGGER.log(Level.FINEST, "[TIME]COMPUTING NON-AFFECTED: " + (end - start) + "ms");
+        LOGGER.log(Level.FINEST, TIME_COMPUTING_NON_AFFECTED + (end - start) + MILLISECOND);
         return new Pair<>(nonAffected, changed);
     }
 
@@ -58,7 +59,7 @@ public class EkstaziHelper {
         long end = System.currentTimeMillis();
         Set<String> nonAffectedTests = toFQN(new HashSet<>(nonAffectedFiles));
         Set<String> changed = new HashSet<>();
-        LOGGER.log(Level.FINEST, "[TIME]COMPUTING NON-AFFECTED(2): " + (end - start) + "ms");
+        LOGGER.log(Level.FINEST, "[TIME]COMPUTING NON-AFFECTED(2): " + (end - start) + MILLISECOND);
         return new Pair<>(nonAffectedTests, changed);
     }
 
@@ -80,7 +81,7 @@ public class EkstaziHelper {
         if (LOGGER.getLoggingLevel().intValue() > Level.FINEST.intValue()) {
             return changed;
         }
-        String outFilename = artifactsDir + File.separator + "changed-classes";
+        String outFilename = artifactsDir + File.separator + CHANGED_CLASSES;
         for (String line : Arrays.asList(baosErr.toString().split(lineSeparator))) {
             String ekstaziDiffMarker = "::Diff:: ";
             if (line.contains(ekstaziDiffMarker)) {
@@ -109,7 +110,7 @@ public class EkstaziHelper {
     private static Set<String> toFQN(Set<String> diff) {
         Set<String> diffFQNs = new HashSet<>();
         for (String d : diff) {
-            diffFQNs.add(d.replace(".java", "").replace("/", "."));
+            diffFQNs.add(d.replace(".java", EMPTY).replace(File.separator, DOT));
         }
         return diffFQNs;
     }

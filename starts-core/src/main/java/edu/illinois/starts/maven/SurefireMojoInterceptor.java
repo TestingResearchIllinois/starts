@@ -10,6 +10,7 @@ import edu.illinois.starts.constants.StartsConstants;
 /** This class is from Ekstazi. **/
 
 public final class SurefireMojoInterceptor extends AbstractMojoInterceptor implements StartsConstants {
+    static final String UNSUPPORTED_SUREFIRE_VERSION_EXCEPTION = "Unsupported surefire version. ";
 
     public static void execute(Object mojo) throws Exception {
         if (!isSurefirePlugin(mojo)) {
@@ -22,7 +23,7 @@ public final class SurefireMojoInterceptor extends AbstractMojoInterceptor imple
         try {
             updateExcludes(mojo);
         } catch (Exception ex) {
-            throwMojoExecutionException(mojo, "Unsupported surefire version", ex);
+            throwMojoExecutionException(mojo, UNSUPPORTED_SUREFIRE_VERSION_EXCEPTION, ex);
         }
     }
 
@@ -42,7 +43,7 @@ public final class SurefireMojoInterceptor extends AbstractMojoInterceptor imple
             getField(ARGLINE_FIELD, mojo);
             getField(EXCLUDES_FIELD, mojo);
         } catch (NoSuchMethodException ex) {
-            throwMojoExecutionException(mojo, "Unsupported surefire version. "
+            throwMojoExecutionException(mojo, UNSUPPORTED_SUREFIRE_VERSION_EXCEPTION
                      + "Try setting excludesFile in the surefire configuration.", ex);
         }
     }
@@ -51,7 +52,7 @@ public final class SurefireMojoInterceptor extends AbstractMojoInterceptor imple
         LOGGER.log(Level.FINE, "updating Excludes");
         List<String> currentExcludes = getListField(EXCLUDES_FIELD, mojo);
         List<String> newExcludes = new ArrayList<>(Arrays.asList(System.getProperty(STARTS_EXCLUDE_PROPERTY)
-                .replace("[", "").replace("]", "").split(",")));
+                .replace("[", EMPTY).replace("]", EMPTY).split(COMMA)));
         if (currentExcludes != null) {
             newExcludes.addAll(currentExcludes);
         } else {
