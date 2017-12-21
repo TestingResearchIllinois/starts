@@ -41,7 +41,7 @@ public class ZLCHelper implements StartsConstants {
 
     // TODO: Uncomment and fix this method. The problem is that it does not track newly added tests correctly
     public static void updateZLCFile(Map<String, Set<String>> testDeps, ClassLoader loader, String artifactsDir,
-                                     Set<String> changed, Set<String> newClasses, boolean incrementalUpdate) {
+                                     Set<String> changedClasses, Set<String> newClasses, boolean incrementalUpdate) {
         long start = System.currentTimeMillis();
         File file = new File(artifactsDir, zlcFile);
         if (!file.exists() || !incrementalUpdate) {
@@ -53,7 +53,7 @@ public class ZLCHelper implements StartsConstants {
                 // handle changed data
                 for (Map.Entry<String, ZLCData> entry : zlcDataMap.entrySet()) {
                     String extForm = entry.getKey();
-                    if (changed.contains(extForm)) {
+                    if (changedClasses.contains(extForm)) {
                         String fqn = Writer.urlToFQN(extForm);
                         Set<String> tests = new HashSet<>();
                         for (String test : testDeps.keySet()) {
@@ -61,24 +61,24 @@ public class ZLCHelper implements StartsConstants {
                                 tests.add(test);
                             }
                         }
-                        if (tests.isEmpty()) {
-                            continue;
+                        if (!tests.isEmpty()) {
+                            entry.getValue().setTests(tests);
+
                         }
-                        entry.getValue().setTests(tests);
                     }
                     zlcData.add(entry.getValue());
                 }
 
                 //handle new data
-                handleNewData(testDeps, loader, newClasses, zlcData);
+                addZLCData(testDeps, loader, newClasses, zlcData);
             }
             Writer.writeToFile(zlcData, zlcFile, artifactsDir);
         }
         long end = System.currentTimeMillis();
-        LOGGER.log(Level.FINE, "[TIME]UPDATING CHECKSUMS: " + Writer.millsToSeconds(end - start));
+        LOGGER.log(Level.FINE, "[PROFILE] updateForNextRun(updateZLCFile): " + Writer.millsToSeconds(end - start));
     }
 
-    private static void handleNewData(Map<String, Set<String>> testDeps, ClassLoader loader,
+    private static void addZLCData(Map<String, Set<String>> testDeps, ClassLoader loader,
                                       Set<String> newClasses, List<ZLCData> zlcData) {
         ChecksumUtil checksumUtil = new ChecksumUtil(true);
         for (String dep : newClasses) {
@@ -108,16 +108,6 @@ public class ZLCHelper implements StartsConstants {
         }
     }
 
-//    public static void updateZLCFile(Map<String, Set<String>> testDeps, ClassLoader loader,
-//                                     String artifactsDir, Set<String> unreached) {
-//        // TODO: Optimize this by only recomputing the checksum+tests for changed classes and newly added tests
-//        long start = System.currentTimeMillis();
-//        List<ZLCData> zlc = createZLCData(testDeps, loader);
-//        Writer.writeToFile(zlc, zlcFile, artifactsDir);
-//        long end = System.currentTimeMillis();
-//        LOGGER.log(Level.FINE, "[PROFILE] updateForNextRun(updateZLCFile): " + Writer.millsToSeconds(end - start));
-//    }
-
     public static List<ZLCData> createZLCData(Map<String, Set<String>> testDeps, ClassLoader loader) {
         long start = System.currentTimeMillis();
         List<ZLCData> zlcData = new ArrayList<>();
@@ -127,8 +117,8 @@ public class ZLCHelper implements StartsConstants {
             deps.addAll(testDeps.get(test));
         }
 
-        // for each dep, find it's url, checksum and tests that depend on it
-        handleNewData(testDeps, loader, deps, zlcData);
+        // for each dep, find its url, checksum and tests that depend on it
+        addZLCData(testDeps, loader, deps, zlcData);
         long end = System.currentTimeMillis();
         LOGGER.log(Level.FINEST, "[TIME]CREATING ZLC FILE: " + (end - start) + MILLISECOND);
         return zlcData;
@@ -168,7 +158,7 @@ public class ZLCHelper implements StartsConstants {
                 String newCheckSum = checksumUtil.computeSingleCheckSum(url);
                 if (!newCheckSum.equals(oldCheckSum)) {
                     affected.addAll(tests);
-                    changedClasses.add(stringURL);//contain changed/deleted classes and jars
+                    changedClasses.add(stringURL);
                 }
                 if (newCheckSum.equals("-1")) {
                     // a class was deleted or auto-generated, no need to track it in zlc

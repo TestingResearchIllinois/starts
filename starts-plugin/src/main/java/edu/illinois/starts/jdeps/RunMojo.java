@@ -101,7 +101,6 @@ public class RunMojo extends DiffMojo implements StartsConstants {
         }
         long startUpdateTime = System.currentTimeMillis();
         if (updateRunChecksums) {
-            //update dependency graph and zlc mapping for run usage in next revision
             updateForNextRun(nonAffectedTests, changedClasses);
         }
         long endUpdateTime = System.currentTimeMillis();

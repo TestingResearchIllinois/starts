@@ -44,8 +44,11 @@ public class Loadables implements StartsConstants {
     private Classpath surefireClasspath;
     private String artifactsDir;
 
-    public Loadables(List<String> changedClasses, List<String> newClasses, String artifactsDir, String sfPathString,
+    public Loadables(List<String> affectedTests, List<String> allTests, List<String> changedClasses,
+                     List<String> newClasses, String artifactsDir, String sfPathString,
                      boolean filterLib, File cache) {
+        this.affectedTests = affectedTests;
+        this.allTests = allTests;
         this.changedClasses = changedClasses;
         this.newClasses = newClasses;
         this.artifactsDir = artifactsDir;
@@ -97,7 +100,7 @@ public class Loadables implements StartsConstants {
         }
         long transitiveClosureTime = System.currentTimeMillis();
         if (computeUnreached) {
-            //TODO: findUnreached may be affected by incrementally finding test dependencies
+            // TODO: findUnreached may be affected by incrementally finding test dependencies
             Map<String, Set<String>> allTransitiveClosure = transitiveClosure;
             if (incrementalUpdate) {
                 allTransitiveClosure = getTransitiveClosurePerClass(graph, allTests);
@@ -244,13 +247,5 @@ public class Loadables implements StartsConstants {
 
     public void setSurefireClasspath(Classpath surefireClasspath) {
         this.surefireClasspath = surefireClasspath;
-    }
-
-    public void setAffectedTests(List<String> affectedTests) {
-        this.affectedTests = affectedTests;
-    }
-
-    public void setAllTests(List<String> allTests) {
-        this.allTests = allTests;
     }
 }

@@ -44,7 +44,7 @@ public class DiffMojo extends BaseMojo implements StartsConstants {
     @Parameter(property = "cleanBytes", defaultValue = TRUE)
     protected boolean cleanBytes;
 
-    //TODO: set this boolean to true only for static reflectionAnalyses with * (border, string, naive)?
+    // TODO: set this boolean to true only for static reflectionAnalyses with * (border, string, naive)?
     @Parameter(property = "computeUnreached", defaultValue = "false")
     protected boolean computeUnreached;
 
@@ -82,7 +82,7 @@ public class DiffMojo extends BaseMojo implements StartsConstants {
         long start = System.currentTimeMillis();
         Pair<Set<String>, Set<String>> data = null;
         if (depFormat == DependencyFormat.ZLC) {
-            ZLCHelper zlcHelper = new ZLCHelper();// be careful about this. this clears the static zlcDataMap
+            ZLCHelper zlcHelper = new ZLCHelper();// called to clear the static zlcDataMap
             data = zlcHelper.getChangedData(getArtifactsDir(), cleanBytes);
         } else if (depFormat == DependencyFormat.CLZ) {
             data = EkstaziHelper.getNonAffectedTests(getArtifactsDir());
@@ -111,19 +111,15 @@ public class DiffMojo extends BaseMojo implements StartsConstants {
             Set<String> newClasses = new HashSet<>(getAllClasses());
             newClasses.removeAll(ZLCHelper.getExistingClasses(getArtifactsDir()));
             // get changed classes in project
-            Set<String> changedClasses = new HashSet<>();
-            changedClasses.addAll(ZLCHelper.getChangedClasses(changedData));
+            Set<String> changedClasses = ZLCHelper.getChangedClasses(changedData);
 
             ClassLoader loader = createClassLoader(sfClassPath);
             Result result = prepareForNextRun(sfPathString, sfClassPath, new ArrayList<>(changedClasses),
                     new ArrayList<>(newClasses), affectedTests, nonAffected, computeUnreached, incrementalUpdate);
-            // add new jar classes for ZLCHelper updateZLCFile
-            newClasses.addAll(Cache.getNewJarClasses());
             Map<String, Set<String>> testDeps = result.getTestDeps();
             graph = result.getGraph();
             Set<String> unreached = computeUnreached ? result.getUnreachedDeps() : new HashSet<String>();
             if (depFormat == DependencyFormat.ZLC) {
-                //ZLCHelper zlcHelper = new ZLCHelper();
                 ZLCHelper.updateZLCFile(testDeps, loader, getArtifactsDir(), changedData, newClasses,
                         incrementalUpdate);
             } else if (depFormat == DependencyFormat.CLZ) {

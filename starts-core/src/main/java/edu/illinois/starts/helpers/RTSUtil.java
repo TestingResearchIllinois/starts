@@ -111,7 +111,6 @@ public class RTSUtil implements StartsConstants {
         } catch (IOException ioe) {
             ioe.printStackTrace();
         }
-
     }
 
     public static Map<String, Set<String>> getDepsFromJdepsOutput(StringWriter jdepsOutput) {

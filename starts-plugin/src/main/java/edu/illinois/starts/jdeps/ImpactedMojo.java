@@ -99,7 +99,6 @@ public class ImpactedMojo extends DiffMojo implements StartsConstants {
         List<String> allTests = getTestClasses("updateForNextRun");
         Result result = prepareForNextRun(sfPathString, sfClassPath, new ArrayList<String>(), allClasses,
                 new HashSet<>(allClasses), new HashSet<String>(), false, incrementalUpdate);
-        //ZLCHelper zlcHelper = new ZLCHelper();// call this would clear zlcDataMap
         ZLCHelper.updateZLCFile(result.getTestDeps(), loader, getArtifactsDir(),
                 new HashSet<String>(), new HashSet<>(allClasses), incrementalUpdate);
         long end = System.currentTimeMillis();
