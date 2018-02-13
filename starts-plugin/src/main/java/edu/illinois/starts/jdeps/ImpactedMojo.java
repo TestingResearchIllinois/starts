@@ -56,7 +56,7 @@ public class ImpactedMojo extends DiffMojo implements StartsConstants {
     public void execute() throws MojoExecutionException {
         Logger.getGlobal().setLoggingLevel(Level.parse(loggingLevel));
         logger = Logger.getGlobal();
-        Pair<Set<String>, Set<String>> data = computeChangeData();
+        Pair<Set<String>, Set<String>> data = computeChangeData(false);
         // 0. Find all classes in program
         List<String> allClasses = getAllClasses();
         if (allClasses.isEmpty()) {
