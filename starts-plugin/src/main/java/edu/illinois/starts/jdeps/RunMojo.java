@@ -147,14 +147,14 @@ public class RunMojo extends DiffMojo implements StartsConstants {
     }
 
     private boolean hasSameJarChecksum(String cleanSfClassPath) throws MojoExecutionException {
-        boolean noException = true;
         if (cleanSfClassPath.isEmpty()) {
-            return noException;
+            return true;
         }
         String oldChecksumPathFileName = Paths.get(getArtifactsDir(), JAR_CHECKSUMS).toString();
         if (!new File(oldChecksumPathFileName).exists()) {
             return false;
         }
+        boolean noException = true;
         try (BufferedReader fileReader = new BufferedReader(new FileReader(oldChecksumPathFileName))) {
             Map<String, String> checksumMap = new HashMap<>();
             String line;
@@ -164,9 +164,9 @@ public class RunMojo extends DiffMojo implements StartsConstants {
             }
             String[] jars = cleanSfClassPath.split(File.pathSeparator);
             for (int i = 0; i < jars.length; i++) {
-                String[] elems = Writer.getJarToChecksumMapping(jars[i]).split(COMMA);
-                String oldCS = checksumMap.get(elems[0]);
-                if (!elems[1].equals(oldCS)) {
+                Pair<String, String> pair = Writer.getJarToChecksumMapping(jars[i]);
+                String oldCS = checksumMap.get(pair.getKey());
+                if (!pair.getValue().equals(oldCS)) {
                     return false;
                 }
             }
