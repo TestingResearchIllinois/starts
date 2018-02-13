@@ -126,6 +126,9 @@ public class RunMojo extends DiffMojo implements StartsConstants {
     }
 
     private boolean isSameClassPath(String sfPathString) throws MojoExecutionException {
+        if (sfPathString.isEmpty()) {
+            return true;
+        }
         String oldSfPathFileName = Paths.get(getArtifactsDir(), SF_CLASSPATH).toString();
         if (!new File(oldSfPathFileName).exists()) {
             return false;
@@ -144,8 +147,11 @@ public class RunMojo extends DiffMojo implements StartsConstants {
     }
 
     private boolean hasSameJarChecksum(String cleanSfClassPath) throws MojoExecutionException {
-        String oldChecksumPathFileName = Paths.get(getArtifactsDir(), JAR_CHECKSUMS).toString();
         boolean noException = true;
+        if (cleanSfClassPath.isEmpty()) {
+            return noException;
+        }
+        String oldChecksumPathFileName = Paths.get(getArtifactsDir(), JAR_CHECKSUMS).toString();
         if (!new File(oldChecksumPathFileName).exists()) {
             return false;
         }
