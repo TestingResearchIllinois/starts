@@ -4,7 +4,6 @@
 
 package edu.illinois.starts.jdeps;
 
-import java.io.File;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -56,7 +55,7 @@ public class DiffMojo extends BaseMojo implements StartsConstants {
 
         Set<String> changed = new HashSet<>();
         Set<String> nonAffected = new HashSet<>();
-        Pair<Set<String>, Set<String>> data = computeChangeData();
+        Pair<Set<String>, Set<String>> data = computeChangeData(false);
         String extraText = EMPTY;
         if (data != null) {
             nonAffected = data.getKey();
@@ -70,7 +69,7 @@ public class DiffMojo extends BaseMojo implements StartsConstants {
         }
     }
 
-    protected Pair<Set<String>, Set<String>> computeChangeData() throws MojoExecutionException {
+    protected Pair<Set<String>, Set<String>> computeChangeData(boolean writeChanged) throws MojoExecutionException {
         long start = System.currentTimeMillis();
         Pair<Set<String>, Set<String>> data = null;
         if (depFormat == DependencyFormat.ZLC) {
@@ -80,7 +79,7 @@ public class DiffMojo extends BaseMojo implements StartsConstants {
             data = EkstaziHelper.getNonAffectedTests(getArtifactsDir());
         }
         Set<String> changed = data == null ? new HashSet<String>() : data.getValue();
-        if (Logger.getGlobal().getLoggingLevel().intValue() <= Level.FINEST.intValue()) {
+        if (writeChanged || Logger.getGlobal().getLoggingLevel().intValue() <= Level.FINEST.intValue()) {
             Writer.writeToFile(changed, CHANGED_CLASSES, getArtifactsDir());
         }
         long end = System.currentTimeMillis();

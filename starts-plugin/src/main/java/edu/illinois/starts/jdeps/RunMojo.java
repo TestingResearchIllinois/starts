@@ -8,8 +8,6 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
-import java.net.URISyntaxException;
-import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -65,6 +63,13 @@ public class RunMojo extends DiffMojo implements StartsConstants {
     @Parameter(property = "writeNonAffected", defaultValue = "false")
     protected boolean writeNonAffected;
 
+    /**
+     * Set this to "true" to save changedClasses to a file on disk.
+     * Note: Running with "-DstartsLogging=FINEST" also saves changedClasses to a file on disk.
+     */
+    @Parameter(property = "writeChangedClasses", defaultValue = "false")
+    protected boolean writeChangedClasses;
+
     protected Set<String> nonAffectedTests;
     protected Set<String> changedClasses;
     private Logger logger;
@@ -73,14 +78,12 @@ public class RunMojo extends DiffMojo implements StartsConstants {
         Logger.getGlobal().setLoggingLevel(Level.parse(loggingLevel));
         logger = Logger.getGlobal();
         long start = System.currentTimeMillis();
-        setChangedAndNonaffected();
-        List<String> excludePaths = Writer.fqnsToExcludePath(nonAffectedTests);
         setIncludesExcludes();
+        run();
+        Set<String> allTests = new HashSet<>(getTestClasses(CHECK_IF_ALL_AFFECTED));
         if (writeNonAffected || logger.getLoggingLevel().intValue() <= Level.FINEST.intValue()) {
             Writer.writeToFile(nonAffectedTests, "non-affected-tests", getArtifactsDir());
         }
-        run(excludePaths);
-        Set<String> allTests = new HashSet<>(getTestClasses(CHECK_IF_ALL_AFFECTED));
         if (allTests.equals(nonAffectedTests)) {
             logger.log(Level.INFO, STARS_RUN_STARS);
             logger.log(Level.INFO, NO_TESTS_ARE_SELECTED_TO_RUN);
@@ -90,13 +93,22 @@ public class RunMojo extends DiffMojo implements StartsConstants {
         logger.log(Level.FINE, PROFILE_RUN_MOJO_TOTAL + Writer.millsToSeconds(end - start));
     }
 
-    protected void run(List<String> excludePaths) throws MojoExecutionException {
+    protected void run() throws MojoExecutionException {
         String sfPathString = getCleanClassPath(Writer.pathToString(getSureFireClassPath().getClassPath()));
-        if (retestAll || !isSameClassPath(sfPathString) || !hasSameJarChecksum(sfPathString)) {
+        if (!isSameClassPath(sfPathString) || hasSameJarChecksum(sfPathString)) {
+            // Force retestAll because classpath changed since last run
             dynamicallyUpdateExcludes(new ArrayList<String>());
             Writer.writeClassPath(sfPathString, artifactsDir);
             Writer.writeJarChecksums(getCleanClassPath(sfPathString), artifactsDir);
+            // Make nonAffected empty so dependencies can be updated
+            nonAffectedTests = new HashSet<>();
+        } else if (retestAll) {
+            // Force retestAll but compute changes and affected tests
+            setChangedAndNonaffected();
+            dynamicallyUpdateExcludes(new ArrayList<String>());
         } else {
+            setChangedAndNonaffected();
+            List<String> excludePaths = Writer.fqnsToExcludePath(nonAffectedTests);
             dynamicallyUpdateExcludes(excludePaths);
         }
         long startUpdateTime = System.currentTimeMillis();
@@ -120,7 +132,7 @@ public class RunMojo extends DiffMojo implements StartsConstants {
     protected void setChangedAndNonaffected() throws MojoExecutionException {
         nonAffectedTests = new HashSet<>();
         changedClasses = new HashSet<>();
-        Pair<Set<String>, Set<String>> data = computeChangeData();
+        Pair<Set<String>, Set<String>> data = computeChangeData(writeChangedClasses);
         nonAffectedTests = data == null ? new HashSet<String>() : data.getKey();
         changedClasses  = data == null ? new HashSet<String>() : data.getValue();
     }
