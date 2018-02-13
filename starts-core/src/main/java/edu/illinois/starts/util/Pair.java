@@ -6,10 +6,12 @@ package edu.illinois.starts.util;
 
 import java.io.Serializable;
 
+import edu.illinois.starts.constants.StartsConstants;
+
 /**
  * A (key, value) pair.
  */
-public class Pair<K, V> implements Serializable {
+public class Pair<K, V> implements Serializable, StartsConstants {
     private K key;
     private V value;
 
@@ -20,7 +22,7 @@ public class Pair<K, V> implements Serializable {
 
     @Override
     public String toString() {
-        return key + "=" + value;
+        return key + COMMA + value;
     }
 
     @Override
@@ -53,5 +55,9 @@ public class Pair<K, V> implements Serializable {
 
     public V getValue() {
         return value;
+    }
+
+    public void setValue(V value) {
+        this.value = value;
     }
 }

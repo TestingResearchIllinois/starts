@@ -6,14 +6,12 @@ package edu.illinois.starts.helpers;
 
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.security.DigestInputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
@@ -27,6 +25,7 @@ import java.util.logging.Level;
 
 import edu.illinois.starts.constants.StartsConstants;
 import edu.illinois.starts.util.Logger;
+import edu.illinois.starts.util.Pair;
 import edu.illinois.yasgl.DirectedGraph;
 import edu.illinois.yasgl.Edge;
 import org.apache.commons.codec.binary.Hex;
@@ -88,7 +87,7 @@ public class Writer implements StartsConstants {
                 if (jarsList[i].isEmpty()) {
                     continue;
                 }
-                writer.write(getJarToChecksumMapping(jarsList[i]));
+                writer.write(getJarToChecksumMapping(jarsList[i]).toString());
                 writer.write(System.lineSeparator());
             }
         } catch (IOException ioe) {
@@ -219,11 +218,10 @@ public class Writer implements StartsConstants {
      * Compute the checksum for the given map and return the jar
      * and the checksum as a string.
      *
-     *
      * @param jar  The jar whose checksum we need to compute.
      */
-    public static String getJarToChecksumMapping(String jar) {
-        StringBuilder sb = new StringBuilder();
+    public static Pair<String, String> getJarToChecksumMapping(String jar) {
+        Pair<String, String> pair = new Pair<>(jar, "-1");
         byte[] bytes;
         int bufSize = 65536 * 2;
         try {
@@ -235,14 +233,13 @@ public class Writer implements StartsConstants {
                 md.update(bytes, 0, size);
                 size = is.read(bytes, 0, bufSize);
             }
-            String hex = Hex.encodeHexString(md.digest());
-            sb.append(jar).append(COMMA).append(hex);
+            pair.setValue(Hex.encodeHexString(md.digest()));
         } catch (IOException ioe) {
             ioe.printStackTrace();
         } catch (NoSuchAlgorithmException nsae) {
             nsae.printStackTrace();
         }
-        return sb.toString();
+        return pair;
     }
 
     /**
