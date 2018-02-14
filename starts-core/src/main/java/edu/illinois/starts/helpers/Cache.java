@@ -34,7 +34,7 @@ public class Cache implements StartsConstants {
         this.m2Repo = m2Repo;
     }
 
-    public void loadM2EdgesFromCache(List<String> moreEdges, String pathString) {
+    public List<String> loadM2EdgesFromCache(String pathString) {
         if (!jdepsCache.exists()) {
             if (!jdepsCache.mkdir()) {
                 throw new RuntimeException("I could not create the jdeps cache: " + jdepsCache.getAbsolutePath());
@@ -48,7 +48,8 @@ public class Cache implements StartsConstants {
         // Some projects depend directly on jars in the standard library, so
         // we want to check there as well
         jarsInCache.addAll(checkMissingJarsInJDKCache(missing));
-        moreEdges.addAll(loadCachedEdges(jarsInCache));
+        return loadCachedEdges(jarsInCache);
+
     }
 
     private HashSet<String> getJarsMissingFromCache(Set<String> jarsInCache) {
