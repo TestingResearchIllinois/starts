@@ -4,9 +4,7 @@
 
 package edu.illinois.starts.jdeps;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -72,6 +70,8 @@ public class RunMojo extends DiffMojo implements StartsConstants {
 
     protected Set<String> nonAffectedTests;
     protected Set<String> changedClasses;
+    protected List<Pair> jarCheckSums = null;
+
     private Logger logger;
 
     public void execute() throws MojoExecutionException {
@@ -94,14 +94,16 @@ public class RunMojo extends DiffMojo implements StartsConstants {
     }
 
     protected void run() throws MojoExecutionException {
-        String sfPathString = getCleanClassPath(Writer.pathToString(getSureFireClassPath().getClassPath()));
-        if (!isSameClassPath(sfPathString) || hasSameJarChecksum(sfPathString)) {
+        String cpString = Writer.pathToString(getSureFireClassPath().getClassPath());
+        List<String> sfPathElements = getCleanClassPath(cpString);
+        if (!isSameClassPath(sfPathElements) || !hasSameJarChecksum(sfPathElements)) {
             // Force retestAll because classpath changed since last run
+            // don't compute changed and non-affected classes
             dynamicallyUpdateExcludes(new ArrayList<String>());
-            Writer.writeClassPath(sfPathString, artifactsDir);
-            Writer.writeJarChecksums(getCleanClassPath(sfPathString), artifactsDir);
             // Make nonAffected empty so dependencies can be updated
             nonAffectedTests = new HashSet<>();
+            Writer.writeClassPath(cpString, artifactsDir);
+            Writer.writeJarChecksums(sfPathElements, artifactsDir, jarCheckSums);
         } else if (retestAll) {
             // Force retestAll but compute changes and affected tests
             setChangedAndNonaffected();
@@ -137,7 +139,7 @@ public class RunMojo extends DiffMojo implements StartsConstants {
         changedClasses  = data == null ? new HashSet<String>() : data.getValue();
     }
 
-    private boolean isSameClassPath(String sfPathString) throws MojoExecutionException {
+    private boolean isSameClassPath(List<String> sfPathString) throws MojoExecutionException {
         if (sfPathString.isEmpty()) {
             return true;
         }
@@ -146,10 +148,13 @@ public class RunMojo extends DiffMojo implements StartsConstants {
             return false;
         }
         try {
-            String cleanOldSfPathFileName = getCleanClassPath(Files.readAllLines(Paths.get(oldSfPathFileName)).get(0));
-            Set<String> sfClassPathSet = new HashSet<>(Arrays.asList(sfPathString.split(File.pathSeparator)));
-            Set<String> oldSfClassPathSet = new HashSet<>(Arrays.asList(cleanOldSfPathFileName.split(File.pathSeparator)));
-            if (sfClassPathSet.equals(oldSfClassPathSet)) {
+            List<String> oldClassPathLines = Files.readAllLines(Paths.get(oldSfPathFileName));
+            if (oldClassPathLines.size() != 1) {
+                throw new MojoExecutionException(SF_CLASSPATH + " is corrupt! Expected only 1 line.");
+            }
+            List<String> oldClassPathelements = getCleanClassPath(oldClassPathLines.get(0));
+            // comparing lists and not sets in case order changes
+            if (sfPathString.equals(oldClassPathelements)) {
                 return true;
             }
         } catch (IOException ioe) {
@@ -158,7 +163,7 @@ public class RunMojo extends DiffMojo implements StartsConstants {
         return false;
     }
 
-    private boolean hasSameJarChecksum(String cleanSfClassPath) throws MojoExecutionException {
+    private boolean hasSameJarChecksum(List<String> cleanSfClassPath) throws MojoExecutionException {
         if (cleanSfClassPath.isEmpty()) {
             return true;
         }
@@ -167,45 +172,41 @@ public class RunMojo extends DiffMojo implements StartsConstants {
             return false;
         }
         boolean noException = true;
-        try (BufferedReader fileReader = new BufferedReader(new FileReader(oldChecksumPathFileName))) {
+        try {
+            List<String> lines = Files.readAllLines(Paths.get(oldChecksumPathFileName));
             Map<String, String> checksumMap = new HashMap<>();
-            String line;
-            while ((line = fileReader.readLine()) != null) {
+            for (String line : lines) {
                 String[] elems = line.split(COMMA);
                 checksumMap.put(elems[0], elems[1]);
             }
-            String[] jars = cleanSfClassPath.split(File.pathSeparator);
-            for (int i = 0; i < jars.length; i++) {
-                Pair<String, String> pair = Writer.getJarToChecksumMapping(jars[i]);
+            jarCheckSums = new ArrayList<>();
+            for (String path : cleanSfClassPath) {
+                Pair<String, String> pair = Writer.getJarToChecksumMapping(path);
+                jarCheckSums.add(pair);
                 String oldCS = checksumMap.get(pair.getKey());
-                if (!pair.getValue().equals(oldCS)) {
-                    return false;
-                }
+                noException &= pair.getValue().equals(oldCS);
             }
         } catch (IOException ioe) {
             noException = false;
+            // reset to null because we don't know what/when exception happened
+            jarCheckSums = null;
             ioe.printStackTrace();
         }
         return noException;
     }
 
-    private String getCleanClassPath(String cp) {
+    private List<String> getCleanClassPath(String cp) {
+        List<String> cpPaths = new ArrayList<>();
         String[] paths = cp.split(File.pathSeparator);
-        StringBuilder sb = new StringBuilder();
         String classes = File.separator + TARGET +  File.separator + CLASSES;
         String testClasses = File.separator + TARGET + File.separator + TEST_CLASSES;
         for (int i = 0; i < paths.length; i++) {
-            if (paths[i].contains(classes)
-                || paths[i].contains(testClasses)
-                || paths[i].contains("-SNAPSHOT.jar")) {
+            // TODO: should we also exclude SNAPSHOTS from same project?
+            if (paths[i].contains(classes) || paths[i].contains(testClasses)) {
                 continue;
             }
-            if (sb.length() == 0) {
-                sb.append(paths[i]);
-            } else {
-                sb.append(File.pathSeparator).append(paths[i]);
-            }
+            cpPaths.add(paths[i]);
         }
-        return sb.toString();
+        return cpPaths;
     }
 }
