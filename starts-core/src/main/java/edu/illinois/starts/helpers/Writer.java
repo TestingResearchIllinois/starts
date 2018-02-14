@@ -79,16 +79,23 @@ public class Writer implements StartsConstants {
         }
     }
 
-    public static void writeJarChecksums(String sfPathString, String artifactsDir) {
+    public static void writeJarChecksums(List<String> sfPathString, String artifactsDir, List<Pair> jarCheckSums) {
         String outFilename = Paths.get(artifactsDir, JAR_CHECKSUMS).toString();
         try (BufferedWriter writer = getWriter(outFilename)) {
-            String[] jarsList = sfPathString.split(File.pathSeparator);
-            for (int i = 0; i < jarsList.length; i++) {
-                if (jarsList[i].isEmpty()) {
-                    continue;
+            if (jarCheckSums != null) {
+                // we already computed the checksums while checking with old version in RunMojo#hasSameJarChecksum()
+                for (Pair<String, String> pair : jarCheckSums) {
+                    writer.write(pair.toString());
+                    writer.write(System.lineSeparator());
                 }
-                writer.write(getJarToChecksumMapping(jarsList[i]).toString());
-                writer.write(System.lineSeparator());
+            } else {
+                for (String path : sfPathString) {
+                    if (path.isEmpty()) {
+                        continue;
+                    }
+                    writer.write(getJarToChecksumMapping(path).toString());
+                    writer.write(System.lineSeparator());
+                }
             }
         } catch (IOException ioe) {
             ioe.printStackTrace();
