@@ -79,16 +79,16 @@ public class ZLCHelper implements StartsConstants {
 //    }
 
     public static void updateZLCFile(Map<String, Set<String>> testDeps, ClassLoader loader,
-                                     String artifactsDir, Set<String> unreached) {
+                                     String artifactsDir, Set<String> unreached, boolean useThirdParty) {
         // TODO: Optimize this by only recomputing the checksum+tests for changed classes and newly added tests
         long start = System.currentTimeMillis();
-        List<ZLCData> zlc = createZLCData(testDeps, loader);
+        List<ZLCData> zlc = createZLCData(testDeps, loader, useThirdParty);
         Writer.writeToFile(zlc, zlcFile, artifactsDir);
         long end = System.currentTimeMillis();
         LOGGER.log(Level.FINE, "[PROFILE] updateForNextRun(updateZLCFile): " + Writer.millsToSeconds(end - start));
     }
 
-    public static List<ZLCData> createZLCData(Map<String, Set<String>> testDeps, ClassLoader loader) {
+    public static List<ZLCData> createZLCData(Map<String, Set<String>> testDeps, ClassLoader loader, boolean useJars) {
         long start = System.currentTimeMillis();
         List<ZLCData> zlcData = new ArrayList<>();
         Set<String> deps = new HashSet<>();
@@ -105,7 +105,8 @@ public class ZLCHelper implements StartsConstants {
                 continue;
             }
             URL url = loader.getResource(klas);
-            if (url == null || ChecksumUtil.isWellKnownUrl(url.toExternalForm())) {
+            String extForm = url.toExternalForm();
+            if (url == null || ChecksumUtil.isWellKnownUrl(extForm) || (!useJars && extForm.startsWith("jar:"))) {
                 continue;
             }
             String checksum = checksumUtil.computeSingleCheckSum(url);
