@@ -51,6 +51,13 @@ public class ImpactedMojo extends DiffMojo implements StartsConstants {
      */
     @Parameter(property = "trackNewClasses", defaultValue = FALSE)
     private boolean trackNewClasses;
+
+    /**
+     * Set to "true" to print non-impacted classes: classes in the program that were not impacted by changes.
+     */
+    @Parameter(property = "trackNonImpacted", defaultValue = FALSE)
+    private boolean trackNonImpacted;
+
     private Logger logger;
 
     public void execute() throws MojoExecutionException {
@@ -88,6 +95,9 @@ public class ImpactedMojo extends DiffMojo implements StartsConstants {
         // 4. Print impacted and/or write to file
         Writer.writeToFile(changed, CHANGED_CLASSES, getArtifactsDir());
         Writer.writeToFile(impacted, "impacted-classes", getArtifactsDir());
+        if (trackNonImpacted) {
+            Writer.writeToFile(nonAffected, "non-impacted-classes", getArtifactsDir());
+        }
     }
 
     private void updateForNextRun(List<String> allClasses) throws MojoExecutionException {
