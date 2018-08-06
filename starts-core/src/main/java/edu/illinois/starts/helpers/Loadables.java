@@ -79,7 +79,7 @@ public class Loadables implements StartsConstants {
     }
 
     public Loadables create(List<String> moreEdges, Classpath sfClassPath,
-                            boolean computeUnreached) {
+                            boolean computeUnreached, boolean trackUsages) {
         setSurefireClasspath(sfClassPath);
         LOGGER.log(Level.FINEST, "More: " + moreEdges.size());
         extraEdges = moreEdges;
@@ -88,7 +88,7 @@ public class Loadables implements StartsConstants {
         long jdepsTime = System.currentTimeMillis();
         graph = makeGraph(deps, extraEdges);
         long graphBuildingTime = System.currentTimeMillis();
-        transitiveClosure = getTransitiveClosurePerClass(graph, classesToAnalyze);
+        transitiveClosure = getTransitiveClosurePerClass(graph, classesToAnalyze, trackUsages);
         long transitiveClosureTime = System.currentTimeMillis();
         if (computeUnreached) {
             unreached = findUnreached(deps, transitiveClosure);
@@ -208,11 +208,15 @@ public class Loadables implements StartsConstants {
     }
 
     public static Map<String, Set<String>> getTransitiveClosurePerClass(DirectedGraph<String> tcGraph,
-                                                                  List<String> classesToAnalyze) {
+                                                                        List<String> classesToAnalyze,
+                                                                        boolean trackUsages) {
         Map<String, Set<String>> tcPerTest = new HashMap<>();
         for (String test : classesToAnalyze) {
-            Set<String> deps = YasglHelper.computeReachabilityFromChangedClasses(
-                    new HashSet<>(Arrays.asList(test)), tcGraph);
+            HashSet<String> nodeSet = new HashSet<>(Arrays.asList(test));
+            Set<String> deps = YasglHelper.computeReachabilityFromChangedClasses(nodeSet, tcGraph);
+            if (trackUsages) {
+                deps.addAll(YasglHelper.reverseReachabilityFromChangedClasses(nodeSet, tcGraph));
+            }
             deps.add(test);
             tcPerTest.put(test, deps);
         }

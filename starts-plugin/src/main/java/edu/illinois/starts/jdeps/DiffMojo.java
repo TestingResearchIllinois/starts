@@ -100,7 +100,7 @@ public class DiffMojo extends BaseMojo implements StartsConstants {
             ClassLoader loader = createClassLoader(sfClassPath);
             //TODO: set this boolean to true only for static reflectionAnalyses with * (border, string, naive)?
             boolean computeUnreached = true;
-            Result result = prepareForNextRun(sfPathString, sfClassPath, allTests, nonAffected, computeUnreached);
+            Result result = prepareForNextRun(sfPathString, sfClassPath, allTests, nonAffected, computeUnreached, false);
             Map<String, Set<String>> testDeps = result.getTestDeps();
             graph = result.getGraph();
             Set<String> unreached = computeUnreached ? result.getUnreachedDeps() : new HashSet<String>();

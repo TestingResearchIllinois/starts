@@ -58,6 +58,13 @@ public class ImpactedMojo extends DiffMojo implements StartsConstants {
     @Parameter(property = "trackNonImpacted", defaultValue = FALSE)
     private boolean trackNonImpacted;
 
+    /**
+     * Should we also track classes used by those in the transitive closure of changed classes?
+     * Set to true if "yes", false if "no.
+     */
+    @Parameter(property = "trackUsages", defaultValue = FALSE)
+    private boolean trackUsages;
+
     private Logger logger;
 
     public void execute() throws MojoExecutionException {
@@ -105,7 +112,7 @@ public class ImpactedMojo extends DiffMojo implements StartsConstants {
         Classpath sfClassPath = getSureFireClassPath();
         String sfPathString = Writer.pathToString(sfClassPath.getClassPath());
         ClassLoader loader = createClassLoader(sfClassPath);
-        Result result = prepareForNextRun(sfPathString, sfClassPath, allClasses, new HashSet<String>(), false);
+        Result result = prepareForNextRun(sfPathString, sfClassPath, allClasses, new HashSet<String>(), false, trackUsages);
         ZLCHelper zlcHelper = new ZLCHelper();
         zlcHelper.updateZLCFile(result.getTestDeps(), loader, getArtifactsDir(), new HashSet<String>(), useThirdParty);
         long end = System.currentTimeMillis();

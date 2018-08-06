@@ -212,7 +212,8 @@ abstract class BaseMojo extends SurefirePlugin implements StartsConstants {
     }
 
     public Result prepareForNextRun(String sfPathString, Classpath sfClassPath, List<String> classesToAnalyze,
-                                    Set<String> nonAffected, boolean computeUnreached) throws MojoExecutionException {
+                                    Set<String> nonAffected, boolean computeUnreached, boolean trackUsages)
+            throws MojoExecutionException {
         long start = System.currentTimeMillis();
         String m2Repo = getLocalRepository().getBasedir();
         File jdepsCache = new File(graphCache);
@@ -236,7 +237,7 @@ abstract class BaseMojo extends SurefirePlugin implements StartsConstants {
         }
         long loadM2EdgesFromCache = System.currentTimeMillis();
         // 2. Get non-reflection edges from CUT and SDK; use (1) to build graph
-        loadables.create(new ArrayList<>(moreEdges), sfClassPath, computeUnreached);
+        loadables.create(new ArrayList<>(moreEdges), sfClassPath, computeUnreached, trackUsages);
 
         Map<String, Set<String>> transitiveClosure = loadables.getTransitiveClosure();
         long createLoadables = System.currentTimeMillis();
