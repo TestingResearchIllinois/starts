@@ -38,16 +38,18 @@ public class Loadables implements StartsConstants {
     private Map<String, Set<String>> transitiveClosure;
     private Set<String> unreached;
     private boolean filterLib;
+    private boolean useThirdParty;
     private Classpath surefireClasspath;
     private String artifactsDir;
 
     public Loadables(List<String> classesToAnalyze, String artifactsDir, String sfPathString,
-                     boolean filterLib, File cache) {
+                     boolean useThirdParty, boolean filterLib, File cache) {
         this.classesToAnalyze = classesToAnalyze;
         this.artifactsDir = artifactsDir;
         this.sfPathString = sfPathString;
         this.filterLib = filterLib;
         this.cache = cache;
+        this.useThirdParty = useThirdParty;
     }
 
     public DirectedGraph<String> getGraph() {
@@ -174,7 +176,7 @@ public class Loadables implements StartsConstants {
             throw new IllegalArgumentException("JDEPS cannot run with an empty classpath.");
         }
         String jdepsClassPath;
-        if (!cache.exists() || (cache.isDirectory() && cache.list().length == 0)) {
+        if ((!cache.exists() || (cache.isDirectory() && cache.list().length == 0)) && useThirdParty) {
             //There is no cache of jdeps graphs, so we want to run jdeps recursively with the entire surefire classpath
             LOGGER.log(Level.WARNING, "Should jdeps cache really be empty? Running in recursive mode.");
             args.add("-R");
