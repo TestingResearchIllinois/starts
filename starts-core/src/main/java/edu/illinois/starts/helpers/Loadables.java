@@ -214,10 +214,10 @@ public class Loadables implements StartsConstants {
         for (String test : classesToAnalyze) {
             HashSet<String> nodeSet = new HashSet<>(Arrays.asList(test));
             Set<String> deps = YasglHelper.computeReachabilityFromChangedClasses(nodeSet, tcGraph);
-            if (trackUsages) {
-                deps.addAll(YasglHelper.reverseReachabilityFromChangedClasses(nodeSet, tcGraph));
-            }
             deps.add(test);
+            if (trackUsages) {
+                deps.addAll(YasglHelper.reverseReachabilityFromChangedClasses(deps, tcGraph));
+            }
             tcPerTest.put(test, deps);
         }
         return tcPerTest;
