@@ -17,6 +17,7 @@ import java.util.logging.Level;
 
 import edu.illinois.starts.constants.StartsConstants;
 import edu.illinois.starts.enums.DependencyFormat;
+import edu.illinois.starts.enums.LibraryOptions;
 import edu.illinois.starts.helpers.Cache;
 import edu.illinois.starts.helpers.Loadables;
 import edu.illinois.starts.helpers.PomUtil;
@@ -212,7 +213,7 @@ abstract class BaseMojo extends SurefirePlugin implements StartsConstants {
     }
 
     public Result prepareForNextRun(String sfPathString, Classpath sfClassPath, List<String> classesToAnalyze,
-                                    Set<String> nonAffected, boolean computeUnreached, boolean trackUsages)
+                                    Set<String> nonAffected, boolean computeUnreached, LibraryOptions trackUsages)
             throws MojoExecutionException {
         long start = System.currentTimeMillis();
         String m2Repo = getLocalRepository().getBasedir();

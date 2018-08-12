@@ -10,6 +10,7 @@ import java.util.Set;
 import java.util.logging.Level;
 
 import edu.illinois.starts.constants.StartsConstants;
+import edu.illinois.starts.enums.LibraryOptions;
 import edu.illinois.starts.helpers.RTSUtil;
 import edu.illinois.starts.helpers.Writer;
 import edu.illinois.starts.helpers.ZLCHelper;
@@ -62,8 +63,8 @@ public class ImpactedMojo extends DiffMojo implements StartsConstants {
      * Should we also track classes used by those in the transitive closure of changed classes?
      * Set to true if "yes", false if "no.
      */
-    @Parameter(property = "trackUsages", defaultValue = FALSE)
-    private boolean trackUsages;
+    @Parameter(property = "trackUsages", defaultValue = "OPTION1")
+    private LibraryOptions trackUsages;
 
     private Logger logger;
 

@@ -16,6 +16,7 @@ import java.util.Set;
 import java.util.logging.Level;
 
 import edu.illinois.starts.constants.StartsConstants;
+import edu.illinois.starts.enums.LibraryOptions;
 import edu.illinois.starts.util.ChecksumUtil;
 import edu.illinois.starts.util.Logger;
 import edu.illinois.yasgl.DirectedGraph;
@@ -79,7 +80,7 @@ public class Loadables implements StartsConstants {
     }
 
     public Loadables create(List<String> moreEdges, Classpath sfClassPath,
-                            boolean computeUnreached, boolean trackUsages) {
+                            boolean computeUnreached, LibraryOptions trackUsages) {
         setSurefireClasspath(sfClassPath);
         LOGGER.log(Level.FINEST, "More: " + moreEdges.size());
         extraEdges = moreEdges;
@@ -209,15 +210,24 @@ public class Loadables implements StartsConstants {
 
     public static Map<String, Set<String>> getTransitiveClosurePerClass(DirectedGraph<String> tcGraph,
                                                                         List<String> classesToAnalyze,
-                                                                        boolean trackUsages) {
+                                                                        LibraryOptions trackUsages) {
         Map<String, Set<String>> tcPerTest = new HashMap<>();
         for (String test : classesToAnalyze) {
             HashSet<String> nodeSet = new HashSet<>(Arrays.asList(test));
             Set<String> deps = YasglHelper.computeReachabilityFromChangedClasses(nodeSet, tcGraph);
-            if (trackUsages) {
-                deps.addAll(YasglHelper.reverseReachabilityFromChangedClasses(nodeSet, tcGraph));
-            }
             deps.add(test);
+            switch (trackUsages) {
+                case OPTION1:
+                    break;
+                case OPTION2PARTIAL:
+                    deps.addAll(YasglHelper.reverseReachabilityFromChangedClasses(nodeSet, tcGraph));
+                    break;
+                case OPTION2FULL:
+                    deps.addAll(YasglHelper.reverseReachabilityFromChangedClasses(deps, tcGraph));
+                    break;
+                default:
+                    break;
+            }
             tcPerTest.put(test, deps);
         }
         return tcPerTest;
