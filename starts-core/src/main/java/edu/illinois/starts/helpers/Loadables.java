@@ -214,18 +214,25 @@ public class Loadables implements StartsConstants {
         Map<String, Set<String>> tcPerTest = new HashMap<>();
         for (String test : classesToAnalyze) {
             HashSet<String> nodeSet = new HashSet<>(Arrays.asList(test));
-            Set<String> deps = YasglHelper.computeReachabilityFromChangedClasses(nodeSet, tcGraph);
-            deps.add(test);
+            Set<String> deps = new HashSet<>();
             switch (trackUsages) {
                 case OPTION1:
+                    deps = YasglHelper.computeReachabilityFromChangedClasses(nodeSet, tcGraph);
+                    deps.add(test);
                     break;
                 case OPTION2PARTIAL:
+                    deps = YasglHelper.computeReachabilityFromChangedClasses(nodeSet, tcGraph);
+                    deps.add(test);
                     deps.addAll(YasglHelper.reverseReachabilityFromChangedClasses(nodeSet, tcGraph));
                     break;
                 case OPTION2FULL:
-                    deps.addAll(YasglHelper.reverseReachabilityFromChangedClasses(deps, tcGraph));
+                    deps  =  YasglHelper.reverseReachabilityFromChangedClasses(nodeSet, tcGraph);
+                    deps.add(test);
+                    deps.addAll(YasglHelper.computeReachabilityFromChangedClasses(deps, tcGraph));
                     break;
                 default:
+                    deps = YasglHelper.computeReachabilityFromChangedClasses(nodeSet, tcGraph);
+                    deps.add(test);
                     break;
             }
             tcPerTest.put(test, deps);
