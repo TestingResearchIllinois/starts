@@ -17,6 +17,7 @@ import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -257,5 +258,13 @@ public class Writer implements StartsConstants {
     public static String urlToFQN(String url) {
         // ASSUMPTION: "classes/" rarely occurs in the rest of the path
         return url.split(CLASSES + File.separator)[1].replace(CLASS_EXTENSION, EMPTY).replace(File.separator, DOT);
+    }
+
+    public static Set<String> urlsToFQN(Collection<String> urls) {
+        Set<String> fqns = new HashSet<>();
+        for (String url : urls) {
+            fqns.add(urlToFQN(url));
+        }
+        return fqns;
     }
 }

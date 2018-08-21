@@ -4,13 +4,17 @@
 
 package edu.illinois.starts.jdeps;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 
+import com.sun.tools.doclets.formats.html.SourceToHTMLConverter;
 import edu.illinois.starts.constants.StartsConstants;
 import edu.illinois.starts.enums.LibraryOptions;
+import edu.illinois.starts.helpers.Loadables;
 import edu.illinois.starts.helpers.RTSUtil;
 import edu.illinois.starts.helpers.Writer;
 import edu.illinois.starts.helpers.ZLCHelper;
@@ -60,32 +64,73 @@ public class ImpactedMojo extends DiffMojo implements StartsConstants {
     private boolean trackNonImpacted;
 
     /**
-     * Should we also track classes used by those in the transitive closure of changed classes?
-     * Set to true if "yes", false if "no.
+     * Sets how to track classes used by those in the transitive closure of changed classes.
+     * See edu.illinois.starts.enums.LibraryOptions for the values.
      */
     @Parameter(property = "trackUsages", defaultValue = "OPTION1")
     private LibraryOptions trackUsages;
 
+    /**
+     * Set to true to use the graph in the new version for computing impacted.
+     */
+    @Parameter(property = "useNewGraph", defaultValue = "false")
+    private boolean useNewGraph;
+
     private Logger logger;
+
+    private Classpath sfClassPath;
+    private String sfPathString;
+    private ClassLoader loader;
 
     public void execute() throws MojoExecutionException {
         Logger.getGlobal().setLoggingLevel(Level.parse(loggingLevel));
         logger = Logger.getGlobal();
-        Pair<Set<String>, Set<String>> data = computeChangeData(false);
         // 0. Find all classes in program
         List<String> allClasses = getAllClasses();
         if (allClasses.isEmpty()) {
             logger.log(Level.INFO, "There are no .class files in this module.");
             return;
         }
-        Set<String>  impacted = new HashSet<>(allClasses);
-        // 1a. Find what changed and what is non-affected
-        Set<String> nonAffected = data == null ? new HashSet<String>() : data.getKey();
-        Set<String> changed = data == null ? new HashSet<String>() : data.getValue();
 
-        // 1b. Remove nonAffected from all classes to get classes impacted by the change
-        impacted.removeAll(nonAffected);
+        Set<String> changed = null;
+        Set<String> impacted = null;
+        Set<String> nonAffected = null;
+        if (useNewGraph) {
+            changed = ZLCHelper.getOnlyChanges(getArtifactsDir(), cleanBytes);
+            nonAffected = new HashSet<>(allClasses);
+            Loadables tc = null;
 
+            if (changed == null) {
+                logger.log(Level.INFO, "FIRST RUN; ALL IS AFFECTED!");
+                changed = new HashSet<>();
+                impacted = new HashSet<>(allClasses);
+                tc = getTC(new ArrayList<>(allClasses));
+            } else if (changed.isEmpty()) {
+                impacted = new HashSet<>();
+                logger.log(Level.INFO, "NOTHING CHANGED!");
+            } else {
+                tc = getTC(new ArrayList<>(Writer.urlsToFQN(changed)));
+                impacted = getAffected(tc.getTransitiveClosure());
+            }
+            nonAffected.removeAll(impacted);
+            // 3. Optionally update ZLC file for next run, using all classes in the SUT
+            if (tc != null && updateImpactedChecksums) {
+                updateChecksumsForNextRun(tc.getGraph(), allClasses);
+            }
+        } else {
+            Pair<Set<String>, Set<String>> data = computeChangeData(false);
+            changed = data == null ? new HashSet<String>() : data.getValue();
+            impacted = new HashSet<>(allClasses);
+            // 1a. Find what changed and what is non-affected
+            nonAffected = data == null ? new HashSet<String>() : data.getKey();
+
+            // 1b. Remove nonAffected from all classes to get classes impacted by the change
+            impacted.removeAll(nonAffected);
+            // 3. Optionally update ZLC file for next run, using all classes in the SUT
+            if (updateImpactedChecksums) {
+                updateForNextRun(allClasses);
+            }
+        }
         logger.log(Level.FINEST, "CHANGED: " + changed.toString());
         logger.log(Level.FINEST, "IMPACTED: " + impacted.toString());
         // 2. Optionally find newly-added classes
@@ -96,10 +141,7 @@ public class ImpactedMojo extends DiffMojo implements StartsConstants {
             logger.log(Level.FINEST, "NEWLY-ADDED: " + newClasses.toString());
             Writer.writeToFile(newClasses, "new-classes", getArtifactsDir());
         }
-        // 3. Optionally update ZLC file for next run, using all classes in the SUT
-        if (updateImpactedChecksums) {
-            updateForNextRun(allClasses);
-        }
+
         // 4. Print impacted and/or write to file
         Writer.writeToFile(changed, CHANGED_CLASSES, getArtifactsDir());
         Writer.writeToFile(impacted, "impacted-classes", getArtifactsDir());
@@ -110,9 +152,7 @@ public class ImpactedMojo extends DiffMojo implements StartsConstants {
 
     private void updateForNextRun(List<String> allClasses) throws MojoExecutionException {
         long start = System.currentTimeMillis();
-        Classpath sfClassPath = getSureFireClassPath();
-        String sfPathString = Writer.pathToString(sfClassPath.getClassPath());
-        ClassLoader loader = createClassLoader(sfClassPath);
+        setFields();
         Result result = prepareForNextRun(sfPathString, sfClassPath, allClasses, new HashSet<String>(), false, trackUsages);
         ZLCHelper zlcHelper = new ZLCHelper();
         zlcHelper.updateZLCFile(result.getTestDeps(), loader, getArtifactsDir(), new HashSet<String>(), useThirdParty);
@@ -124,6 +164,43 @@ public class ImpactedMojo extends DiffMojo implements StartsConstants {
             save(getArtifactsDir(), result.getGraph());
         }
         Logger.getGlobal().log(Level.FINE, PROFILE_UPDATE_FOR_NEXT_RUN_TOTAL + Writer.millsToSeconds(end - start));
+    }
+
+    private void updateChecksumsForNextRun(DirectedGraph<String> graph, List<String> allClasses)
+            throws MojoExecutionException {
+        long start = System.currentTimeMillis();
+        Map<String, Set<String>> deps = Loadables.getTransitiveClosurePerClass(graph, allClasses, trackUsages);
+        ZLCHelper zlcHelper = new ZLCHelper();
+        zlcHelper.updateZLFile(deps, loader, getArtifactsDir(), new HashSet<String>(), useThirdParty);
+        long end = System.currentTimeMillis();
+        if (writePath || logger.getLoggingLevel().intValue() <= Level.FINER.intValue()) {
+            Writer.writeClassPath(sfPathString, getArtifactsDir());
+        }
+        if (logger.getLoggingLevel().intValue() <= Level.FINEST.intValue()) {
+            save(getArtifactsDir(), graph);
+        }
+        Logger.getGlobal().log(Level.FINE, PROFILE_UPDATE_FOR_NEXT_RUN_TOTAL + Writer.millsToSeconds(end - start));
+    }
+
+    private Loadables getTC(List<String> allClasses) throws MojoExecutionException {
+        setFields();
+        return getTransitiveClosure(sfPathString, sfClassPath, allClasses, false, trackUsages);
+    }
+
+    private Set<String> getAffected(Map<String, Set<String>> tc) {
+        Set<String> affected = new HashSet<>();
+        for (Set<String> value : tc.values()) {
+            affected.addAll(value);
+        }
+        return affected;
+    }
+
+    private void setFields() throws MojoExecutionException {
+        if (sfClassPath == null) {
+            sfClassPath = getSureFireClassPath();
+            sfPathString = Writer.pathToString(sfClassPath.getClassPath());
+            loader = createClassLoader(sfClassPath);
+        }
     }
 
     private void save(String artifactsDir, DirectedGraph<String> graph) {

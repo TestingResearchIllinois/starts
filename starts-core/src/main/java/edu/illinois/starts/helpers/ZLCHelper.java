@@ -20,6 +20,7 @@ import java.util.logging.Level;
 
 import edu.illinois.starts.constants.StartsConstants;
 import edu.illinois.starts.data.ZLCData;
+import edu.illinois.starts.data.ZLData;
 import edu.illinois.starts.util.ChecksumUtil;
 import edu.illinois.starts.util.Logger;
 import edu.illinois.starts.util.Pair;
@@ -88,6 +89,15 @@ public class ZLCHelper implements StartsConstants {
         LOGGER.log(Level.FINE, "[PROFILE] updateForNextRun(updateZLCFile): " + Writer.millsToSeconds(end - start));
     }
 
+    public static void updateZLFile(Map<String, Set<String>> testDeps, ClassLoader loader,
+                                     String artifactsDir, Set<String> unreached, boolean useThirdParty) {
+        long start = System.currentTimeMillis();
+        List<ZLData> zlc = createZLData(testDeps, loader, useThirdParty);
+        Writer.writeToFile(zlc, zlcFile, artifactsDir);
+        long end = System.currentTimeMillis();
+        LOGGER.log(Level.FINE, "[PROFILE] updateForNextRun(updateZLCFile): " + Writer.millsToSeconds(end - start));
+    }
+
     public static List<ZLCData> createZLCData(Map<String, Set<String>> testDeps, ClassLoader loader, boolean useJars) {
         long start = System.currentTimeMillis();
         List<ZLCData> zlcData = new ArrayList<>();
@@ -121,6 +131,35 @@ public class ZLCHelper implements StartsConstants {
         long end = System.currentTimeMillis();
         LOGGER.log(Level.FINEST, "[TIME]CREATING ZLC FILE: " + (end - start) + MILLISECOND);
         return zlcData;
+    }
+
+    public static List<ZLData> createZLData(Map<String, Set<String>> testDeps, ClassLoader loader, boolean useJars) {
+        long start = System.currentTimeMillis();
+        List<ZLData> zlData = new ArrayList<>();
+        Set<String> deps = new HashSet<>();
+        ChecksumUtil checksumUtil = new ChecksumUtil(true);
+        // merge all the deps for all tests into a single set
+        for (String test : testDeps.keySet()) {
+            deps.addAll(testDeps.get(test));
+        }
+
+        // for each dep, find it's url, checksum and tests that depend on it
+        for (String dep : deps) {
+            String klas = ChecksumUtil.toClassName(dep);
+            if (Types.isIgnorableInternalName(klas)) {
+                continue;
+            }
+            URL url = loader.getResource(klas);
+            String extForm = url.toExternalForm();
+            if (url == null || ChecksumUtil.isWellKnownUrl(extForm) || (!useJars && extForm.startsWith("jar:"))) {
+                continue;
+            }
+            String checksum = checksumUtil.computeSingleCheckSum(url);
+            zlData.add(new ZLData(url, checksum));
+        }
+        long end = System.currentTimeMillis();
+        LOGGER.log(Level.FINEST, "[TIME]CREATING ZLC FILE: " + (end - start) + MILLISECOND);
+        return zlData;
     }
 
     public static Pair<Set<String>, Set<String>> getChangedData(String artifactsDir, boolean cleanBytes) {
@@ -178,6 +217,45 @@ public class ZLCHelper implements StartsConstants {
         long end = System.currentTimeMillis();
         LOGGER.log(Level.FINEST, TIME_COMPUTING_NON_AFFECTED + (end - start) + MILLISECOND);
         return new Pair<>(nonAffected, changedClasses);
+    }
+
+    public static Set<String> getOnlyChanges(String artifactsDir, boolean cleanBytes) {
+        long start = System.currentTimeMillis();
+        File zlc = new File(artifactsDir, zlcFile);
+        if (!zlc.exists()) {
+            LOGGER.log(Level.FINEST, NOEXISTING_ZLCFILE_FIRST_RUN);
+            return null;
+        }
+        Set<String> changedClasses = new HashSet<>();
+        ChecksumUtil checksumUtil = new ChecksumUtil(cleanBytes);
+        try {
+            List<String> zlcLines = Files.readAllLines(zlc.toPath(), Charset.defaultCharset());
+            String space = WHITE_SPACE;
+
+            for (String line : zlcLines) {
+                if (line.startsWith(STAR_FILE)) {
+                    continue;
+                }
+                String[] parts = line.split(space);
+                String stringURL = parts[0];
+                String oldCheckSum = parts[1];
+                URL url = new URL(stringURL);
+                String newCheckSum = checksumUtil.computeSingleCheckSum(url);
+                if (!newCheckSum.equals(oldCheckSum)) {
+                    changedClasses.add(stringURL);
+                }
+                if (newCheckSum.equals("-1")) {
+                    // a class was deleted or auto-generated, no need to track it in zlc
+                    LOGGER.log(Level.FINEST, "Ignoring: " + url);
+                    continue;
+                }
+            }
+        } catch (IOException ioe) {
+            ioe.printStackTrace();
+        }
+        long end = System.currentTimeMillis();
+        LOGGER.log(Level.FINEST, TIME_COMPUTING_NON_AFFECTED + (end - start) + MILLISECOND);
+        return changedClasses;
     }
 
     private static Set<String> fromCSV(String tests) {

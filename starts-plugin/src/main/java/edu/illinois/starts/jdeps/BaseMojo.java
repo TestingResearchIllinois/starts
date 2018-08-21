@@ -265,6 +265,36 @@ abstract class BaseMojo extends SurefirePlugin implements StartsConstants {
         return new Result(transitiveClosure, loadables.getGraph(), affected, loadables.getUnreached());
     }
 
+    // find all classes affected by the classesToAnalyze
+    public Loadables getTransitiveClosure(String sfPathString, Classpath sfClassPath,
+                                                         List<String> classesToAnalyze,
+                                                         boolean computeUnreached, LibraryOptions trackUsages)
+            throws MojoExecutionException {
+        String m2Repo = getLocalRepository().getBasedir();
+        File jdepsCache = new File(graphCache);
+        // We store the jdk-graphs at the root of "jdepsCache" directory, with
+        // jdk.graph being the file that merges all the graphs for all standard
+        // library jars.
+        // Create the Loadables object early so we can use its helpers
+        Loadables loadables = new Loadables(classesToAnalyze, artifactsDir, sfPathString,
+                useThirdParty, filterLib, jdepsCache);
+        // Surefire Classpath object is easier to iterate over without de-constructing
+        // sfPathString (which we use in a number of other places)
+        loadables.setSurefireClasspath(sfClassPath);
+
+        Cache cache = new Cache(jdepsCache, m2Repo);
+        // 1. Load non-reflection edges from third-party libraries in the classpath
+        List<String> moreEdges = new ArrayList<>();
+        if (useThirdParty) {
+            moreEdges = cache.loadM2EdgesFromCache(sfPathString);
+        }
+        // 2. Get non-reflection edges from CUT and SDK; use (1) to build graph
+        loadables.create(new ArrayList<>(moreEdges), sfClassPath, computeUnreached, trackUsages);
+
+        return loadables;
+    }
+
+
     protected List<String> getAllClasses() {
         DirectoryScanner testScanner = new DirectoryScanner(getTestClassesDirectory(), new TestListResolver(STAR));
         DirectoryScanner classScanner = new DirectoryScanner(getClassesDirectory(), new TestListResolver(STAR));
