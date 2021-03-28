@@ -29,15 +29,13 @@ public final class AgentLoader implements StartsConstants {
             URL agentJarURLConnection = AbstractMojoInterceptor.extractJarURL(agentJarURL);
             return loadAgent(agentJarURLConnection);
         } catch (Exception ex) {
+            ex.printStackTrace();
             return false;
         }
     }
 
     public static boolean loadAgent(URL aju) throws Exception {
         URL toolsJarFile = findToolsJar();
-        if (toolsJarFile == null) {
-            return false;
-        }
 
         Class<?> vc = loadVirtualMachine(new URL[]{toolsJarFile});
         if (vc == null) {
@@ -70,8 +68,12 @@ public final class AgentLoader implements StartsConstants {
     }
 
     private static Class<?> loadVirtualMachine(URL[] urls) throws Exception {
-        URLClassLoader loader = new URLClassLoader(urls, ClassLoader.getSystemClassLoader());
-        return loader.loadClass("com.sun.tools.attach.VirtualMachine");
+        try {
+            return ClassLoader.getSystemClassLoader().loadClass("com.sun.tools.attach.VirtualMachine");
+        } catch (ClassNotFoundException ex) {
+            URLClassLoader loader = new URLClassLoader(urls, ClassLoader.getSystemClassLoader());
+            return loader.loadClass("com.sun.tools.attach.VirtualMachine");
+        }
     }
 
     private static String getPID() {
