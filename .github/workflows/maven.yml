@@ -13,16 +13,17 @@ jobs:
   build:
 
     runs-on: ubuntu-latest
-
+    
     strategy:
       matrix:
-        java-version: [8]
+        java-version: [8, 9, 10, 11, 12, 13, 14, 15]
+      fail-fast: false
 
     steps:
-      - uses: actions/checkout@v2
-      - name: Set up JDK ${{ matrix.java-version }}
-        uses: actions/setup-java@v1
-        with:
-          java-version: ${{ matrix.java-version }}
-      - name: Build with Maven
-        run: mvn -B install --file pom.xml
+    - uses: actions/checkout@v2
+    - name: Set up JDK ${{ matrix.java-version }}
+      uses: actions/setup-java@v1
+      with:
+        java-version: ${{ matrix.java-version }}
+    - name: Build with Maven
+      run: mvn -B package --file pom.xml

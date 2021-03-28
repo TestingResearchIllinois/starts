@@ -15,6 +15,8 @@
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <it.version>1.0-SNAPSHOT</it.version>
+    <maven.compiler.source>1.6</maven.compiler.source>
+    <maven.compiler.target>1.6</maven.compiler.target>
   </properties>
 
   <build>
@@ -32,11 +34,17 @@
             </goals>
           </execution>
         </executions>
+        <configuration>
+          <argLine>-Djdk.attach.allowAttachSelf=true</argLine>
+        </configuration>
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
         <version>2.19.1</version>
+        <configuration>
+          <argLine>-Djdk.attach.allowAttachSelf=true</argLine>
+        </configuration>
       </plugin>
     </plugins>
   </build>
