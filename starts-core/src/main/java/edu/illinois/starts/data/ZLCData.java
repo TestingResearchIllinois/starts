@@ -18,9 +18,9 @@ import edu.illinois.starts.constants.StartsConstants;
 public class ZLCData implements StartsConstants {
     private URL url;
     private String checksum;
-    private Set<String> tests;
+    private Set<Integer> tests;
 
-    public ZLCData(URL url, String checksum, Set<String> tests) {
+    public ZLCData(URL url, String checksum, Set<Integer> tests) {
         this.url = url;
         this.checksum = checksum;
         this.tests = tests;
@@ -38,8 +38,8 @@ public class ZLCData implements StartsConstants {
         return data;
     }
 
-    private String toCSV(Set<String> tests) {
-        return tests.stream().collect(Collectors.joining(COMMA));
+    private static String toCSV(Set<Integer> tests) {
+        return tests.stream().map(String::valueOf).collect(Collectors.joining(COMMA));
     }
 
     @Override
@@ -59,7 +59,7 @@ public class ZLCData implements StartsConstants {
         return checksum.equals(zlcData.checksum);
     }
 
-    public void setTests(Set<String> tests) {
+    public void setTests(Set<Integer> tests) {
         this.tests = tests;
     }
 }
