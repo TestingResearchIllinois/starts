@@ -24,6 +24,8 @@ import java.util.Set;
 import java.util.logging.Level;
 
 import edu.illinois.starts.constants.StartsConstants;
+import edu.illinois.starts.data.ZLCData;
+import edu.illinois.starts.data.ZLCFile;
 import edu.illinois.starts.util.Logger;
 import edu.illinois.starts.util.Pair;
 import edu.illinois.yasgl.DirectedGraph;
@@ -50,6 +52,25 @@ public class Writer implements StartsConstants {
             }
             for (Object elem : col) {
                 writer.write(elem + System.lineSeparator());
+            }
+        } catch (IOException ioe) {
+            ioe.printStackTrace();
+        }
+    }
+
+    public static void writeToFile(ZLCFile zlcFile, String filename, String artifactsDir) {
+        String outFilename = artifactsDir + File.separator + filename;
+        writeToFile(zlcFile, outFilename);
+    }
+
+    public static void writeToFile(ZLCFile zlcFile, String filename) {
+        try (BufferedWriter writer = getWriter(filename)) {
+            writer.write(zlcFile.getTestsCount() + System.lineSeparator());
+            for (String test: zlcFile.getTests()) {
+                writer.write(test + System.lineSeparator());
+            }
+            for (ZLCData zlcData: zlcFile.getZlcData()) {
+                writer.write(zlcData + System.lineSeparator());
             }
         } catch (IOException ioe) {
             ioe.printStackTrace();
