@@ -46,5 +46,22 @@
             </configuration>
         </plugin>
     </plugins>
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <groupId>org.jacoco</groupId>
+          <artifactId>jacoco-maven-plugin</artifactId>
+          <version>${jacoco.version}</version>
+          <configuration>
+            <dataFile>
+              ../starts-plugin/target/jacoco-it.exec
+            </dataFile>
+            <excludes>
+              <exclude>edu/illinois/starts/asm/**</exclude>
+            </excludes>
+          </configuration>
+        </plugin>
+      </plugins>
+    </pluginManagement>
   </build>
 </project>
