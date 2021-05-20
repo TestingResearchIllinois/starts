@@ -68,6 +68,8 @@ public final class AgentLoader implements StartsConstants {
     }
 
     private static Class<?> loadVirtualMachine(URL[] urls) throws Exception {
+        // Code copied from ekstazi:
+        // https://github.com/gliga/ekstazi/blob/6567da0534c20eeee802d2dfb8d216cbcbf6883c/org.ekstazi.core/src/main/java/org/ekstazi/agent/AgentLoader.java#L88
         try {
             return ClassLoader.getSystemClassLoader().loadClass("com.sun.tools.attach.VirtualMachine");
         } catch (ClassNotFoundException ex) {
