@@ -30,9 +30,9 @@ import org.ekstazi.data.RegData;
  */
 public class RTSUtil implements StartsConstants {
     private static final Logger LOGGER = Logger.getGlobal();
-    /** Name of tools.jar in JDK */
+    // Name of tools.jar in JDK
     private static final String TOOLS_JAR_NAME = "tools.jar";
-    /** Name of tools.jar on Mac in JDK */
+    // Name of tools.jar on Mac in JDK
     private static final String CLASSES_JAR_NAME = "classes.jar";
 
     public static void saveForNextRun(String artifactsDir, DirectedGraph<String> graph,
