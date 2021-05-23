@@ -105,8 +105,11 @@ public class ZLCHelper implements StartsConstants {
                 continue;
             }
             URL url = loader.getResource(klas);
-            if (url == null || ChecksumUtil.isWellKnownUrl(url.toExternalForm())
-                    || (!useJars && url.toExternalForm().startsWith("jar:"))) {
+            if (url == null) {
+                continue;
+            }
+            String extForm = url.toExternalForm();
+            if (ChecksumUtil.isWellKnownUrl(extForm) || (!useJars && extForm.startsWith("jar:"))) {
                 continue;
             }
             String checksum = checksumUtil.computeSingleCheckSum(url);
