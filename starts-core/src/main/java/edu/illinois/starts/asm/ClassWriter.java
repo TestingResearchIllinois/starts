@@ -332,8 +332,8 @@ public class ClassWriter extends ClassVisitor {
      * A type table used to temporarily store internal names that will not
      * necessarily be stored in the constant pool. This type table is used by
      * the control flow and data flow analysis algorithm used to compute stack
-     * map frames from scratch. This array associates to each index <tt>i</tt>
-     * the Item whose index is <tt>i</tt>. All Item objects stored in this array
+     * map frames from scratch. This array associates to each index <code>i</code>
+     * the Item whose index is <code>i</code>. All Item objects stored in this array
      * are also stored in the {@link #items} hash table. These two arrays allow
      * to retrieve an Item from its index or, conversely, to get the index of an
      * Item from its value. Each Item stores an internal name in its
@@ -485,18 +485,18 @@ public class ClassWriter extends ClassVisitor {
     MethodWriter lastMethod;
 
     /**
-     * <tt>true</tt> if the maximum stack size and number of local variables
+     * <code>true</code> if the maximum stack size and number of local variables
      * must be automatically computed.
      */
     private boolean computeMaxs;
 
     /**
-     * <tt>true</tt> if the stack map frames must be recomputed from scratch.
+     * <code>true</code> if the stack map frames must be recomputed from scratch.
      */
     private boolean computeFrames;
 
     /**
-     * <tt>true</tt> if the stack map tables of this class are invalid. The
+     * <code>true</code> if the stack map tables of this class are invalid. The
      * {@link MethodWriter#resizeInstructions} method cannot transform existing
      * stack map tables, and so produces potentially invalid classes when it is
      * executed. In this case the class is reread and rewritten with the
@@ -1396,7 +1396,7 @@ public class ClassWriter extends ClassVisitor {
      * @param desc
      *            the method's descriptor.
      * @param itf
-     *            <tt>true</tt> if <tt>owner</tt> is an interface.
+     *            <code>true</code> if <code>owner</code> is an interface.
      * @return a new or already existing method reference item.
      */
     Item newMethodItem(final String owner, final String name,
@@ -1425,7 +1425,7 @@ public class ClassWriter extends ClassVisitor {
      * @param desc
      *            the method's descriptor.
      * @param itf
-     *            <tt>true</tt> if <tt>owner</tt> is an interface.
+     *            <code>true</code> if <code>owner</code> is an interface.
      * @return the index of a new or already existing method reference item.
      */
     public int newMethod(final String owner, final String name,
@@ -1707,7 +1707,7 @@ public class ClassWriter extends ClassVisitor {
      * @param key
      *            a constant pool item.
      * @return the constant pool's hash table item which is equal to the given
-     *         item, or <tt>null</tt> if there is no such item.
+     *         item, or <code>null</code> if there is no such item.
      */
     private Item get(final Item key) {
         Item i = items[key.hashCode % items.length];
