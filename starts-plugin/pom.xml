@@ -31,6 +31,7 @@
   <build>
     <plugins>
     <plugin>
+      <!-- Using compiler version 8 to allow method reference -->
       <groupId>org.apache.maven.plugins</groupId>
       <artifactId>maven-compiler-plugin</artifactId>
       <configuration>
