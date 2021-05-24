@@ -52,14 +52,47 @@
           <groupId>org.jacoco</groupId>
           <artifactId>jacoco-maven-plugin</artifactId>
           <version>${jacoco.version}</version>
-          <configuration>
-            <dataFile>
-              ../starts-plugin/target/jacoco-it.exec
-            </dataFile>
-            <excludes>
-              <exclude>edu/illinois/starts/asm/**</exclude>
-            </excludes>
-          </configuration>
+          <executions>
+            <execution>
+              <id>report-id</id>
+              <goals>
+                <goal>report</goal>
+              </goals>
+              <configuration>
+                <dataFile>
+                  ${project.build.directory}/jacoco-merged.exec
+                </dataFile>
+                <excludes>
+                  <exclude>edu/illinois/starts/asm/**</exclude>
+                </excludes>
+                <outputDirectory>
+                  ${project.reporting.outputDirectory}/jacoco-merged
+                </outputDirectory>
+              </configuration>
+            </execution>
+            <execution>
+              <id>merge-id</id>
+              <goals>
+                <goal>merge</goal>
+              </goals>
+              <configuration>
+                <fileSets>
+                  <fileSet>
+                    <directory>
+                      ${project.basedir}/../
+                    </directory>
+                    <includes>
+                      <include>starts-core/target/jacoco.exec</include>
+                      <include>starts-plugin/target/jacoco-it.exec</include>
+                    </includes>
+                  </fileSet>
+                </fileSets>
+                <destFile>
+                  ${project.build.directory}/jacoco-merged.exec
+                </destFile>
+              </configuration>
+            </execution>
+          </executions>
         </plugin>
       </plugins>
     </pluginManagement>
