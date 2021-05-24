@@ -40,9 +40,13 @@ public final class AgentLoader implements StartsConstants {
     }
 
     public static boolean loadAgent(URL aju) throws Exception {
-        URL toolsJarFile = findToolsJar().toURI().toURL();
+        File toolsJarFile = findToolsJar();
+        if (toolsJarFile == null) {  // TODO: maybe remove null check
+            return false;
+        }
+        URL toolsJarFileURL = toolsJarFile.toURI().toURL();
 
-        Class<?> vc = loadVirtualMachine(new URL[]{toolsJarFile});
+        Class<?> vc = loadVirtualMachine(new URL[]{toolsJarFileURL});
         if (vc == null) {
             return false;
         }
@@ -88,7 +92,7 @@ public final class AgentLoader implements StartsConstants {
         return vmName.substring(0, vmName.indexOf("@"));
     }
 
-    private static File findToolsJar() throws MalformedURLException {
+    private static File findToolsJar() {
         // Copied from ekstazi:
         // https://github.com/gliga/ekstazi/blob/6567da0534c20eeee802d2dfb8d216cbcbf6883c/org.ekstazi.core/src/main/java/org/ekstazi/agent/AgentLoader.java#L209
         String javaHome = System.getProperty(JAVA_HOME);
