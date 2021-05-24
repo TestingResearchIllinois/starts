@@ -1,4 +1,4 @@
-name: build
+name: Report coverage
 
 on:
   push:
@@ -40,3 +40,13 @@ jobs:
         run: |
           echo "coverage = ${{ steps.jacoco.outputs.coverage }}"
           echo "branch coverage = ${{ steps.jacoco.outputs.branches }}"
+
+      - name: Add comment to PR
+        uses: mshick/add-pr-comment@v1
+        if: ${{ github.event_name == 'pull_request' }}
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          allow-repeats: true
+          message: 'Statement coverage = ${{ steps.jacoco.outputs.coverage }}
+
+                    Branch coverage = ${{ steps.jacoco.outputs.branches }}'
