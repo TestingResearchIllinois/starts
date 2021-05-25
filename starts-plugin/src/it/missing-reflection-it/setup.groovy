@@ -2,8 +2,12 @@
  * Copyright (c) 2015 - Present. The STARTS Team. All Rights Reserved.
  */
 
-import edu.illinois.starts.jdeps.SetupUtil;
+import edu.illinois.starts.jdeps.SetupUtil
 
-setupUtil = new SetupUtil(new File(basedir, ".starts/deps.zlc"))
-file = new File(basedir, "src/main/java/base/Simple.java");
-setupUtil.replaceAllInFile(file, "MissingDependency", "MissedDependency")
+firstRun = new File(basedir, "first-run.txt")
+
+if (firstRun.exists()) {
+    setupUtil = new SetupUtil(new File(basedir, ".starts/deps.zlc"))
+    file = new File(basedir, "src/main/java/base/Simple.java")
+    setupUtil.replaceAllInFile(file, "MissingDependency", "MissedDependency")
+}
