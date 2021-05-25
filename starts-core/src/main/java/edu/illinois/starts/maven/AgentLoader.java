@@ -1,11 +1,16 @@
 package edu.illinois.starts.maven;
 
 import java.io.File;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.lang.management.ManagementFactory;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.util.List;
+import java.util.Optional;
 
 import edu.illinois.starts.constants.StartsConstants;
 
@@ -35,9 +40,13 @@ public final class AgentLoader implements StartsConstants {
     }
 
     public static boolean loadAgent(URL aju) throws Exception {
-        URL toolsJarFile = findToolsJar();
+        File toolsJarFile = findToolsJar();
+        if (toolsJarFile == null) {  // TODO: maybe remove null check
+            return false;
+        }
+        URL toolsJarFileURL = toolsJarFile.toURI().toURL();
 
-        Class<?> vc = loadVirtualMachine(new URL[]{toolsJarFile});
+        Class<?> vc = loadVirtualMachine(new URL[]{toolsJarFileURL});
         if (vc == null) {
             return false;
         }
@@ -83,7 +92,7 @@ public final class AgentLoader implements StartsConstants {
         return vmName.substring(0, vmName.indexOf("@"));
     }
 
-    private static URL findToolsJar() throws MalformedURLException {
+    private static File findToolsJar() {
         // Copied from ekstazi:
         // https://github.com/gliga/ekstazi/blob/6567da0534c20eeee802d2dfb8d216cbcbf6883c/org.ekstazi.core/src/main/java/org/ekstazi/agent/AgentLoader.java#L209
         String javaHome = System.getProperty(JAVA_HOME);
@@ -104,10 +113,43 @@ public final class AgentLoader implements StartsConstants {
             tjf = new File(javaHomeFile, "Classes" + File.separator + CLASSES_JAR_NAME);
         }
 
-        return tjf.toURI().toURL();
+        return tjf;
     }
 
     private static boolean isMac() {
         return System.getProperty("os.name").toLowerCase().indexOf("mac") >= 0;
+    }
+
+    public static StringWriter loadAndRunJdeps(List<String> args) {
+        StringWriter output = new StringWriter();
+        try {
+            File toolsJarFile = findToolsJar();
+            if (!toolsJarFile.exists()) {
+                // Java 9+, load jdeps through java.util.spi.ToolProvider
+                Class<?> toolProvider = ClassLoader.getSystemClassLoader().loadClass("java.util.spi.ToolProvider");
+                Object jdeps = toolProvider.getMethod("findFirst", String.class).invoke(null, "jdeps");
+                jdeps = Optional.class.getMethod("get").invoke(jdeps);
+                toolProvider.getMethod("run", PrintWriter.class, PrintWriter.class, String[].class)
+                        .invoke(jdeps, new PrintWriter(output), new PrintWriter(output), args.toArray(new String[0]));
+            } else {
+                // Java 8, load tools.jar
+                URLClassLoader loader = new URLClassLoader(new URL[] { toolsJarFile.toURI().toURL() },
+                        ClassLoader.getSystemClassLoader());
+                Class<?> jdepsMain = loader.loadClass("com.sun.tools.jdeps.Main");
+                jdepsMain.getMethod("run", String[].class, PrintWriter.class)
+                        .invoke(null, args.toArray(new String[0]), new PrintWriter(output));
+            }
+        } catch (MalformedURLException malformedURLException) {
+            malformedURLException.printStackTrace();
+        } catch (ClassNotFoundException classNotFoundException) {
+            classNotFoundException.printStackTrace();
+        } catch (InvocationTargetException invocationTargetException) {
+            invocationTargetException.printStackTrace();
+        } catch (IllegalAccessException illegalAccessException) {
+            illegalAccessException.printStackTrace();
+        } catch (NoSuchMethodException noSuchMethodException) {
+            noSuchMethodException.printStackTrace();
+        }
+        return output;
     }
 }

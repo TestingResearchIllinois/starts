@@ -6,10 +6,7 @@ package edu.illinois.starts.helpers;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.net.URL;
-import java.net.URLClassLoader;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -19,6 +16,7 @@ import java.util.Set;
 import java.util.logging.Level;
 
 import edu.illinois.starts.constants.StartsConstants;
+import edu.illinois.starts.maven.AgentLoader;
 import edu.illinois.starts.util.ChecksumUtil;
 import edu.illinois.starts.util.Logger;
 import edu.illinois.yasgl.DirectedGraph;
@@ -79,56 +77,11 @@ public class RTSUtil implements StartsConstants {
     }
 
     public static Map<String, Set<String>> runJdeps(List<String> args) {
-        StringWriter output = new StringWriter();
         LOGGER.log(Level.FINE, "JDEPS ARGS:" + args);
 
-        try {
-            File toolsJarFile = findToolsJar();
-            if (!toolsJarFile.exists()) {
-                // Java 9+, load jdeps through java.util.spi.ToolProvider
-                Class<?> toolProvider = ClassLoader.getSystemClassLoader().loadClass("java.util.spi.ToolProvider");
-                Object jdeps = toolProvider.getMethod("findFirst", String.class).invoke(null, "jdeps");
-                toolProvider.getMethod("run", PrintWriter.class, PrintWriter.class, String[].class)
-                        .invoke(jdeps, new PrintWriter(output), new PrintWriter(output), args.toArray(new String[0]));
-            } else {
-                // Java 8, load tools.jar
-                URLClassLoader loader = new URLClassLoader(new URL[] { toolsJarFile.toURI().toURL() },
-                        ClassLoader.getSystemClassLoader());
-                Class<?> jdepsMain = loader.loadClass("com.sun.tools.jdeps.Main");
-                jdepsMain.getMethod("run", String[].class, PrintWriter.class)
-                        .invoke(null, args.toArray(new String[0]), new PrintWriter(output));
-            }
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
+        StringWriter output = AgentLoader.loadAndRunJdeps(args);
         // jdeps can return an empty output when run on .jar files with no .class files
         return output.getBuffer().length() != 0 ? getDepsFromJdepsOutput(output) : new HashMap<String, Set<String>>();
-    }
-
-    private static File findToolsJar() {
-        String javaHome = System.getProperty("java.home");
-        File javaHomeFile = new File(javaHome);
-        File toolsJarFile = new File(javaHomeFile, "lib" + File.separator + TOOLS_JAR_NAME);
-
-        if (!toolsJarFile.exists()) {
-            toolsJarFile = new File(System.getenv("java_home"), "lib" + File.separator + TOOLS_JAR_NAME);
-        }
-
-        if (!toolsJarFile.exists() && javaHomeFile.getAbsolutePath().endsWith(File.separator + "jre")) {
-            javaHomeFile = javaHomeFile.getParentFile();
-            toolsJarFile = new File(javaHomeFile, "lib" + File.separator + TOOLS_JAR_NAME);
-        }
-
-        if (!toolsJarFile.exists() && isMac() && javaHomeFile.getAbsolutePath().endsWith(File.separator + "Home")) {
-            javaHomeFile = javaHomeFile.getParentFile();
-            toolsJarFile = new File(javaHomeFile, "Classes" + File.separator + CLASSES_JAR_NAME);
-        }
-
-        return toolsJarFile;
-    }
-
-    private static boolean isMac() {
-        return System.getProperty("os.name").toLowerCase().contains("mac");
     }
 
     public static Map<String, Set<String>> getDepsFromJdepsOutput(StringWriter jdepsOutput) {
