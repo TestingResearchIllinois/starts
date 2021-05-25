@@ -31,9 +31,25 @@ Change the pom.xml to add the configuration for the STARTS plugin:
 
 ## Building STARTS from source
 
+Build from source to use the latest development version, which supports Java 8-15, on Linux, OSX, or Windows.
+
 1. `git clone https://github.com/TestingResearchIllinois/starts`
 2. `cd starts`
 3. `mvn install`
+
+Then, change the pom.xml to add the configuration for the latest development version of the STARTS plugin:
+
+```xml
+<build>
+  <plugins>
+    <plugin>
+      <groupId>edu.illinois</groupId>
+      <artifactId>starts-maven-plugin</artifactId>
+      <version>1.4-SNAPSHOT</version>
+    </plugin>
+  </plugins>
+</build>
+```
 
 ## Using the STARTS Maven Plugin
 
