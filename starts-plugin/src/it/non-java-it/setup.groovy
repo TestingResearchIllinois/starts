@@ -8,6 +8,6 @@ firstRun = new File(basedir, "first-run.txt")
 
 if (firstRun.exists()) {
     setupUtil = new SetupUtil(new File(basedir, ".starts/deps.zlc"))
-    file = new File(basedir, "src/main/java/transitive/Base.java")
-    setupUtil.replaceAllInFile(file, "LinkedHashSet", "HashSet")
+    file = new File(basedir, "src/main/resources/books.xml")
+    setupUtil.replaceAllInFile(file, "bk", "boook")
 }
