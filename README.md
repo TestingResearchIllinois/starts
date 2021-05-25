@@ -8,10 +8,10 @@ for Maven-based Java programs.
 
 ## Prerequisites
 
-1. Java 1.8
+1. Java 8 - 15
 2. Maven 3.2.5 and above
 3. Maven Surefire 2.14 and above
-4. Operating System: Linux or OSX
+4. Operating System: Linux, OSX or Windows
 
 ## Integrating STARTS Plugin from Maven Central
 
@@ -23,7 +23,7 @@ Change the pom.xml to add the configuration for the STARTS plugin:
     <plugin>
       <groupId>edu.illinois</groupId>
       <artifactId>starts-maven-plugin</artifactId>
-      <version>1.3</version>
+      <version>1.4-SNAPSHOT</version>
     </plugin>
   </plugins>
 </build>
