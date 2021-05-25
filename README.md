@@ -8,14 +8,36 @@ for Maven-based Java programs.
 
 ## Prerequisites
 
-1. Java 8 - 15
+1. Java 1.8
 2. Maven 3.2.5 and above
 3. Maven Surefire 2.14 and above
-4. Operating System: Linux, OSX or Windows
+4. Operating System: Linux or OSX
 
 ## Integrating STARTS Plugin from Maven Central
 
 Change the pom.xml to add the configuration for the STARTS plugin:
+
+```xml
+<build>
+  <plugins>
+    <plugin>
+      <groupId>edu.illinois</groupId>
+      <artifactId>starts-maven-plugin</artifactId>
+      <version>1.3</version>
+    </plugin>
+  </plugins>
+</build>
+```
+
+## Building STARTS from source
+
+Build from source to use the latest development version, which supports Java 8-15, on Linux, OSX, or Windows.
+
+1. `git clone https://github.com/TestingResearchIllinois/starts`
+2. `cd starts`
+3. `mvn install`
+
+Then change the pom.xml to add the configuration for the latest version of STARTS plugin:
 
 ```xml
 <build>
@@ -28,12 +50,6 @@ Change the pom.xml to add the configuration for the STARTS plugin:
   </plugins>
 </build>
 ```
-
-## Building STARTS from source
-
-1. `git clone https://github.com/TestingResearchIllinois/starts`
-2. `cd starts`
-3. `mvn install`
 
 ## Using the STARTS Maven Plugin
 
