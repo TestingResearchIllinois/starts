@@ -37,7 +37,7 @@ Build from source to use the latest development version, which supports Java 8-1
 2. `cd starts`
 3. `mvn install`
 
-Then change the pom.xml to add the configuration for the latest version of STARTS plugin:
+Then, change the pom.xml to add the configuration for the latest development version of the STARTS plugin:
 
 ```xml
 <build>
