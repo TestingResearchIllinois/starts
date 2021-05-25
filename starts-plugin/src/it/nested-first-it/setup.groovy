@@ -7,7 +7,12 @@ import edu.illinois.starts.jdeps.SetupUtil
 firstRun = new File(basedir, "first-run.txt")
 
 if (firstRun.exists()) {
+    changeSrc()
+}
+
+def changeSrc() {
     setupUtil = new SetupUtil(new File(basedir, ".starts/deps.zlc"))
-    file = new File(basedir, "src/main/java/transitive/Base.java")
-    setupUtil.replaceAllInFile(file, "LinkedHashSet", "HashSet")
+    file = new File(basedir, "src/main/java/first/First.java")
+    setupUtil.replaceAllInFile(file, "Short", "Long")
+    setupUtil.replaceAllInFile(file, "short", "long")
 }

@@ -6,7 +6,7 @@ import edu.illinois.starts.jdeps.VerifyUtil
 
 firstRun = new File(basedir, "first-run.txt")
 verifyUtil = new VerifyUtil(new File(basedir, "build.log"))
-verifyUtil.assertCorrectlyAffected("2")
+verifyUtil.assertCorrectlyAffected("1")
 
 if (!firstRun.exists()) {
     firstRun.createNewFile()
@@ -15,8 +15,9 @@ if (!firstRun.exists()) {
 }
 
 def resetIT() {
-    changedFile = new File(basedir, "src/main/java/base/Base.java")
-    VerifyUtil.replaceAllInFileStatic(changedFile, "Set g", "Set<Integer> g")
+    changedFile = new File(basedir, "src/main/java/first/First.java")
+    VerifyUtil.replaceAllInFileStatic(changedFile, "Long", "Short")
+    VerifyUtil.replaceAllInFileStatic(changedFile, "long", "short")
 
     verifyUtil.deleteFile(firstRun)
     verifyUtil.deleteFile(new File(basedir, ".starts/deps.zlc"))
