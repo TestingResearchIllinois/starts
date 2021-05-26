@@ -41,12 +41,17 @@ jobs:
           echo "coverage = ${{ steps.jacoco.outputs.coverage }}"
           echo "branch coverage = ${{ steps.jacoco.outputs.branches }}"
 
-#      - name: Add comment to PR
-#        uses: mshick/add-pr-comment@v1
-#        if: ${{ github.event_name == 'pull_request' }}
-#        with:
-#          repo-token: ${{ secrets.GITHUB_TOKEN }}
-#          allow-repeats: true
-#          message: 'Statement coverage = ${{ steps.jacoco.outputs.coverage }}
-#
-#                    Branch coverage = ${{ steps.jacoco.outputs.branches }}'
+      - name: Add comment to PR
+        uses: actions/github-script@v4
+        if: ${{ github.event_name == 'pull_request' }}
+        with:
+          github-token: ${{secrets.GITHUB_TOKEN}}
+          script: |
+            github.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: 'Statement coverage = ${{ steps.jacoco.outputs.coverage }}
+
+                     Branch coverage = ${{ steps.jacoco.outputs.branches }}'
+            })
