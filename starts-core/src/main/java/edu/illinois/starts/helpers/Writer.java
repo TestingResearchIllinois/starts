@@ -26,6 +26,7 @@ import java.util.logging.Level;
 import edu.illinois.starts.constants.StartsConstants;
 import edu.illinois.starts.data.ZLCData;
 import edu.illinois.starts.data.ZLCFile;
+import edu.illinois.starts.data.ZLCFormat;
 import edu.illinois.starts.util.Logger;
 import edu.illinois.starts.util.Pair;
 import edu.illinois.yasgl.DirectedGraph;
@@ -65,9 +66,12 @@ public class Writer implements StartsConstants {
 
     public static void writeToFile(ZLCFile zlcFile, String filename) {
         try (BufferedWriter writer = getWriter(filename)) {
-            writer.write(zlcFile.getTestsCount() + System.lineSeparator());
-            for (String test: zlcFile.getTests()) {
-                writer.write(test + System.lineSeparator());
+            writer.write(zlcFile.getFormat() + System.lineSeparator());
+            if (zlcFile.getFormat() == ZLCFormat.INDEXED) {
+                writer.write(zlcFile.getTestsCount() + System.lineSeparator());
+                for (String test: zlcFile.getTests()) {
+                    writer.write(test + System.lineSeparator());
+                }
             }
             for (ZLCData zlcData: zlcFile.getZlcData()) {
                 writer.write(zlcData + System.lineSeparator());
