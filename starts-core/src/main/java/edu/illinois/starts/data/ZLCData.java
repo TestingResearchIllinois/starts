@@ -11,16 +11,19 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import edu.illinois.starts.constants.StartsConstants;
+import edu.illinois.starts.util.Pair;
 
 /**
  * This class creates objects that represent one row in the .zlc file.
  */
 public class ZLCData implements StartsConstants {
+    private ZLCFormat format;
     private URL url;
     private String checksum;
-    private Set<Integer> tests;
+    private Set<Pair<String, Integer>> tests;
 
-    public ZLCData(URL url, String checksum, Set<Integer> tests) {
+    public ZLCData(URL url, String checksum, Set<Pair<String, Integer>> tests, ZLCFormat format) {
+        this.format = format;
         this.url = url;
         this.checksum = checksum;
         this.tests = tests;
@@ -32,14 +35,31 @@ public class ZLCData implements StartsConstants {
         String data;
         if (tests.isEmpty()) {
             data = join(WHITE_SPACE, url.toExternalForm(), checksum);
-        } else {
-            data = join(WHITE_SPACE, url.toExternalForm(), checksum, toCSV(tests));
+            return data;
+        }
+        switch (format) {
+            case INDEXED:
+                data = join(WHITE_SPACE, url.toExternalForm(), checksum, toCSVInt(
+                        tests.stream().map(Pair::getValue).collect(Collectors.toSet())
+                ));
+                break;
+            case PLAIN_TEXT:
+                data = join(WHITE_SPACE, url.toExternalForm(), checksum, toCSVStr(
+                        tests.stream().map(Pair::getKey).collect(Collectors.toSet())
+                ));
+                break;
+            default:
+                throw new RuntimeException("Unexpected ZLCFormat");
         }
         return data;
     }
 
-    private static String toCSV(Set<Integer> tests) {
+    private static String toCSVInt(Set<Integer> tests) {
         return tests.stream().map(String::valueOf).collect(Collectors.joining(COMMA));
+    }
+
+    private static String toCSVStr(Set<String> tests) {
+        return String.join(COMMA, tests);
     }
 
     @Override
@@ -59,7 +79,7 @@ public class ZLCData implements StartsConstants {
         return checksum.equals(zlcData.checksum);
     }
 
-    public void setTests(Set<Integer> tests) {
+    public void setTests(Set<Pair<String, Integer>> tests) {
         this.tests = tests;
     }
 }
