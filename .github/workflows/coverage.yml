@@ -51,7 +51,5 @@ jobs:
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body: 'Statement coverage = ${{ steps.jacoco.outputs.coverage }}
-
-                     Branch coverage = ${{ steps.jacoco.outputs.branches }}'
+              body: 'Statement coverage = ${{ steps.jacoco.outputs.coverage }}\n\nBranch coverage = ${{ steps.jacoco.outputs.branches }}'
             })
