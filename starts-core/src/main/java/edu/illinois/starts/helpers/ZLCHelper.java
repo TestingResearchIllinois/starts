@@ -121,13 +121,28 @@ public class ZLCHelper implements StartsConstants {
                 continue;
             }
             String checksum = checksumUtil.computeSingleCheckSum(url);
-            Set<Pair<String, Integer>> tests = new HashSet<>();
-            for (int i = 0; i < testList.size(); i++) {
-                if (testDeps.get(testList.get(i)).contains(dep)) {
-                    tests.add(new Pair<>(testList.get(i), i));
-                }
+            switch (format) {
+                case PLAIN_TEXT:
+                    Set<String> testsStr = new HashSet<>();
+                    for (String test: testDeps.keySet()) {
+                        if (testDeps.get(test).contains(dep)) {
+                            testsStr.add(test);
+                        }
+                    }
+                    zlcData.add(new ZLCData(url, checksum, format, testsStr, null));
+                    break;
+                case INDEXED:
+                    Set<Integer> testsIdx = new HashSet<>();
+                    for (int i = 0; i < testList.size(); i++) {
+                        if (testDeps.get(testList.get(i)).contains(dep)) {
+                            testsIdx.add(i);
+                        }
+                    }
+                    zlcData.add(new ZLCData(url, checksum, format, null, testsIdx));
+                    break;
+                default:
+                    throw new RuntimeException("Unexpected ZLCFormat");
             }
-            zlcData.add(new ZLCData(url, checksum, tests, format));
         }
         long end = System.currentTimeMillis();
         LOGGER.log(Level.FINEST, "[TIME]CREATING ZLC FILE: " + (end - start) + MILLISECOND);
