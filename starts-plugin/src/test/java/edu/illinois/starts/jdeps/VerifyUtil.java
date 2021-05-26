@@ -33,6 +33,14 @@ public class VerifyUtil implements StartsConstants {
         }
     }
 
+    public void assertContains(String value) {
+        Assert.assertTrue("Log should contains string: " + value, buildLog.contains(value));
+    }
+
+    public void assertNotContains(String value) {
+        Assert.assertFalse("Log shouldn't contains string: " + value, buildLog.contains(value));
+    }
+
     public void deleteFile(File file) {
         if (file.exists()) {
             file.delete();
