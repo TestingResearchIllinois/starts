@@ -41,7 +41,7 @@ jobs:
           echo "coverage = ${{ steps.jacoco.outputs.coverage }}"
           echo "branch coverage = ${{ steps.jacoco.outputs.branches }}"
 
-# Getting: RequestError [HttpError]: Resource not accessible by integration
+#  Getting: RequestError [HttpError]: Resource not accessible by integration
 #      - name: Add comment to PR
 #        uses: actions/github-script@v4
 #        if: ${{ github.event_name == 'pull_request' }}
