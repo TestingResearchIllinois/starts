@@ -21,7 +21,7 @@ import java.util.stream.Collectors;
 
 import edu.illinois.starts.constants.StartsConstants;
 import edu.illinois.starts.data.ZLCData;
-import edu.illinois.starts.data.ZLCFile;
+import edu.illinois.starts.data.ZLCFileContent;
 import edu.illinois.starts.data.ZLCFormat;
 import edu.illinois.starts.util.ChecksumUtil;
 import edu.illinois.starts.util.Logger;
@@ -87,13 +87,13 @@ public class ZLCHelper implements StartsConstants {
         // TODO: Optimize this by only recomputing the checksum+tests for changed classes and newly added tests
         long start = System.currentTimeMillis();
         LOGGER.log(Level.FINE, "ZLC format: " + format.toString());
-        ZLCFile zlc = createZLCData(testDeps, loader, useThirdParty, format);
+        ZLCFileContent zlc = createZLCData(testDeps, loader, useThirdParty, format);
         Writer.writeToFile(zlc, zlcFile, artifactsDir);
         long end = System.currentTimeMillis();
         LOGGER.log(Level.FINE, "[PROFILE] updateForNextRun(updateZLCFile): " + Writer.millsToSeconds(end - start));
     }
 
-    public static ZLCFile createZLCData(
+    public static ZLCFileContent createZLCData(
             Map<String, Set<String>> testDeps,
             ClassLoader loader,
             boolean useJars,
@@ -146,7 +146,7 @@ public class ZLCHelper implements StartsConstants {
         }
         long end = System.currentTimeMillis();
         LOGGER.log(Level.FINEST, "[TIME]CREATING ZLC FILE: " + (end - start) + MILLISECOND);
-        return new ZLCFile(testList, zlcData, format);
+        return new ZLCFileContent(testList, zlcData, format);
     }
 
     public static Pair<Set<String>, Set<String>> getChangedData(String artifactsDir, boolean cleanBytes) {
