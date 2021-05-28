@@ -185,15 +185,16 @@ public class ZLCHelper implements StartsConstants {
                 zlcLines.remove(0);
             }
 
-            int testsCount = 0;
+            int testsCount = -1;  // on PLAIN_TEXT, testsCount+1 will starts from 0
+            ArrayList<String> testsList = null;
             if (format == ZLCFormat.INDEXED) {
                 try {
                     testsCount = Integer.parseInt(zlcLines.get(0));
                 } catch (NumberFormatException nfe) {
                     nfe.printStackTrace();
                 }
+                testsList = new ArrayList<>(zlcLines.subList(1, testsCount + 1));
             }
-            ArrayList<String> testsList = new ArrayList<>(zlcLines.subList(1, testsCount + 1));
 
             for (int i = testsCount + 1; i < zlcLines.size(); i++) {
                 String line = zlcLines.get(i);
