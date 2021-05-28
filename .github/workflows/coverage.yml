@@ -2,11 +2,9 @@ name: Report coverage
 
 on:
   push:
-    branches:
-      - '**'  # any branch
+    branches: [ master ]
   pull_request:
-    branches:
-      - '**'
+    branches: [ master ]
 
 jobs:
   build:
@@ -40,6 +38,14 @@ jobs:
         run: |
           echo "coverage = ${{ steps.jacoco.outputs.coverage }}"
           echo "branch coverage = ${{ steps.jacoco.outputs.branches }}"
+
+      - name: Commit and push the badge (if it changed)
+        uses: EndBug/add-and-commit@v7
+        if: ${{ github.event_name == 'push' }}
+        with:
+          default_author: github_actions
+          message: 'commit badge'
+          add: '*.svg'
 
 #  Getting: RequestError [HttpError]: Resource not accessible by integration
 #      - name: Add comment to PR
