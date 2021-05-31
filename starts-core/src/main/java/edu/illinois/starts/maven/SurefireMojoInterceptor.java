@@ -1,5 +1,6 @@
 package edu.illinois.starts.maven;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -51,8 +52,9 @@ public final class SurefireMojoInterceptor extends AbstractMojoInterceptor imple
     private static void updateExcludes(Object mojo) throws Exception {
         LOGGER.log(Level.FINE, "updating Excludes");
         List<String> currentExcludes = getListField(EXCLUDES_FIELD, mojo);
+        // always use forward-slash as separator for Surefire's excludes field
         List<String> newExcludes = new ArrayList<>(Arrays.asList(System.getProperty(STARTS_EXCLUDE_PROPERTY)
-                .replace("[", EMPTY).replace("]", EMPTY).split(COMMA)));
+                .replace("[", EMPTY).replace("]", EMPTY).replace(File.separator, "/").split(COMMA)));
         if (currentExcludes != null) {
             newExcludes.addAll(currentExcludes);
         } else {
