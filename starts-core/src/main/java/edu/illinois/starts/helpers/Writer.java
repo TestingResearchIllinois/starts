@@ -242,6 +242,28 @@ public class Writer implements StartsConstants {
         }
     }
 
+    //TODO come up with a better name for the list
+    public static void writeToLogWithTimes(List<Pair> testNameTimePairList, String title, Logger logger) {
+        logger.log(Level.INFO, "");
+        logger.log(Level.INFO, "********** " + title + " **********");
+
+        for (Pair listItem : testNameTimePairList) {
+            String predictedTime;
+            int time =  (Integer)listItem.getValue();
+            if (time < 0) {
+                predictedTime = " with no runtime prediction";
+            } else {
+                predictedTime = " with an estimated runtime of " + (Integer)listItem.getValue() / 1000.0 + "s";
+            }
+            String tmpString = listItem.getKey() + predictedTime;
+            logger.log(Level.INFO, tmpString);
+        }
+
+        if (testNameTimePairList.isEmpty()) {
+            logger.log(Level.INFO, title + " found no classes.");
+        }
+    }
+
     public static String millsToSeconds(long value) {
         return String.format("%.03f", (double) value / 1000.0);
     }
