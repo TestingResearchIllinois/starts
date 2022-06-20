@@ -31,6 +31,13 @@ import org.apache.maven.surefire.booter.Classpath;
 @Mojo(name = "impacted", requiresDirectInvocation = true, requiresDependencyResolution = ResolutionScope.TEST)
 @Execute(phase = LifecyclePhase.TEST_COMPILE)
 public class ImpactedMojo extends DiffMojo implements StartsConstants {
+
+    protected Set<String> impacted;
+    protected Set<String> nonAffected;
+    protected Set<String> changed;
+    protected Set<String> newClasses;
+    protected Set<String> oldClasses;
+
     /**
      * Set this to "true" to update test dependencies on disk. The default value of "false"
      * is useful for "dry runs" where one may want to see the diff without updating
@@ -68,6 +75,26 @@ public class ImpactedMojo extends DiffMojo implements StartsConstants {
 
     private Logger logger;
 
+    public Set<String> getImpacted() {
+        return impacted;
+    }
+
+    public Set<String> getNonAffected() {
+        return nonAffected;
+    }
+
+    public Set<String> getChanged() {
+        return changed;
+    }
+
+    public Set<String> getNewClasses() {
+        return newClasses;
+    }
+
+    public Set<String> getOldClasses() {
+        return oldClasses;
+    }
+
     public void execute() throws MojoExecutionException {
         Logger.getGlobal().setLoggingLevel(Level.parse(loggingLevel));
         logger = Logger.getGlobal();
@@ -78,10 +105,10 @@ public class ImpactedMojo extends DiffMojo implements StartsConstants {
             logger.log(Level.INFO, "There are no .class files in this module.");
             return;
         }
-        Set<String>  impacted = new HashSet<>(allClasses);
+        impacted = new HashSet<>(allClasses);
         // 1a. Find what changed and what is non-affected
-        Set<String> nonAffected = data == null ? new HashSet<String>() : data.getKey();
-        Set<String> changed = data == null ? new HashSet<String>() : data.getValue();
+        nonAffected = data == null ? new HashSet<String>() : data.getKey();
+        changed = data == null ? new HashSet<String>() : data.getValue();
 
         // 1b. Remove nonAffected from all classes to get classes impacted by the change
         impacted.removeAll(nonAffected);
@@ -90,8 +117,8 @@ public class ImpactedMojo extends DiffMojo implements StartsConstants {
         logger.log(Level.FINEST, "IMPACTED: " + impacted.toString());
         // 2. Optionally find newly-added classes
         if (trackNewClasses) {
-            Set<String> newClasses = new HashSet<>(allClasses);
-            Set<String> oldClasses = ZLCHelper.getExistingClasses(getArtifactsDir());
+            newClasses = new HashSet<>(allClasses);
+            oldClasses = ZLCHelper.getExistingClasses(getArtifactsDir());
             newClasses.removeAll(oldClasses);
             logger.log(Level.FINEST, "NEWLY-ADDED: " + newClasses.toString());
             Writer.writeToFile(newClasses, "new-classes", getArtifactsDir());
