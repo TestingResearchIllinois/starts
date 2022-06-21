@@ -4,6 +4,7 @@
 
 package edu.illinois.starts.jdeps;
 
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -76,23 +77,23 @@ public class ImpactedMojo extends DiffMojo implements StartsConstants {
     private Logger logger;
 
     public Set<String> getImpacted() {
-        return impacted;
+        return Collections.unmodifiableSet(impacted);
     }
 
     public Set<String> getNonAffected() {
-        return nonAffected;
+        return Collections.unmodifiableSet(nonAffected);
     }
 
     public Set<String> getChanged() {
-        return changed;
+        return Collections.unmodifiableSet(changed);
     }
 
     public Set<String> getNewClasses() {
-        return newClasses;
+        return Collections.unmodifiableSet(newClasses);
     }
 
     public Set<String> getOldClasses() {
-        return oldClasses;
+        return Collections.unmodifiableSet(oldClasses);
     }
 
     public void execute() throws MojoExecutionException {
