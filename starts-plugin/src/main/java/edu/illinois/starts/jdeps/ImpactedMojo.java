@@ -33,12 +33,6 @@ import org.apache.maven.surefire.booter.Classpath;
 @Execute(phase = LifecyclePhase.TEST_COMPILE)
 public class ImpactedMojo extends DiffMojo implements StartsConstants {
 
-    protected Set<String> impacted;
-    protected Set<String> nonAffected;
-    protected Set<String> changed;
-    protected Set<String> newClasses;
-    protected Set<String> oldClasses;
-
     /**
      * Set this to "true" to update test dependencies on disk. The default value of "false"
      * is useful for "dry runs" where one may want to see the diff without updating
@@ -75,6 +69,12 @@ public class ImpactedMojo extends DiffMojo implements StartsConstants {
     private LibraryOptions trackUsages;
 
     private Logger logger;
+
+    private Set<String> impacted;
+    private Set<String> nonAffected;
+    private Set<String> changed;
+    private Set<String> newClasses;
+    private Set<String> oldClasses;
 
     public Set<String> getImpacted() {
         return Collections.unmodifiableSet(impacted);
