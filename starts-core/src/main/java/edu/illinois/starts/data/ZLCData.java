@@ -7,39 +7,62 @@ package edu.illinois.starts.data;
 import static java.lang.String.join;
 
 import java.net.URL;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import edu.illinois.starts.constants.StartsConstants;
+import edu.illinois.starts.util.Pair;
 
 /**
  * This class creates objects that represent one row in the .zlc file.
  */
 public class ZLCData implements StartsConstants {
+    private ZLCFormat format;
     private URL url;
     private String checksum;
-    private Set<String> tests;
+    private Set<String> testsStr;
+    private Set<Integer> testsIdx;
 
-    public ZLCData(URL url, String checksum, Set<String> tests) {
+    public ZLCData(URL url, String checksum, ZLCFormat format, Set<String> testsStr, Set<Integer> testsIdx) {
+        this.format = format;
         this.url = url;
         this.checksum = checksum;
-        this.tests = tests;
+        this.testsStr = testsStr;
+        this.testsIdx = testsIdx;
     }
 
     @Override
     public String toString() {
         //we track dependencies that are not reached by any test because of *
         String data;
-        if (tests.isEmpty()) {
-            data = join(WHITE_SPACE, url.toExternalForm(), checksum);
-        } else {
-            data = join(WHITE_SPACE, url.toExternalForm(), checksum, toCSV(tests));
+        switch (format) {
+            case INDEXED:
+                if (testsIdx.isEmpty()) {
+                    data = join(WHITE_SPACE, url.toExternalForm(), checksum);
+                } else {
+                    data = join(WHITE_SPACE, url.toExternalForm(), checksum, toCSVInt(testsIdx));
+                }
+                break;
+            case PLAIN_TEXT:
+                if (testsStr.isEmpty()) {
+                    data = join(WHITE_SPACE, url.toExternalForm(), checksum);
+                } else {
+                    data = join(WHITE_SPACE, url.toExternalForm(), checksum, toCSVStr(testsStr));
+                }
+                break;
+            default:
+                throw new RuntimeException("Unexpected ZLCFormat");
         }
         return data;
     }
 
-    private String toCSV(Set<String> tests) {
-        return tests.stream().collect(Collectors.joining(COMMA));
+    private static String toCSVInt(Set<Integer> tests) {
+        return tests.stream().map(String::valueOf).collect(Collectors.joining(COMMA));
+    }
+
+    private static String toCSVStr(Set<String> tests) {
+        return String.join(COMMA, tests);
     }
 
     @Override
@@ -57,9 +80,5 @@ public class ZLCData implements StartsConstants {
             return false;
         }
         return checksum.equals(zlcData.checksum);
-    }
-
-    public void setTests(Set<String> tests) {
-        this.tests = tests;
     }
 }

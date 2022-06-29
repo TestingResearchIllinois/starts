@@ -143,7 +143,8 @@ public class ImpactedMojo extends DiffMojo implements StartsConstants {
         ClassLoader loader = createClassLoader(sfClassPath);
         Result result = prepareForNextRun(sfPathString, sfClassPath, allClasses, new HashSet<String>(), false, trackUsages);
         ZLCHelper zlcHelper = new ZLCHelper();
-        zlcHelper.updateZLCFile(result.getTestDeps(), loader, getArtifactsDir(), new HashSet<String>(), useThirdParty);
+        zlcHelper.updateZLCFile(result.getTestDeps(), loader, getArtifactsDir(), new HashSet<String>(), useThirdParty,
+                zlcFormat);
         long end = System.currentTimeMillis();
         if (writePath || logger.getLoggingLevel().intValue() <= Level.FINER.intValue()) {
             Writer.writeClassPath(sfPathString, getArtifactsDir());

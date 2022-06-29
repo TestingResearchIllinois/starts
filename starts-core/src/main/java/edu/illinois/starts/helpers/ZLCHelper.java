@@ -17,9 +17,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
+import java.util.stream.Collectors;
 
 import edu.illinois.starts.constants.StartsConstants;
 import edu.illinois.starts.data.ZLCData;
+import edu.illinois.starts.data.ZLCFileContent;
+import edu.illinois.starts.data.ZLCFormat;
 import edu.illinois.starts.util.ChecksumUtil;
 import edu.illinois.starts.util.Logger;
 import edu.illinois.starts.util.Pair;
@@ -79,16 +82,23 @@ public class ZLCHelper implements StartsConstants {
 //    }
 
     public static void updateZLCFile(Map<String, Set<String>> testDeps, ClassLoader loader,
-                                     String artifactsDir, Set<String> unreached, boolean useThirdParty) {
+                                     String artifactsDir, Set<String> unreached, boolean useThirdParty,
+                                     ZLCFormat format) {
         // TODO: Optimize this by only recomputing the checksum+tests for changed classes and newly added tests
         long start = System.currentTimeMillis();
-        List<ZLCData> zlc = createZLCData(testDeps, loader, useThirdParty);
+        LOGGER.log(Level.FINE, "ZLC format: " + format.toString());
+        ZLCFileContent zlc = createZLCData(testDeps, loader, useThirdParty, format);
         Writer.writeToFile(zlc, zlcFile, artifactsDir);
         long end = System.currentTimeMillis();
         LOGGER.log(Level.FINE, "[PROFILE] updateForNextRun(updateZLCFile): " + Writer.millsToSeconds(end - start));
     }
 
-    public static List<ZLCData> createZLCData(Map<String, Set<String>> testDeps, ClassLoader loader, boolean useJars) {
+    public static ZLCFileContent createZLCData(
+            Map<String, Set<String>> testDeps,
+            ClassLoader loader,
+            boolean useJars,
+            ZLCFormat format
+    ) {
         long start = System.currentTimeMillis();
         List<ZLCData> zlcData = new ArrayList<>();
         Set<String> deps = new HashSet<>();
@@ -97,6 +107,7 @@ public class ZLCHelper implements StartsConstants {
         for (String test : testDeps.keySet()) {
             deps.addAll(testDeps.get(test));
         }
+        ArrayList<String> testList = new ArrayList<>(testDeps.keySet());  // all tests
 
         // for each dep, find it's url, checksum and tests that depend on it
         for (String dep : deps) {
@@ -113,17 +124,32 @@ public class ZLCHelper implements StartsConstants {
                 continue;
             }
             String checksum = checksumUtil.computeSingleCheckSum(url);
-            Set<String> tests = new HashSet<>();
-            for (String test : testDeps.keySet()) {
-                if (testDeps.get(test).contains(dep)) {
-                    tests.add(test);
-                }
+            switch (format) {
+                case PLAIN_TEXT:
+                    Set<String> testsStr = new HashSet<>();
+                    for (String test: testDeps.keySet()) {
+                        if (testDeps.get(test).contains(dep)) {
+                            testsStr.add(test);
+                        }
+                    }
+                    zlcData.add(new ZLCData(url, checksum, format, testsStr, null));
+                    break;
+                case INDEXED:
+                    Set<Integer> testsIdx = new HashSet<>();
+                    for (int i = 0; i < testList.size(); i++) {
+                        if (testDeps.get(testList.get(i)).contains(dep)) {
+                            testsIdx.add(i);
+                        }
+                    }
+                    zlcData.add(new ZLCData(url, checksum, format, null, testsIdx));
+                    break;
+                default:
+                    throw new RuntimeException("Unexpected ZLCFormat");
             }
-            zlcData.add(new ZLCData(url, checksum, tests));
         }
         long end = System.currentTimeMillis();
         LOGGER.log(Level.FINEST, "[TIME]CREATING ZLC FILE: " + (end - start) + MILLISECOND);
-        return zlcData;
+        return new ZLCFileContent(testList, zlcData, format);
     }
 
     public static Pair<Set<String>, Set<String>> getChangedData(String artifactsDir, boolean cleanBytes) {
@@ -150,11 +176,38 @@ public class ZLCHelper implements StartsConstants {
                 zlcLines.remove(0);
             }
 
-            for (String line : zlcLines) {
+            ZLCFormat format = ZLCFormat.PLAIN_TEXT;  // default to plain text
+            if (zlcLines.get(0).equals(ZLCFormat.PLAIN_TEXT.toString())) {
+                format = ZLCFormat.PLAIN_TEXT;
+                zlcLines.remove(0);
+            } else if (zlcLines.get(0).equals(ZLCFormat.INDEXED.toString())) {
+                format = ZLCFormat.INDEXED;
+                zlcLines.remove(0);
+            }
+
+            int testsCount = -1;  // on PLAIN_TEXT, testsCount+1 will starts from 0
+            ArrayList<String> testsList = null;
+            if (format == ZLCFormat.INDEXED) {
+                try {
+                    testsCount = Integer.parseInt(zlcLines.get(0));
+                } catch (NumberFormatException nfe) {
+                    nfe.printStackTrace();
+                }
+                testsList = new ArrayList<>(zlcLines.subList(1, testsCount + 1));
+            }
+
+            for (int i = testsCount + 1; i < zlcLines.size(); i++) {
+                String line = zlcLines.get(i);
                 String[] parts = line.split(space);
                 String stringURL = parts[0];
                 String oldCheckSum = parts[1];
-                Set<String> tests = parts.length == 3 ? fromCSV(parts[2]) : new HashSet<String>();
+                Set<String> tests;
+                if (format == ZLCFormat.INDEXED) {
+                    Set<Integer> testsIdx = parts.length == 3 ? fromCSVToInt(parts[2]) : new HashSet<>();
+                    tests = testsIdx.stream().map(testsList::get).collect(Collectors.toSet());
+                } else {
+                    tests = parts.length == 3 ? fromCSV(parts[2]) : new HashSet<>();
+                }
                 nonAffected.addAll(tests);
                 URL url = new URL(stringURL);
                 String newCheckSum = checksumUtil.computeSingleCheckSum(url);
@@ -167,8 +220,6 @@ public class ZLCHelper implements StartsConstants {
                     LOGGER.log(Level.FINEST, "Ignoring: " + url);
                     continue;
                 }
-                ZLCData data = new ZLCData(url, newCheckSum, tests);
-                zlcDataMap.put(stringURL, data);
             }
         } catch (IOException ioe) {
             ioe.printStackTrace();
@@ -185,6 +236,10 @@ public class ZLCHelper implements StartsConstants {
 
     private static Set<String> fromCSV(String tests) {
         return new HashSet<>(Arrays.asList(tests.split(COMMA)));
+    }
+
+    private static Set<Integer> fromCSVToInt(String tests) {
+        return Arrays.stream(tests.split(COMMA)).map(Integer::parseInt).collect(Collectors.toSet());
     }
 
     public static Set<String> getExistingClasses(String artifactsDir) {
