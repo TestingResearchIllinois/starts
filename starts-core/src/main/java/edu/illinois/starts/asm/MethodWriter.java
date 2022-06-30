@@ -178,41 +178,41 @@ class MethodWriter extends MethodVisitor {
     int[] exceptions;
 
     /**
-     * The annotation default attribute of this method. May be <tt>null</tt>.
+     * The annotation default attribute of this method. May be <code>null</code>.
      */
     private ByteVector annd;
 
     /**
-     * The runtime visible annotations of this method. May be <tt>null</tt>.
+     * The runtime visible annotations of this method. May be <code>null</code>.
      */
     private AnnotationWriter anns;
 
     /**
-     * The runtime invisible annotations of this method. May be <tt>null</tt>.
+     * The runtime invisible annotations of this method. May be <code>null</code>.
      */
     private AnnotationWriter ianns;
 
     /**
-     * The runtime visible type annotations of this method. May be <tt>null</tt>
+     * The runtime visible type annotations of this method. May be <code>null</code>
      * .
      */
     private AnnotationWriter tanns;
 
     /**
      * The runtime invisible type annotations of this method. May be
-     * <tt>null</tt>.
+     * <code>null</code>.
      */
     private AnnotationWriter itanns;
 
     /**
      * The runtime visible parameter annotations of this method. May be
-     * <tt>null</tt>.
+     * <code>null</code>.
      */
     private AnnotationWriter[] panns;
 
     /**
      * The runtime invisible parameter annotations of this method. May be
-     * <tt>null</tt>.
+     * <code>null</code>.
      */
     private AnnotationWriter[] ipanns;
 
@@ -341,12 +341,12 @@ class MethodWriter extends MethodVisitor {
     private int lastCodeOffset;
 
     /**
-     * The runtime visible type annotations of the code. May be <tt>null</tt>.
+     * The runtime visible type annotations of the code. May be <code>null</code>.
      */
     private AnnotationWriter ctanns;
 
     /**
-     * The runtime invisible type annotations of the code. May be <tt>null</tt>.
+     * The runtime invisible type annotations of the code. May be <code>null</code>.
      */
     private AnnotationWriter ictanns;
 
@@ -410,7 +410,7 @@ class MethodWriter extends MethodVisitor {
      * is relative to the beginning of the current basic block, i.e., the true
      * stack size after the last visited instruction is equal to the
      * {@link Label#inputStackTop beginStackSize} of the current basic block
-     * plus <tt>stackSize</tt>.
+     * plus <code>stackSize</code>.
      */
     private int stackSize;
 
@@ -419,7 +419,7 @@ class MethodWriter extends MethodVisitor {
      * This size is relative to the beginning of the current basic block, i.e.,
      * the true maximum stack size after the last visited instruction is equal
      * to the {@link Label#inputStackTop beginStackSize} of the current basic
-     * block plus <tt>stackSize</tt>.
+     * block plus <code>stackSize</code>.
      */
     private int maxStackSize;
 
@@ -439,15 +439,15 @@ class MethodWriter extends MethodVisitor {
      * @param desc
      *            the method's descriptor (see {@link Type}).
      * @param signature
-     *            the method's signature. May be <tt>null</tt>.
+     *            the method's signature. May be <code>null</code>.
      * @param exceptions
      *            the internal names of the method's exceptions. May be
-     *            <tt>null</tt>.
+     *            <code>null</code>.
      * @param computeMaxs
-     *            <tt>true</tt> if the maximum stack size and number of local
+     *            <code>true</code> if the maximum stack size and number of local
      *            variables must be automatically computed.
      * @param computeFrames
-     *            <tt>true</tt> if the stack map tables must be recomputed from
+     *            <code>true</code> if the stack map tables must be recomputed from
      *            scratch.
      */
     MethodWriter(final ClassWriter cw, final int access, final String name,
@@ -2846,7 +2846,7 @@ class MethodWriter extends MethodVisitor {
      * Computes the future value of a bytecode offset.
      * <p>
      * Note: it is possible to have several entries for the same instruction in
-     * the <tt>indexes</tt> and <tt>sizes</tt>: two entries (index=a,size=b) and
+     * the <code>indexes</code> and <code>sizes</code>: two entries (index=a,size=b) and
      * (index=a,size=b') are equivalent to a single entry (index=a,size=b+b').
      *
      * @param indexes
@@ -2856,11 +2856,11 @@ class MethodWriter extends MethodVisitor {
      *            <i>first</i> byte of the <i>next</i> instruction).
      * @param sizes
      *            the number of bytes to be <i>added</i> to the above
-     *            instructions. More precisely, for each i < <tt>len</tt>,
-     *            <tt>sizes</tt>[i] bytes will be added at the end of the
-     *            instruction designated by <tt>indexes</tt>[i] or, if
-     *            <tt>sizes</tt>[i] is negative, the <i>last</i> |
-     *            <tt>sizes[i]</tt>| bytes of the instruction will be removed
+     *            instructions. More precisely, for each i < <code>len</code>,
+     *            <code>sizes</code>[i] bytes will be added at the end of the
+     *            instruction designated by <code>indexes</code>[i] or, if
+     *            <code>sizes</code>[i] is negative, the <i>last</i> |
+     *            <code>sizes[i]</code>| bytes of the instruction will be removed
      *            (the instruction size <i>must not</i> become negative or
      *            null).
      * @param begin
@@ -2894,11 +2894,11 @@ class MethodWriter extends MethodVisitor {
      *            <i>first</i> byte of the <i>next</i> instruction).
      * @param sizes
      *            the number of bytes to be <i>added</i> to the above
-     *            instructions. More precisely, for each i < <tt>len</tt>,
-     *            <tt>sizes</tt>[i] bytes will be added at the end of the
-     *            instruction designated by <tt>indexes</tt>[i] or, if
-     *            <tt>sizes</tt>[i] is negative, the <i>last</i> |
-     *            <tt>sizes[i]</tt>| bytes of the instruction will be removed
+     *            instructions. More precisely, for each i < <code>len</code>,
+     *            <code>sizes</code>[i] bytes will be added at the end of the
+     *            instruction designated by <code>indexes</code>[i] or, if
+     *            <code>sizes</code>[i] is negative, the <i>last</i> |
+     *            <code>sizes[i]</code>| bytes of the instruction will be removed
      *            (the instruction size <i>must not</i> become negative or
      *            null).
      * @param label

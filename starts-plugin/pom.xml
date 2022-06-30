@@ -30,6 +30,15 @@
 
   <build>
     <plugins>
+    <plugin>
+      <!-- Using compiler version 8 to allow method reference -->
+      <groupId>org.apache.maven.plugins</groupId>
+      <artifactId>maven-compiler-plugin</artifactId>
+      <configuration>
+        <source>8</source>
+        <target>8</target>
+      </configuration>
+    </plugin>
      <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
@@ -65,7 +74,7 @@
           <addTestClassPath>true</addTestClassPath>
           <debug>false</debug>
           <cloneProjectsTo>${project.build.directory}/it</cloneProjectsTo>
-          <cloneClean>true</cloneClean>
+          <cloneClean>false</cloneClean>
           <pomIncludes>
             <pomInclude>*/pom.xml</pomInclude>
           </pomIncludes>
@@ -83,6 +92,24 @@
               <goal>integration-test</goal>
               <goal>verify</goal>
             </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.jacoco</groupId>
+        <artifactId>jacoco-maven-plugin</artifactId>
+        <version>${jacoco.version}</version>
+        <executions>
+          <execution>
+            <id>pre-integration-test-execution</id>
+            <phase>pre-integration-test</phase>
+            <goals>
+              <goal>prepare-agent</goal>
+            </goals>
+            <configuration>
+              <destFile>${project.build.directory}/jacoco-it.exec</destFile>
+              <propertyName>invoker.mavenOpts</propertyName>
+            </configuration>
           </execution>
         </executions>
       </plugin>

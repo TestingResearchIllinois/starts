@@ -11,6 +11,7 @@ import java.util.Set;
 import java.util.logging.Level;
 
 import edu.illinois.starts.constants.StartsConstants;
+import edu.illinois.starts.data.ZLCFormat;
 import edu.illinois.starts.enums.DependencyFormat;
 import edu.illinois.starts.enums.LibraryOptions;
 import edu.illinois.starts.helpers.EkstaziHelper;
@@ -42,6 +43,14 @@ public class DiffMojo extends BaseMojo implements StartsConstants {
      */
     @Parameter(property = "cleanBytes", defaultValue = TRUE)
     protected boolean cleanBytes;
+
+    /**
+     * Format of the ZLC dependency file deps.zlc
+     * Set to "INDEXED" to store indices of tests
+     * Set to "PLAIN_TEXT" to store full URLs of tests
+     */
+    @Parameter(property = "zlcFormat", defaultValue = "PLAIN_TEXT")
+    protected ZLCFormat zlcFormat;
 
     /**
      * Set this to "true" to update test dependencies on disk. The default value of "false"
@@ -108,7 +117,7 @@ public class DiffMojo extends BaseMojo implements StartsConstants {
             Set<String> unreached = computeUnreached ? result.getUnreachedDeps() : new HashSet<String>();
             if (depFormat == DependencyFormat.ZLC) {
                 ZLCHelper zlcHelper = new ZLCHelper();
-                zlcHelper.updateZLCFile(testDeps, loader, getArtifactsDir(), unreached, useThirdParty);
+                zlcHelper.updateZLCFile(testDeps, loader, getArtifactsDir(), unreached, useThirdParty, zlcFormat);
             } else if (depFormat == DependencyFormat.CLZ) {
                 // The next line is not needed with ZLC because '*' is explicitly tracked in ZLC
                 affectedTests = result.getAffectedTests();

@@ -41,7 +41,7 @@ public class EkstaziHelper implements StartsConstants {
         PrintStream olderr = System.err;
         System.setOut(psOut);
         System.setErr(psErr);
-        AffectedChecker.main((String[]) Arrays.asList(artifactsDir).toArray());
+        AffectedChecker.main(Arrays.asList(artifactsDir).toArray(new String[1]));
         System.out.flush();
         System.err.flush();
         System.setOut(oldOut);

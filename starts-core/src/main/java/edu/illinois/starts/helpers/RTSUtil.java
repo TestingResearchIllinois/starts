@@ -6,7 +6,6 @@ package edu.illinois.starts.helpers;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -16,8 +15,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 
-import com.sun.tools.jdeps.Main;
 import edu.illinois.starts.constants.StartsConstants;
+import edu.illinois.starts.maven.AgentLoader;
 import edu.illinois.starts.util.ChecksumUtil;
 import edu.illinois.starts.util.Logger;
 import edu.illinois.yasgl.DirectedGraph;
@@ -29,6 +28,10 @@ import org.ekstazi.data.RegData;
  */
 public class RTSUtil implements StartsConstants {
     private static final Logger LOGGER = Logger.getGlobal();
+    // Name of tools.jar in JDK
+    private static final String TOOLS_JAR_NAME = "tools.jar";
+    // Name of tools.jar on Mac in JDK
+    private static final String CLASSES_JAR_NAME = "classes.jar";
 
     public static void saveForNextRun(String artifactsDir, DirectedGraph<String> graph,
                                       boolean printGraph, String graphFile) {
@@ -74,9 +77,9 @@ public class RTSUtil implements StartsConstants {
     }
 
     public static Map<String, Set<String>> runJdeps(List<String> args) {
-        StringWriter output = new StringWriter();
         LOGGER.log(Level.FINE, "JDEPS ARGS:" + args);
-        Main.run(args.toArray(new String[0]), new PrintWriter(output));
+
+        StringWriter output = AgentLoader.loadAndRunJdeps(args);
         // jdeps can return an empty output when run on .jar files with no .class files
         return output.getBuffer().length() != 0 ? getDepsFromJdepsOutput(output) : new HashMap<String, Set<String>>();
     }

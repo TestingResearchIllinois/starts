@@ -20,13 +20,6 @@
 
   <dependencies>
     <dependency>
-      <groupId>com.sun</groupId>
-      <artifactId>tools</artifactId>
-      <version>1.8</version>
-      <scope>system</scope>
-      <systemPath>${java.home}/../lib/tools.jar</systemPath>
-    </dependency>
-    <dependency>
       <groupId>org.ekstazi</groupId>
       <artifactId>org.ekstazi.core</artifactId>
       <version>4.6.2</version>
@@ -44,6 +37,65 @@
           </archive>
         </configuration>
       </plugin>
+        <plugin>
+            <!-- Using compiler version 8 to allow method reference -->
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-compiler-plugin</artifactId>
+            <configuration>
+                <source>8</source>
+                <target>8</target>
+            </configuration>
+        </plugin>
     </plugins>
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <groupId>org.jacoco</groupId>
+          <artifactId>jacoco-maven-plugin</artifactId>
+          <version>${jacoco.version}</version>
+          <executions>
+            <execution>
+              <id>report-id</id>
+              <goals>
+                <goal>report</goal>
+              </goals>
+              <configuration>
+                <dataFile>
+                  ${project.build.directory}/jacoco-merged.exec
+                </dataFile>
+                <excludes>
+                  <exclude>edu/illinois/starts/asm/**</exclude>
+                </excludes>
+                <outputDirectory>
+                  ${project.reporting.outputDirectory}/jacoco-merged
+                </outputDirectory>
+              </configuration>
+            </execution>
+            <execution>
+              <id>merge-id</id>
+              <goals>
+                <goal>merge</goal>
+              </goals>
+              <configuration>
+                <fileSets>
+                  <fileSet>
+                    <directory>
+                      ${project.basedir}/../
+                    </directory>
+                    <includes>
+                      <include>starts-core/target/jacoco.exec</include>
+                      <include>starts-plugin/target/jacoco-it.exec</include>
+                    </includes>
+                  </fileSet>
+                </fileSets>
+                <destFile>
+                  ${project.build.directory}/jacoco-merged.exec
+                </destFile>
+              </configuration>
+            </execution>
+          </executions>
+        </plugin>
+      </plugins>
+    </pluginManagement>
   </build>
 </project>

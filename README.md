@@ -2,6 +2,8 @@
 
 [![Build Status](https://travis-ci.org/TestingResearchIllinois/starts.svg?branch=master)](https://travis-ci.org/TestingResearchIllinois/starts)
 [![Build status](https://ci.appveyor.com/api/projects/status/giplqg2f4sylogop?svg=true)](https://ci.appveyor.com/project/august782/starts)
+[![Build Status](https://github.com/TestingResearchIllinois/starts/actions/workflows/maven.yml/badge.svg)](https://github.com/TestingResearchIllinois/starts/actions)
+[![Coverage](.github/badges/jacoco.svg)](https://github.com/TestingResearchIllinois/starts/actions/workflows/coverage.yml)
 
 STARTS is a static class-level regression test selection tool
 for Maven-based Java programs.
@@ -31,9 +33,25 @@ Change the pom.xml to add the configuration for the STARTS plugin:
 
 ## Building STARTS from source
 
+Build from source to use the latest development version, which supports Java 8-15, on Linux, OSX, or Windows.
+
 1. `git clone https://github.com/TestingResearchIllinois/starts`
 2. `cd starts`
 3. `mvn install`
+
+Then, change the pom.xml to add the configuration for the latest development version of the STARTS plugin:
+
+```xml
+<build>
+  <plugins>
+    <plugin>
+      <groupId>edu.illinois</groupId>
+      <artifactId>starts-maven-plugin</artifactId>
+      <version>1.4-SNAPSHOT</version>
+    </plugin>
+  </plugins>
+</build>
+```
 
 ## Using the STARTS Maven Plugin
 

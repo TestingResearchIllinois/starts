@@ -24,6 +24,9 @@ import java.util.Set;
 import java.util.logging.Level;
 
 import edu.illinois.starts.constants.StartsConstants;
+import edu.illinois.starts.data.ZLCData;
+import edu.illinois.starts.data.ZLCFileContent;
+import edu.illinois.starts.data.ZLCFormat;
 import edu.illinois.starts.util.Logger;
 import edu.illinois.starts.util.Pair;
 import edu.illinois.yasgl.DirectedGraph;
@@ -50,6 +53,28 @@ public class Writer implements StartsConstants {
             }
             for (Object elem : col) {
                 writer.write(elem + System.lineSeparator());
+            }
+        } catch (IOException ioe) {
+            ioe.printStackTrace();
+        }
+    }
+
+    public static void writeToFile(ZLCFileContent zlcFileContent, String filename, String artifactsDir) {
+        String outFilename = artifactsDir + File.separator + filename;
+        writeToFile(zlcFileContent, outFilename);
+    }
+
+    public static void writeToFile(ZLCFileContent zlcFileContent, String filename) {
+        try (BufferedWriter writer = getWriter(filename)) {
+            writer.write(zlcFileContent.getFormat() + System.lineSeparator());
+            if (zlcFileContent.getFormat() == ZLCFormat.INDEXED) {
+                writer.write(zlcFileContent.getTestsCount() + System.lineSeparator());
+                for (String test: zlcFileContent.getTests()) {
+                    writer.write(test + System.lineSeparator());
+                }
+            }
+            for (ZLCData zlcData: zlcFileContent.getZlcData()) {
+                writer.write(zlcData + System.lineSeparator());
             }
         } catch (IOException ioe) {
             ioe.printStackTrace();

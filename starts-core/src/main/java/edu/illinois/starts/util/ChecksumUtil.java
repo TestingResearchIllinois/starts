@@ -37,7 +37,7 @@ public class ChecksumUtil implements StartsConstants {
     }
 
     /**
-     * This method creates the checksum map only for tests that are affected by changes
+     * This method creates the checksum map only for tests that are affected by changes.
      *
      * @param loader   The classloader from which to find .class files
      * @param testDeps The transitive closure of dependencies for each test
