@@ -96,6 +96,14 @@ public class ImpactedMojo extends DiffMojo implements StartsConstants {
         return Collections.unmodifiableSet(oldClasses);
     }
 
+    public boolean getUpdateImpactedChecksums() {
+        return updateImpactedChecksums;
+    }
+
+    public void setUpdateImpactedChecksums(boolean updateImpactedChecksums) {
+        this.updateImpactedChecksums = updateImpactedChecksums;
+    }
+
     public void execute() throws MojoExecutionException {
         Logger.getGlobal().setLoggingLevel(Level.parse(loggingLevel));
         logger = Logger.getGlobal();
