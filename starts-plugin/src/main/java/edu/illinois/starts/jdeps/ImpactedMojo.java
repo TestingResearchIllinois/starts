@@ -96,7 +96,7 @@ public class ImpactedMojo extends DiffMojo implements StartsConstants {
         return Collections.unmodifiableSet(oldClasses);
     }
 
-    public boolean getUpdateImpactedChecksums() {
+    public boolean isUpdateImpactedChecksums() {
         return updateImpactedChecksums;
     }
 
