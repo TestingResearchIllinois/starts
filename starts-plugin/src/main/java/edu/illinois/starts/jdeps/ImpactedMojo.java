@@ -100,6 +100,10 @@ public class ImpactedMojo extends DiffMojo implements StartsConstants {
         this.updateImpactedChecksums = updateImpactedChecksums;
     }
 
+    public void setTrackNewClasses(boolean trackNewClasses) {
+        this.trackNewClasses = trackNewClasses;
+    }
+
     public void execute() throws MojoExecutionException {
         Logger.getGlobal().setLoggingLevel(Level.parse(loggingLevel));
         logger = Logger.getGlobal();
