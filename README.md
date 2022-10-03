@@ -90,13 +90,13 @@ diff, run `mvn starts:diff -DupdateDiffChecksums=true`.
 Below is a list of research papers that describe some aspects of
 STARTS:
 
-* [STARTS: STAtic Regression Test Selection](http://mir.cs.illinois.edu/legunsen/pubs/LegunsenETALSTARTSDemo.pdf)
+* [STARTS: STAtic Regression Test Selection](https://www.cs.cornell.edu/~legunsen/pubs/LegunsenETAL17STARTS.pdf)
   ```
   Owolabi Legunsen, August Shi, Darko Marinov
   32nd IEEE/ACM International Conference On Automated Software Engineering, Tool Demonstrations Track
   (ASE Demo 2017), pages 949-954, Urbana-Champaign, IL, October-November 2017
   ```
-* [An Extensive Study of Static Regression Test Selection in Modern Software Evolution](http://mir.cs.illinois.edu/legunsen/pubs/LegunsenETAL16StaticRTSStudy.pdf)
+* [An Extensive Study of Static Regression Test Selection in Modern Software Evolution](https://www.cs.cornell.edu/~legunsen/pubs/LegunsenETAL16StaticRTSStudy.pdf)
   ```
   Owolabi Legunsen, Farah Hariri, August Shi, Yafeng Lu, Lingming Zhang, Darko Marinov
   24th ACM SIGSOFT International Symposium on the Foundations of Software Engineering
