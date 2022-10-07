@@ -15,7 +15,7 @@ import java.util.Set;
 import java.util.logging.Level;
 
 import edu.illinois.starts.constants.StartsConstants;
-import edu.illinois.starts.enums.LibraryOptions;
+import edu.illinois.starts.enums.TransitiveClosureOptions;
 import edu.illinois.starts.util.ChecksumUtil;
 import edu.illinois.starts.util.Logger;
 import edu.illinois.yasgl.DirectedGraph;
@@ -79,7 +79,7 @@ public class Loadables implements StartsConstants {
     }
 
     public Loadables create(List<String> moreEdges, Classpath sfClassPath,
-                            boolean computeUnreached, LibraryOptions trackUsages) {
+                            boolean computeUnreached, TransitiveClosureOptions closureOption) {
         setSurefireClasspath(sfClassPath);
         LOGGER.log(Level.FINEST, "More: " + moreEdges.size());
         extraEdges = moreEdges;
@@ -88,7 +88,7 @@ public class Loadables implements StartsConstants {
         long jdepsTime = System.currentTimeMillis();
         graph = makeGraph(deps, extraEdges);
         long graphBuildingTime = System.currentTimeMillis();
-        transitiveClosure = getTransitiveClosurePerClass(graph, classesToAnalyze, trackUsages);
+        transitiveClosure = getTransitiveClosurePerClass(graph, classesToAnalyze, closureOption);
         long transitiveClosureTime = System.currentTimeMillis();
         if (computeUnreached) {
             unreached = findUnreached(deps, transitiveClosure);
@@ -209,34 +209,34 @@ public class Loadables implements StartsConstants {
 
     public static Map<String, Set<String>> getTransitiveClosurePerClass(DirectedGraph<String> tcGraph,
                                                                         List<String> classesToAnalyze,
-                                                                        LibraryOptions trackUsages) {
-        Map<String, Set<String>> tcPerTest = new HashMap<>();
-        for (String test : classesToAnalyze) {
-            HashSet<String> nodeSet = new HashSet<>(Arrays.asList(test));
-            Set<String> deps = new HashSet<>();
-            switch (trackUsages) {
-                case OPTION1:
-                    deps = YasglHelper.computeReachabilityFromChangedClasses(nodeSet, tcGraph);
-                    deps.add(test);
+                                                                        TransitiveClosureOptions closureOption) {
+        Map<String, Set<String>> closurePerClass = new HashMap<>();
+        for (String analyzedClass : classesToAnalyze) {
+            HashSet<String> nodeSet = new HashSet<>(Arrays.asList(analyzedClass));
+            Set<String> closure = new HashSet<>();
+            switch (closureOption) {
+                case TRANS:
+                    closure = YasglHelper.computeReachabilityFromChangedClasses(nodeSet, tcGraph);
+                    closure.add(analyzedClass);
                     break;
-                case OPTION2PARTIAL:
-                    deps = YasglHelper.computeReachabilityFromChangedClasses(nodeSet, tcGraph);
-                    deps.add(test);
-                    deps.addAll(YasglHelper.reverseReachabilityFromChangedClasses(nodeSet, tcGraph));
+                case TRANS_AND_INVERSE_TRANS:
+                    closure = YasglHelper.computeReachabilityFromChangedClasses(nodeSet, tcGraph);
+                    closure.add(analyzedClass);
+                    closure.addAll(YasglHelper.reverseReachabilityFromChangedClasses(nodeSet, tcGraph));
                     break;
-                case OPTION2FULL:
-                    deps  =  YasglHelper.reverseReachabilityFromChangedClasses(nodeSet, tcGraph);
-                    deps.add(test);
-                    deps.addAll(YasglHelper.computeReachabilityFromChangedClasses(deps, tcGraph));
+                case TRANS_OF_INVERSE_TRANS:
+                    closure = YasglHelper.reverseReachabilityFromChangedClasses(nodeSet, tcGraph);
+                    closure.add(analyzedClass);
+                    closure.addAll(YasglHelper.computeReachabilityFromChangedClasses(closure, tcGraph));
                     break;
                 default:
-                    deps = YasglHelper.computeReachabilityFromChangedClasses(nodeSet, tcGraph);
-                    deps.add(test);
+                    closure = YasglHelper.computeReachabilityFromChangedClasses(nodeSet, tcGraph);
+                    closure.add(analyzedClass);
                     break;
             }
-            tcPerTest.put(test, deps);
+            closurePerClass.put(analyzedClass, closure);
         }
-        return tcPerTest;
+        return closurePerClass;
     }
 
     public void setSurefireClasspath(Classpath surefireClasspath) {

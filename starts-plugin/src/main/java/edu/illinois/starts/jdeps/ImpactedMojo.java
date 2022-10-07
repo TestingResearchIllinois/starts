@@ -11,7 +11,7 @@ import java.util.Set;
 import java.util.logging.Level;
 
 import edu.illinois.starts.constants.StartsConstants;
-import edu.illinois.starts.enums.LibraryOptions;
+import edu.illinois.starts.enums.TransitiveClosureOptions;
 import edu.illinois.starts.helpers.RTSUtil;
 import edu.illinois.starts.helpers.Writer;
 import edu.illinois.starts.helpers.ZLCHelper;
@@ -65,8 +65,8 @@ public class ImpactedMojo extends DiffMojo implements StartsConstants {
      * Should we also track classes used by those in the transitive closure of changed classes?
      * Set to true if "yes", false if "no.
      */
-    @Parameter(property = "trackUsages", defaultValue = "OPTION1")
-    private LibraryOptions trackUsages;
+    @Parameter(property = "closureOption", defaultValue = "TRANS")
+    private TransitiveClosureOptions closureOption;
 
     private Logger logger;
 
@@ -102,6 +102,10 @@ public class ImpactedMojo extends DiffMojo implements StartsConstants {
 
     public void setTrackNewClasses(boolean trackNewClasses) {
         this.trackNewClasses = trackNewClasses;
+    }
+
+    public void setTransitiveClosureOption(TransitiveClosureOptions closureOption) {
+        this.closureOption = closureOption;
     }
 
     public void execute() throws MojoExecutionException {
@@ -149,7 +153,7 @@ public class ImpactedMojo extends DiffMojo implements StartsConstants {
         Classpath sfClassPath = getSureFireClassPath();
         String sfPathString = Writer.pathToString(sfClassPath.getClassPath());
         ClassLoader loader = createClassLoader(sfClassPath);
-        Result result = prepareForNextRun(sfPathString, sfClassPath, allClasses, new HashSet<String>(), false, trackUsages);
+        Result result = prepareForNextRun(sfPathString, sfClassPath, allClasses, new HashSet<String>(), false, closureOption);
         ZLCHelper zlcHelper = new ZLCHelper();
         zlcHelper.updateZLCFile(result.getTestDeps(), loader, getArtifactsDir(), new HashSet<String>(), useThirdParty,
                 zlcFormat);
