@@ -213,28 +213,28 @@ public class Loadables implements StartsConstants {
         Map<String, Set<String>> closurePerClass = new HashMap<>();
         for (String analyzedClass : classesToAnalyze) {
             HashSet<String> nodeSet = new HashSet<>(Arrays.asList(analyzedClass));
-            Set<String> closure = new HashSet<>();
+            Set<String> transitiveClosure = new HashSet<>();
             switch (closureOption) {
-                case TRANS:
-                    closure = YasglHelper.computeReachabilityFromChangedClasses(nodeSet, tcGraph);
-                    closure.add(analyzedClass);
+                case TRANSITIVE:
+                    transitiveClosure = YasglHelper.computeReachabilityFromChangedClasses(nodeSet, tcGraph);
+                    transitiveClosure.add(analyzedClass);
                     break;
-                case TRANS_AND_INVERSE_TRANS:
-                    closure = YasglHelper.computeReachabilityFromChangedClasses(nodeSet, tcGraph);
-                    closure.add(analyzedClass);
-                    closure.addAll(YasglHelper.reverseReachabilityFromChangedClasses(nodeSet, tcGraph));
+                case TRANSITIVE_AND_INVERSE_TRANSITIVE:
+                    transitiveClosure = YasglHelper.computeReachabilityFromChangedClasses(nodeSet, tcGraph);
+                    transitiveClosure.add(analyzedClass);
+                    transitiveClosure.addAll(YasglHelper.reverseReachabilityFromChangedClasses(nodeSet, tcGraph));
                     break;
-                case TRANS_OF_INVERSE_TRANS:
-                    closure = YasglHelper.reverseReachabilityFromChangedClasses(nodeSet, tcGraph);
-                    closure.add(analyzedClass);
-                    closure.addAll(YasglHelper.computeReachabilityFromChangedClasses(closure, tcGraph));
+                case TRANSITIVE_OF_INVERSE_TRANSITIVE:
+                    transitiveClosure = YasglHelper.reverseReachabilityFromChangedClasses(nodeSet, tcGraph);
+                    transitiveClosure.add(analyzedClass);
+                    transitiveClosure.addAll(YasglHelper.computeReachabilityFromChangedClasses(transitiveClosure, tcGraph));
                     break;
                 default:
-                    closure = YasglHelper.computeReachabilityFromChangedClasses(nodeSet, tcGraph);
-                    closure.add(analyzedClass);
+                    transitiveClosure = YasglHelper.computeReachabilityFromChangedClasses(nodeSet, tcGraph);
+                    transitiveClosure.add(analyzedClass);
                     break;
             }
-            closurePerClass.put(analyzedClass, closure);
+            closurePerClass.put(analyzedClass, transitiveClosure);
         }
         return closurePerClass;
     }
