@@ -210,7 +210,7 @@ public class Loadables implements StartsConstants {
     public static Map<String, Set<String>> getTransitiveClosurePerClass(DirectedGraph<String> tcGraph,
                                                                         List<String> classesToAnalyze,
                                                                         TransitiveClosureOptions closureOption) {
-        Map<String, Set<String>> closurePerClass = new HashMap<>();
+        Map<String, Set<String>> transitiveClosurePerClass = new HashMap<>();
         for (String analyzedClass : classesToAnalyze) {
             HashSet<String> nodeSet = new HashSet<>(Arrays.asList(analyzedClass));
             Set<String> transitiveClosure = new HashSet<>();
@@ -234,9 +234,9 @@ public class Loadables implements StartsConstants {
                     transitiveClosure.add(analyzedClass);
                     break;
             }
-            closurePerClass.put(analyzedClass, transitiveClosure);
+            transitiveClosurePerClass.put(analyzedClass, transitiveClosure);
         }
-        return closurePerClass;
+        return transitiveClosurePerClass;
     }
 
     public void setSurefireClasspath(Classpath surefireClasspath) {
