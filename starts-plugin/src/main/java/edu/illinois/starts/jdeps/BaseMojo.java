@@ -17,7 +17,7 @@ import java.util.logging.Level;
 
 import edu.illinois.starts.constants.StartsConstants;
 import edu.illinois.starts.enums.DependencyFormat;
-import edu.illinois.starts.enums.LibraryOptions;
+import edu.illinois.starts.enums.TransitiveClosureOptions;
 import edu.illinois.starts.helpers.Cache;
 import edu.illinois.starts.helpers.Loadables;
 import edu.illinois.starts.helpers.PomUtil;
@@ -213,7 +213,8 @@ abstract class BaseMojo extends SurefirePlugin implements StartsConstants {
     }
 
     public Result prepareForNextRun(String sfPathString, Classpath sfClassPath, List<String> classesToAnalyze,
-                                    Set<String> nonAffected, boolean computeUnreached, LibraryOptions trackUsages)
+                                    Set<String> nonAffected, boolean computeUnreached,
+                                    TransitiveClosureOptions closureOption)
             throws MojoExecutionException {
         long start = System.currentTimeMillis();
         String m2Repo = getLocalRepository().getBasedir();
@@ -238,7 +239,7 @@ abstract class BaseMojo extends SurefirePlugin implements StartsConstants {
         }
         long loadM2EdgesFromCache = System.currentTimeMillis();
         // 2. Get non-reflection edges from CUT and SDK; use (1) to build graph
-        loadables.create(new ArrayList<>(moreEdges), sfClassPath, computeUnreached, trackUsages);
+        loadables.create(new ArrayList<>(moreEdges), sfClassPath, computeUnreached, closureOption);
 
         Map<String, Set<String>> transitiveClosure = loadables.getTransitiveClosure();
         long createLoadables = System.currentTimeMillis();
