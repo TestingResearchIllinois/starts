@@ -10,8 +10,6 @@ import java.io.File;
  * Some constants used throughout the STARTS codebase.
  */
 public interface StartsConstants {
-    String STARTS_DIRECTORY_PATH = ".starts" + File.separator;
-
     String SUREFIRE_PLUGIN_VM = "org/apache/maven/plugin/surefire/SurefirePlugin";
     String SUREFIRE_PLUGIN_BIN = "org.apache.maven.plugin.surefire.SurefirePlugin";
 
