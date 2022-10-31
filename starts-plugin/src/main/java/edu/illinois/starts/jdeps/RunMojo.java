@@ -104,14 +104,15 @@ public class RunMojo extends DiffMojo implements StartsConstants {
                     + ". Use version " + MIN_SUREFIRE_VERSION + " and above. Running all tests.");
             // Run all tests
             dynamicallyUpdateExcludes(new ArrayList<String>());
+            nonAffectedTests = new HashSet<>();
         } else if (!isSameClassPath(sfPathElements) || !hasSameJarChecksum(sfPathElements)) {
             // Force retestAll because classpath changed since last run
             // don't compute changed and non-affected classes
             dynamicallyUpdateExcludes(new ArrayList<String>());
             // Make nonAffected empty so dependencies can be updated
             nonAffectedTests = new HashSet<>();
-            Writer.writeClassPath(cpString, artifactsDir);
-            Writer.writeJarChecksums(sfPathElements, artifactsDir, jarCheckSums);
+            Writer.writeClassPath(cpString, getArtifactsDir());
+            Writer.writeJarChecksums(sfPathElements, getArtifactsDir(), jarCheckSums);
         } else if (retestAll) {
             // Force retestAll but compute changes and affected tests
             setChangedAndNonaffected();
