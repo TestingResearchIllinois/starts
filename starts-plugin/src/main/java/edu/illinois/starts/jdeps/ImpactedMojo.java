@@ -116,6 +116,9 @@ public class ImpactedMojo extends DiffMojo implements StartsConstants {
         List<String> allClasses = getAllClasses();
         if (allClasses.isEmpty()) {
             logger.log(Level.INFO, "There are no .class files in this module.");
+            oldClasses = new HashSet<>();
+            newClasses = new HashSet<>();
+            impacted = new HashSet<>();
             return;
         }
         impacted = new HashSet<>(allClasses);
