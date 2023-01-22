@@ -24,7 +24,7 @@ Change the pom.xml to add the configuration for the STARTS plugin:
     <plugin>
       <groupId>edu.illinois</groupId>
       <artifactId>starts-maven-plugin</artifactId>
-      <version>1.3</version>
+      <version>1.4</version>
     </plugin>
   </plugins>
 </build>
@@ -46,7 +46,7 @@ Then, change the pom.xml to add the configuration for the latest development ver
     <plugin>
       <groupId>edu.illinois</groupId>
       <artifactId>starts-maven-plugin</artifactId>
-      <version>1.4-SNAPSHOT</version>
+      <version>1.5-SNAPSHOT</version>
     </plugin>
   </plugins>
 </build>

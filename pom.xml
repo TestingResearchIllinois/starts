@@ -4,7 +4,7 @@
 
   <groupId>edu.illinois</groupId>
   <artifactId>starts</artifactId>
-  <version>1.4</version>
+  <version>1.5-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <name>STARTS</name>
