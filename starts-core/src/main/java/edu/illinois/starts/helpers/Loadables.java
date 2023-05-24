@@ -215,16 +215,16 @@ public class Loadables implements StartsConstants {
             HashSet<String> nodeSet = new HashSet<>(Arrays.asList(analyzedClass));
             Set<String> transitiveClosure = new HashSet<>();
             switch (closureOption) {
-                case TRANSITIVE:
+                case PS3:
                     transitiveClosure = YasglHelper.computeReachabilityFromChangedClasses(nodeSet, tcGraph);
                     transitiveClosure.add(analyzedClass);
                     break;
-                case TRANSITIVE_AND_INVERSE_TRANSITIVE:
+                case PS2:
                     transitiveClosure = YasglHelper.computeReachabilityFromChangedClasses(nodeSet, tcGraph);
                     transitiveClosure.add(analyzedClass);
                     transitiveClosure.addAll(YasglHelper.reverseReachabilityFromChangedClasses(nodeSet, tcGraph));
                     break;
-                case TRANSITIVE_OF_INVERSE_TRANSITIVE:
+                case PS1:
                     transitiveClosure = YasglHelper.reverseReachabilityFromChangedClasses(nodeSet, tcGraph);
                     transitiveClosure.add(analyzedClass);
                     transitiveClosure.addAll(YasglHelper.computeReachabilityFromChangedClasses(transitiveClosure, tcGraph));
