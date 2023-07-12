@@ -4,11 +4,12 @@
 
 package edu.illinois.starts.helpers;
 
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -17,6 +18,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import edu.illinois.starts.constants.StartsConstants;
@@ -26,65 +29,36 @@ import edu.illinois.starts.data.ZLCFormat;
 import edu.illinois.starts.util.ChecksumUtil;
 import edu.illinois.starts.util.Logger;
 import edu.illinois.starts.util.Pair;
+
 import org.ekstazi.util.Types;
+import org.objectweb.asm.ClassReader;
+import org.objectweb.asm.Label;
+import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.tree.ClassNode;
+import org.objectweb.asm.tree.MethodNode;
+import org.objectweb.asm.util.Printer;
+import org.objectweb.asm.util.Textifier;
+import org.objectweb.asm.util.TraceMethodVisitor;
+
+import static edu.illinois.starts.smethods.MethodLevelStaticDepsBuilder.*;
 
 /**
  * Utility methods for dealing with the .zlc format.
  */
-public class ZLCHelper implements StartsConstants {
-    public static final String zlcFile = "deps.zlc";
+public class ZLCHelperMethods implements StartsConstants {
+    public static final String zlcFile = "method-deps.zlc";
     public static final String STAR_FILE = "file:*";
     private static final Logger LOGGER = Logger.getGlobal();
     private static Map<String, ZLCData> zlcDataMap;
     private static final String NOEXISTING_ZLCFILE_FIRST_RUN = "@NoExistingZLCFile. First Run?";
 
-    public ZLCHelper() {
+    public ZLCHelperMethods() {
         zlcDataMap = new HashMap<>();
     }
 
-// TODO: Uncomment and fix this method. The problem is that it does not track newly added tests correctly
-//    public static void updateZLCFile(Map<String, Set<String>> testDeps, ClassLoader loader,
-//                                     String artifactsDir, Set<String> changed) {
-//        long start = System.currentTimeMillis();
-//        File file = new File(artifactsDir, zlcFile);
-//        if (! file.exists()) {
-//            Set<ZLCData> zlc = createZLCData(testDeps, loader);
-//            Writer.writeToFile(zlc, zlcFile, artifactsDir);
-//        } else {
-//            Set<ZLCData> zlcData = new HashSet<>();
-//            if (zlcDataMap != null) {
-//                for (ZLCData data : zlcDataMap.values()) {
-//                    String extForm = data.getUrl().toExternalForm();
-//                    if (changed.contains(extForm)) {
-//                         we need to update tests for this zlcData before adding
-//                        String fqn = Writer.toFQN(extForm);
-//                        Set<String> tests = new HashSet<>();
-//                        if (testDeps.keySet().contains(fqn)) {
-//                             a test class changed, it affects on itself
-//                            tests.add(fqn);
-//                        }
-//                        for (String test : testDeps.keySet()) {
-//                            if (testDeps.get(test).contains(fqn)) tests.add(test);
-//                        }
-//                        if (tests.isEmpty()) {
-//                             this dep no longer has ant tests depending on it???
-//                            continue;
-//                        }
-//                        data.setTests(tests);
-//                    }
-//                    zlcData.add(data);
-//                }
-//            }
-//            Writer.writeToFile(zlcData, zlcFile, artifactsDir);
-//        }
-//        long end = System.currentTimeMillis();
-//        System.out.println(TIME_UPDATING_CHECKSUMS + (end - start) + MS);
-//    }
-
     public static void updateZLCFile(Map<String, Set<String>> testDeps, ClassLoader loader,
-                                     String artifactsDir, Set<String> unreached, boolean useThirdParty,
-                                     ZLCFormat format) {
-        // TODO: Optimize this by only recomputing the checksum+tests for changed classes and newly added tests
+            String artifactsDir, Set<String> unreached, boolean useThirdParty,
+            ZLCFormat format) {
         long start = System.currentTimeMillis();
         LOGGER.log(Level.FINE, "ZLC format: " + format.toString());
         ZLCFileContent zlc = createZLCData(testDeps, loader, useThirdParty, format);
@@ -94,68 +68,84 @@ public class ZLCHelper implements StartsConstants {
     }
 
     public static ZLCFileContent createZLCData(
-            Map<String, Set<String>> testDeps,
+            Map<String, Set<String>> method2methods,
             ClassLoader loader,
             boolean useJars,
-            ZLCFormat format
-    ) {
+            ZLCFormat format) {
+
         long start = System.currentTimeMillis();
         List<ZLCData> zlcData = new ArrayList<>();
-        Set<String> deps = new HashSet<>();
-        ChecksumUtil checksumUtil = new ChecksumUtil(true);
-        // merge all the deps for all tests into a single set
-        for (String test : testDeps.keySet()) {
-            deps.addAll(testDeps.get(test));
-        }
-        ArrayList<String> testList = new ArrayList<>(testDeps.keySet());  // all tests
+        
+        ArrayList<String> methodList = new ArrayList<>(method2methods.keySet());  // all tests
 
-        // for each dep, find it's url, checksum and tests that depend on it
-        for (String dep : deps) {
-            String klas = ChecksumUtil.toClassName(dep);
-            if (Types.isIgnorableInternalName(klas)) {
-                continue;
-            }
+        for (Map.Entry<String, Set<String>> entry : method2methods.entrySet()) {
+            String methodPath = entry.getKey();
+            Set<String> deps = entry.getValue();
+
+            String klas = ChecksumUtil.toClassName(methodPath.split("#")[0]);
+            String methodName = methodPath.split("#")[1].replace("()", "");
+
             URL url = loader.getResource(klas);
-            if (url == null) {
+
+            String path = url.getPath();
+            ClassNode node = new ClassNode(Opcodes.ASM5);
+            ClassReader reader = null;
+            try {
+                reader = new ClassReader(new FileInputStream(path));
+            } catch (IOException e) {
+                System.out.println("[ERROR] reading class: " + klas);
                 continue;
             }
+
+            String methodChecksum = null;
+            reader.accept(node, ClassReader.SKIP_DEBUG);
+            List<MethodNode> methods = node.methods;
+            for (MethodNode method : methods) {
+                // methodName is from the generated graph
+                // method.name is from method visitor (ASM) -> does not have signatures
+                // Append the parameter signature
+                String method1 = appendParametersToMethodName(method);
+                if (!method1.equals(methodName))
+                    continue;
+                String methodContent = printMethodContent(method);
+                try {
+                    methodChecksum = ChecksumUtil.computeMethodChecksum(methodContent);
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+            
             String extForm = url.toExternalForm();
             if (ChecksumUtil.isWellKnownUrl(extForm) || (!useJars && extForm.startsWith("jar:"))) {
                 continue;
             }
-            String checksum = checksumUtil.computeSingleCheckSum(url);
-            switch (format) {
-                case PLAIN_TEXT:
-                    Set<String> testsStr = new HashSet<>();
-                    for (String test: testDeps.keySet()) {
-                        if (testDeps.get(test).contains(dep)) {
-                            testsStr.add(test);
-                        }
-                    }
-                    zlcData.add(new ZLCData(url, checksum, format, testsStr, null));
-                    break;
-                case INDEXED:
-                    Set<Integer> testsIdx = new HashSet<>();
-                    for (int i = 0; i < testList.size(); i++) {
-                        if (testDeps.get(testList.get(i)).contains(dep)) {
-                            testsIdx.add(i);
-                        }
-                    }
-                    zlcData.add(new ZLCData(url, checksum, format, null, testsIdx));
-                    break;
-                default:
-                    throw new RuntimeException("Unexpected ZLCFormat");
+            String classURL = url.toString();
+            URL newUrl = null;
+            try {
+                if (!methodName.matches(".*\\(.*\\)$")) {
+                    newUrl = new URL(classURL + "#" + methodName + "()");
+                } else {
+                    newUrl = new URL(classURL + "#" + methodName);
+                }
+                
+            } catch (MalformedURLException e) {
+                throw new RuntimeException(e);
             }
+            zlcData.add(new ZLCData(newUrl, methodChecksum, format, deps, null));
         }
+
         long end = System.currentTimeMillis();
         LOGGER.log(Level.FINEST, "[TIME]CREATING ZLC FILE: " + (end - start) + MILLISECOND);
-        return new ZLCFileContent(testList, zlcData, format);
+        return new ZLCFileContent(methodList, zlcData, format);
     }
 
     public static Pair<Set<String>, Set<String>> getChangedData(String artifactsDir, boolean cleanBytes) {
         long start = System.currentTimeMillis();
         File zlc = new File(artifactsDir, zlcFile);
+
         if (!zlc.exists()) {
+           
+            
             LOGGER.log(Level.FINEST, NOEXISTING_ZLCFILE_FIRST_RUN);
             return null;
         }
@@ -166,8 +156,9 @@ public class ZLCHelper implements StartsConstants {
         ChecksumUtil checksumUtil = new ChecksumUtil(cleanBytes);
         try {
             List<String> zlcLines = Files.readAllLines(zlc.toPath(), Charset.defaultCharset());
-            String firstLine = zlcLines.get(0);
+            String firstLine = zlcLines.get(0);//class t affected tests
             String space = WHITE_SPACE;
+            
 
             // check whether the first line is for *
             if (firstLine.startsWith(STAR_FILE)) {
@@ -212,6 +203,7 @@ public class ZLCHelper implements StartsConstants {
                 URL url = new URL(stringURL);
                 String newCheckSum = checksumUtil.computeSingleCheckSum(url);
                 if (!newCheckSum.equals(oldCheckSum)) {
+                    
                     affected.addAll(tests);
                     changedClasses.add(stringURL);
                 }
@@ -228,14 +220,21 @@ public class ZLCHelper implements StartsConstants {
             // there was some change so we need to add all tests that reach star, if any
             affected.addAll(starTests);
         }
+       
+        
         nonAffected.removeAll(affected);
+
+       /*  System.out.println("The affected:");
+        System.out.println(affected);
+        System.out.println("The unaffected:");
+        System.out.println(nonAffected);
+        */
         long end = System.currentTimeMillis();
         LOGGER.log(Level.FINEST, TIME_COMPUTING_NON_AFFECTED + (end - start) + MILLISECOND);
 
-        System.out.println("Non affected: " + nonAffected);
-        System.out.println("changed: " + changedClasses);
-        System.out.println("affected: " + affected);
 
+        // ShowimpactedC(changedClasses,artifactsDir);
+      
         return new Pair<>(nonAffected, changedClasses);
     }
 
@@ -247,26 +246,36 @@ public class ZLCHelper implements StartsConstants {
         return Arrays.stream(tests.split(COMMA)).map(Integer::parseInt).collect(Collectors.toSet());
     }
 
-    public static Set<String> getExistingClasses(String artifactsDir) {
-        Set<String> existingClasses = new HashSet<>();
-        long start = System.currentTimeMillis();
-        File zlc = new File(artifactsDir, zlcFile);
-        if (!zlc.exists()) {
-            LOGGER.log(Level.FINEST, NOEXISTING_ZLCFILE_FIRST_RUN);
-            return existingClasses;
-        }
-        try {
-            List<String> zlcLines = Files.readAllLines(zlc.toPath(), Charset.defaultCharset());
-            for (String line : zlcLines) {
-                if (line.startsWith("file")) {
-                    existingClasses.add(Writer.urlToFQN(line.split(WHITE_SPACE)[0]));
-                }
+    public static String printMethodContent(MethodNode node) {
+        Printer printer = new Textifier(Opcodes.ASM5) {
+            @Override
+            public void visitLineNumber(int line, Label start) {
             }
-        } catch (IOException ioe) {
-            ioe.printStackTrace();
+        };
+        TraceMethodVisitor methodPrinter = new TraceMethodVisitor(printer);
+        node.accept(methodPrinter);
+        StringWriter sw = new StringWriter();
+        printer.print(new PrintWriter(sw));
+        printer.getText().clear();
+        // include the access code in case of access code changes
+        String methodContent = node.access + "\n" + node.signature + "\n" + sw.toString();
+        return methodContent;
+    }
+
+    private static String appendParametersToMethodName(MethodNode methodNode) {
+        String method1 = methodNode.name;
+        String parameters = methodNode.desc;
+        Pattern pattern = Pattern.compile("\\(.*?\\)");
+        Matcher matcher = pattern.matcher(parameters);
+        if (matcher.find()) {
+            String extracted = matcher.group();
+            // Handle the case where there are no parameters
+            if (extracted.equals("()"))
+                return method1;
+
+            method1 += extracted;
+            return method1;
         }
-        long end = System.currentTimeMillis();
-        LOGGER.log(Level.FINEST, "[TIME]COMPUTING EXISTING CLASSES: " + (end - start) + MILLISECOND);
-        return existingClasses;
+        return method1;
     }
 }

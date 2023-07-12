@@ -144,4 +144,8 @@ public class ChecksumUtil implements StartsConstants {
             super.extendedSave(fos, sortedData);
         }
     }
+
+    public static String computeMethodChecksum(String content) throws IOException{
+        return org.apache.commons.codec.digest.DigestUtils.md5Hex(content);
+    }
 }
