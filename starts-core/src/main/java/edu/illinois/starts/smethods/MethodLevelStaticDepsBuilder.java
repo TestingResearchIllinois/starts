@@ -52,17 +52,15 @@ public class MethodLevelStaticDepsBuilder {
 
         // Filter out the variables in the graph. We only need methods.
         filterVariables();
+        addReflexiveClosure();
+        invertMap();
 
-        // // create Macros.STARTS_ROOT_DIR_NAME folder if not exist
-        // if (!Files.exists(Paths.get(Macros.SMETHODS_ROOT_DIR_NAME))) {
-        //     Files.createDirectory(Paths.get(Macros.SMETHODS_ROOT_DIR_NAME));
-        // }
         // // save debugging info
-        FileUtil.saveMap(methodName2MethodNames, Macros.SMETHODS_ROOT_DIR_NAME, "graph.txt");
+        // FileUtil.saveMap(methodName2MethodNames, Macros.SMETHODS_ROOT_DIR_NAME, "graph.txt");
         // FileUtil.saveMap(hierarchy_parents, Macros.SMETHODS_ROOT_DIR_NAME, "hierarchy_parents.txt");
         // FileUtil.saveMap(hierarchy_children, Macros.SMETHODS_ROOT_DIR_NAME, "hierarchy_children.txt");
         // FileUtil.saveMap(class2ContainedMethodNames, Macros.SMETHODS_ROOT_DIR_NAME, "class2methods.txt");
-        FileUtil.saveMap(test2methods, Macros.SMETHODS_ROOT_DIR_NAME, "test2methods.txt");
+        // FileUtil.saveMap(test2methods, Macros.SMETHODS_ROOT_DIR_NAME, "test2methods.txt");
     }
 
     public static void findMethodsinvoked(Set<String> classPaths) {
@@ -205,5 +203,27 @@ public class MethodLevelStaticDepsBuilder {
     
         // Filter from test2methods
         test2methods.values().forEach(methodList -> methodList.removeIf(method -> !method.matches(".*\\(.*\\)")));
+    }
+
+    public static void invertMap() {
+        Map<String, Set<String>> map = methodName2MethodNames;
+        Map<String, Set<String>> invertedMap = new HashMap<>();
+        for (Map.Entry<String, Set<String>> entry : map.entrySet()) {
+            String key = entry.getKey();
+            Set<String> values = entry.getValue();
+            for (String value : values) {
+                if (!invertedMap.containsKey(value)) {
+                    invertedMap.put(value, new HashSet<>());
+                }
+                invertedMap.get(value).add(key);
+            }
+        }
+        methodName2MethodNames = invertedMap;
+    }
+
+    public static void addReflexiveClosure() {
+        for (String method : methodName2MethodNames.keySet()) {
+            methodName2MethodNames.get(method).add(method);
+        }
     }
 }

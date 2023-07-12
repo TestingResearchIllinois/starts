@@ -232,10 +232,6 @@ public class ZLCHelper implements StartsConstants {
         long end = System.currentTimeMillis();
         LOGGER.log(Level.FINEST, TIME_COMPUTING_NON_AFFECTED + (end - start) + MILLISECOND);
 
-        System.out.println("Non affected: " + nonAffected);
-        System.out.println("changed: " + changedClasses);
-        System.out.println("affected: " + affected);
-
         return new Pair<>(nonAffected, changedClasses);
     }
 

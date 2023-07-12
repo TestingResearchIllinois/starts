@@ -37,17 +37,18 @@ public class MethodsMojo extends DiffMojo implements StartsConstants {
     private Logger logger;
     private Set<String> impacted;
     private Set<String> changed;
-    private Set<String> nonAffected;
+    private Set<String> affected;
 
     @Parameter(property = "updateMethodsChecksums", defaultValue = FALSE)
     private boolean updateMethodsChecksums;
-    
-    /*  TODO
-    1. Build dependency graph 
-    2. Check if method-deps.zlc is built. If not, build it with null values.
-    3. Compute changes to find changed methods.
-    4. Find impacted methods.
-    */
+
+    /*
+     * TODO
+     * 1. Build dependency graph
+     * 2. Check if method-deps.zlc is built. If not, build it with null values.
+     * 3. Compute changes to find changed methods.
+     * 4. Find impacted methods.
+     */
     public void execute() throws MojoExecutionException {
         Logger.getGlobal().setLoggingLevel(Level.parse(loggingLevel));
         logger = Logger.getGlobal();
@@ -58,91 +59,39 @@ public class MethodsMojo extends DiffMojo implements StartsConstants {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
-        
-        Pair<Set<String>, Set<String>> data = computeChangeData(false);
 
-        Set<String> allMethods = getAllMethods(MethodLevelStaticDepsBuilder.methodName2MethodNames);
+        List<Set<String>> data = ZLCHelperMethods.getChangedData(getArtifactsDir(), cleanBytes);
 
-        impacted = new HashSet<>(allMethods);
-        // 1a. Find what changed and what is non-affected
-        nonAffected = data == null ? new HashSet<String>() : data.getKey();
-        changed = data == null ? new HashSet<String>() : data.getValue();
-        
-        System.out.println("Non affected: " + nonAffected);
-        System.out.println("changed: " + changed);
-        System.out.println("all: " + allMethods);
-
-        // 1b. Remove nonAffected from all classes to get classes impacted by the change
-        impacted.removeAll(nonAffected);
-
+        changed = data == null ? new HashSet<String>() : data.get(0);
+        affected = data == null ? new HashSet<String>() : data.get(1);
+        impacted = findImpactedMethods(affected);
 
         logger.log(Level.FINEST, "CHANGED: " + changed.toString());
         logger.log(Level.FINEST, "IMPACTED: " + impacted.toString());
-        // Optionally update methods-deps.zlc 
+        // Optionally update methods-deps.zlc
         if (updateMethodsChecksums) {
-            this.updateForNextRun(nonAffected);
+            this.updateForNextRun(null);
         }
 
         Writer.writeToFile(changed, "changed-methods", getArtifactsDir());
         Writer.writeToFile(impacted, "impacted-methods", getArtifactsDir());
     }
 
-    protected Pair<Set<String>, Set<String>> computeChangeData(boolean writeChanged) throws MojoExecutionException {
-        long start = System.currentTimeMillis();
-        Pair<Set<String>, Set<String>> data = null;
-        
-        if (depFormat == DependencyFormat.ZLC) {
-            ZLCHelperMethods.getChangedData(getArtifactsDir(), cleanBytes);
-        }
-
-        // Set<String> changed = data == null ? new HashSet<String>() : data.getValue();
-        long end = System.currentTimeMillis();
-        Logger.getGlobal().log(Level.FINE, "[PROFILE] COMPUTING CHANGES: " + Writer.millsToSeconds(end - start));
-        return data;
-    }
-
     protected void updateForNextRun(Set<String> nonAffected) throws MojoExecutionException {
         Classpath sfClassPath = getSureFireClassPath();
         ClassLoader loader = createClassLoader(sfClassPath);
-        ZLCHelperMethods.updateZLCFile(MethodLevelStaticDepsBuilder.methodName2MethodNames, loader, getArtifactsDir(), nonAffected, useThirdParty, zlcFormat);
+        ZLCHelperMethods.updateZLCFile(MethodLevelStaticDepsBuilder.methodName2MethodNames, loader, getArtifactsDir(),
+                nonAffected, useThirdParty, zlcFormat);
     }
 
-    private Set<String> getAllMethods(Map<String, Set<String>> methodName2MethodNames) throws MojoExecutionException {
-        // Set<String> allMethods = new HashSet<>();
-        // for (String methodName : methodName2MethodNames.keySet()) {
-        //     if (methodName.contains(">")) {
-        //         continue;
-        //     }
-        //     if (!methodName.endsWith(")")) {
-        //         continue;
-        //     }
-        //     methodName.replace("/", ".");
-        //     allMethods.add(methodName);
-        // }
-        // return allMethods;
-        return methodName2MethodNames.keySet();
+    private Set<String> findImpactedMethods(Set<String> affectedMethods) {
+        Set<String> impactedMethods = new HashSet<>(affectedMethods);
+        Map<String, Set<String>> graph = MethodLevelStaticDepsBuilder.methodName2MethodNames;
+        for (String method : affectedMethods) {
+            if (graph.containsKey(method)) {
+                impactedMethods.addAll(graph.get(method));
+            }
+        }
+        return impactedMethods;
     }
-
-//     private Set<String> findImpactedMethods(Map<String, Set<String>> methodName2MethodNames, Set<String> changed) {
-//         Set<String> impactedMethods = new HashSet<>();
-// //        System.out.println("method2method: " + methodName2MethodNames);
-//         for (String changedMethod : changed) {
-//             changedMethod = changedMethod.replace(".class", "");
-// //            System.out.println("changedMethod: " + changedMethod);
-//             for (String key : methodName2MethodNames.keySet()) {
-//                 if (methodName2MethodNames.get(key).isEmpty()) {
-//                     continue;
-//                 }
-// //                System.out.println("key: " + key);
-//                 for (String value : methodName2MethodNames.get(key)) {
-//                     value = value.replace("()", "");
-// //                    System.out.println("value: " + value);
-//                     if (changedMethod.endsWith(value)) {
-//                         impactedMethods.add(key);
-//                     }
-//                 }
-//             }
-//         }
-//         return impactedMethods;
-//     }
 }
