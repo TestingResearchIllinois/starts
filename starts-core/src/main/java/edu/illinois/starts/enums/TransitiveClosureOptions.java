@@ -15,14 +15,14 @@ package edu.illinois.starts.enums;
  * }
  * The options will return the following values when performed on B:
  * {@literal
- *     TRANSITIVE --> [B, C, TC]
- *     TRANSITIVE_AND_INVERSE_TRANSITIVE --> [A, B, C, TC]
- *     TRANSITIVE_OF_INVERSE_TRANSITIVE --> [A, B, C, D, TC]
+ *     PS1 --> [A, B, C, D, TC]
+ *     PS2 --> [A, B, C, TC]
+ *     PS3 --> [B, C, TC]
  * }
  * These options correspond to ps3, ps2, and ps1, respectively, in the aforementioned paper
  */
 public enum TransitiveClosureOptions {
-    TRANSITIVE,
-    TRANSITIVE_AND_INVERSE_TRANSITIVE,
-    TRANSITIVE_OF_INVERSE_TRANSITIVE,
+    PS1,
+    PS2,
+    PS3,
 }
