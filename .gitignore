@@ -9,3 +9,4 @@ starts-plugin/target/
 **/*~
 **/.DS_Store
 **/dependency-reduced-pom.xml
+.vscode/
