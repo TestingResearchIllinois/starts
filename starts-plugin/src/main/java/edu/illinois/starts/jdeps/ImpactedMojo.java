@@ -65,7 +65,7 @@ public class ImpactedMojo extends DiffMojo implements StartsConstants {
      * Should we also track classes used by those in the transitive closure of changed classes?
      * Set to true if "yes", false if "no.
      */
-    @Parameter(property = "closureOption", defaultValue = "TRANSITIVE")
+    @Parameter(property = "closureOption", defaultValue = "PS1")
     private TransitiveClosureOptions closureOption;
 
     private Logger logger;

@@ -35,6 +35,10 @@ public class MethodsMojo extends DiffMojo {
     @Parameter(property = "updateMethodsChecksums", defaultValue = FALSE)
     private boolean updateMethodsChecksums;
 
+    public void setUpdateMethodsChecksums(boolean updateChecksums) {
+        this.updateMethodsChecksums = updateChecksums;
+    }
+
     public void execute() throws MojoExecutionException {
         Logger.getGlobal().setLoggingLevel(Level.parse(loggingLevel));
         logger = Logger.getGlobal();
@@ -50,11 +54,14 @@ public class MethodsMojo extends DiffMojo {
 
         changed = data == null ? new HashSet<String>() : data.get(0);
         affected = data == null ? new HashSet<String>() : data.get(1);
-        impacted = findImpactedMethods(affected);
+        
+        // If it is first run with update methods checksums as true, then all methods are impacted.
+        impacted = (updateMethodsChecksums && data == null) ? getAllMethods() : findImpactedMethods(affected);
+        
 
         logger.log(Level.FINEST, "CHANGED: " + changed.toString());
         logger.log(Level.FINEST, "IMPACTED: " + impacted.toString());
-        
+
         // Optionally update methods-deps.zlc
         if (updateMethodsChecksums) {
             this.updateForNextRun(null);
@@ -80,5 +87,13 @@ public class MethodsMojo extends DiffMojo {
             }
         }
         return impactedMethods;
+    }
+
+    private Set<String> getAllMethods() {
+        Set<String> allMethods = new HashSet<>();
+        for (Set<String> methods : MethodLevelStaticDepsBuilder.methodName2MethodNames.values()) {
+            allMethods.addAll(methods);
+        }
+        return allMethods;
     }
 }
