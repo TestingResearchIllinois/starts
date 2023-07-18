@@ -8,17 +8,10 @@ import java.util.*;
 import java.util.logging.Level;
 
 import edu.illinois.starts.constants.StartsConstants;
-import edu.illinois.starts.enums.DependencyFormat;
-import edu.illinois.starts.enums.TransitiveClosureOptions;
-import edu.illinois.starts.helpers.EkstaziHelper;
-import edu.illinois.starts.helpers.RTSUtil;
 import edu.illinois.starts.helpers.Writer;
-import edu.illinois.starts.helpers.ZLCHelper;
 import edu.illinois.starts.helpers.ZLCHelperMethods;
 import edu.illinois.starts.smethods.MethodLevelStaticDepsBuilder;
 import edu.illinois.starts.util.Logger;
-import edu.illinois.starts.util.Pair;
-import edu.illinois.yasgl.DirectedGraph;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.Execute;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
@@ -32,7 +25,7 @@ import org.apache.maven.surefire.booter.Classpath;
 
 @Mojo(name = "methods", requiresDirectInvocation = true, requiresDependencyResolution = ResolutionScope.TEST)
 @Execute(phase = LifecyclePhase.TEST_COMPILE)
-public class MethodsMojo extends DiffMojo implements StartsConstants {
+public class MethodsMojo extends DiffMojo {
 
     private Logger logger;
     private Set<String> impacted;
@@ -42,13 +35,6 @@ public class MethodsMojo extends DiffMojo implements StartsConstants {
     @Parameter(property = "updateMethodsChecksums", defaultValue = FALSE)
     private boolean updateMethodsChecksums;
 
-    /*
-     * TODO
-     * 1. Build dependency graph
-     * 2. Check if method-deps.zlc is built. If not, build it with null values.
-     * 3. Compute changes to find changed methods.
-     * 4. Find impacted methods.
-     */
     public void execute() throws MojoExecutionException {
         Logger.getGlobal().setLoggingLevel(Level.parse(loggingLevel));
         logger = Logger.getGlobal();
@@ -68,6 +54,7 @@ public class MethodsMojo extends DiffMojo implements StartsConstants {
 
         logger.log(Level.FINEST, "CHANGED: " + changed.toString());
         logger.log(Level.FINEST, "IMPACTED: " + impacted.toString());
+        
         // Optionally update methods-deps.zlc
         if (updateMethodsChecksums) {
             this.updateForNextRun(null);
