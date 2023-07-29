@@ -153,7 +153,9 @@ public class ZLCHelperMethods implements StartsConstants {
 
                 String oldCheckSum = parts[1];
                 Set<String> dependencies;
-                dependencies = parts.length == 3 ? fromCSV(parts[2]) : new HashSet<>();
+                dependencies = parts.length == 3 ? fromCSV(parts[2]) : new HashSet<>(); // Fields should be returned
+                
+                
                 URL url = new URL(classURL);
                 String path = url.getPath();
                 ClassNode node = new ClassNode(Opcodes.ASM5);
@@ -167,6 +169,8 @@ public class ZLCHelperMethods implements StartsConstants {
                 String newMethodChecksum = null;
                 reader.accept(node, ClassReader.SKIP_DEBUG);
                 List<MethodNode> methods = node.methods;
+                
+                
                 for (MethodNode method : methods) {
                     // methodName is from the generated graph
                     // method.name is from method visitor (ASM) -> does not have signatures
@@ -196,6 +200,9 @@ public class ZLCHelperMethods implements StartsConstants {
                         continue;
                     }
                 }
+
+
+                
             }
         } catch (IOException ioe) {
             ioe.printStackTrace();

@@ -12,6 +12,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+import java.security.MessageDigest;
+
 
 public class MethodLevelStaticDepsBuilder {
     // mvn exec:java -Dexec.mainClass=org.smethods.MethodLevelStaticDepsBuilder
@@ -27,6 +29,8 @@ public class MethodLevelStaticDepsBuilder {
     public static Map<String, Set<String>> hierarchy_children = new HashMap<>();
 
     public static Map<String, Set<String>> test2methods = new HashMap<>();
+
+    public static Map<String, MessageDigest> methodCheckSum = new HashMap<>();
 
     public static void buildMethodsGraph(String... args) throws Exception {
         // find all the class files
@@ -55,6 +59,7 @@ public class MethodLevelStaticDepsBuilder {
         addReflexiveClosure();
         invertMap();
 
+        System.out.println(methodCheckSum);
         // // save debugging info
         // FileUtil.saveMap(methodName2MethodNames, Macros.SMETHODS_ROOT_DIR_NAME, "graph.txt");
         // FileUtil.saveMap(hierarchy_parents, Macros.SMETHODS_ROOT_DIR_NAME, "hierarchy_parents.txt");
@@ -68,7 +73,7 @@ public class MethodLevelStaticDepsBuilder {
             try {
                 ClassReader classReader = new ClassReader(new FileInputStream(new File(classPath)));
                 ClassToMethodsCollectorCV classToMethodsVisitor = new ClassToMethodsCollectorCV(
-                        class2ContainedMethodNames, hierarchy_parents, hierarchy_children);
+                        class2ContainedMethodNames, hierarchy_parents, hierarchy_children, methodCheckSum);
                 classReader.accept(classToMethodsVisitor, ClassReader.SKIP_DEBUG);
             } catch (IOException e) {
                 System.out.println("Cannot parse file: " + classPath);
@@ -225,5 +230,18 @@ public class MethodLevelStaticDepsBuilder {
         for (String method : methodName2MethodNames.keySet()) {
             methodName2MethodNames.get(method).add(method);
         }
+    }
+
+
+    private String bytesToHex(byte[] bytes) {
+        StringBuilder hexString = new StringBuilder();
+        for (byte b : bytes) {
+            String hex = Integer.toHexString(0xFF & b);
+            if (hex.length() == 1) {
+                hexString.append('0');
+            }
+            hexString.append(hex);
+        }
+        return hexString.toString();
     }
 }

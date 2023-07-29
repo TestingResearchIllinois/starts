@@ -42,6 +42,7 @@ public class MethodsMojo extends DiffMojo {
     public void execute() throws MojoExecutionException {
         Logger.getGlobal().setLoggingLevel(Level.parse(loggingLevel));
         logger = Logger.getGlobal();
+        setIncludesExcludes(); 
 
         // Build method level static dependencies
         try {

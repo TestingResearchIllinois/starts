@@ -1,9 +1,13 @@
 package edu.illinois.starts.smethods;
 
+import java.security.MessageDigest;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
+import java.security.NoSuchAlgorithmException;
+
+
 
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.MethodVisitor;
@@ -18,14 +22,16 @@ public class ClassToMethodsCollectorCV extends ClassVisitor {
     Map<String, Set<String>> class2ContainedMethodNames;
     Map<String, Set<String>> hierarchy_parents;
     Map<String, Set<String>> hierarchy_children;
+    Map<String, MessageDigest> methodCheckSum;
 
     public ClassToMethodsCollectorCV(Map<String, Set<String>> class2ContainedMethodNames,
             Map<String, Set<String>> hierarchy_parents,
-            Map<String, Set<String>> hierarchy_children) {
+            Map<String, Set<String>> hierarchy_children, Map<String, MessageDigest> methodCheckSum) {
         super(ASM_VERSION);
         this.class2ContainedMethodNames = class2ContainedMethodNames;
         this.hierarchy_parents = hierarchy_parents;
         this.hierarchy_children = hierarchy_children;
+        this.methodCheckSum = methodCheckSum;
     }
 
     @Override
@@ -60,7 +66,19 @@ public class ClassToMethodsCollectorCV extends ClassVisitor {
         Set<String> methods = class2ContainedMethodNames.getOrDefault(mClassName, new TreeSet<>());
         methods.add(m);
         class2ContainedMethodNames.put(mClassName, methods);
-        return null;
+        MethodVisitor methodVisitor = super.visitMethod(access, outerName, outerDesc, signature, exceptions);
+        MessageDigest messageDigest = null;
+        try{
+            messageDigest = MessageDigest.getInstance("MD5");
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        }
+        String methodInfo = outerName + outerDesc;
+        byte[] methodBytes = methodInfo.getBytes();
+        messageDigest.update(methodBytes);
+        methodCheckSum.put(mClassName+"#"+outerName+"#"+outerDesc, messageDigest);
+        return new MethodChecksum(methodVisitor, messageDigest);
     }
+
 
 }

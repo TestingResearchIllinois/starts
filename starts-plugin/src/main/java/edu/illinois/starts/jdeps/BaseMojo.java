@@ -100,6 +100,7 @@ abstract class BaseMojo extends SurefirePlugin implements StartsConstants {
     protected String loggingLevel;
     private Classpath sureFireClassPath;
 
+    
     protected void printResult(Set<String> set, String title) {
         Writer.writeToLog(set, title, Logger.getGlobal());
     }
