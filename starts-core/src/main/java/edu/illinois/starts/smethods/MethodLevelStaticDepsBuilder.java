@@ -12,7 +12,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
-import java.security.MessageDigest;
 
 
 public class MethodLevelStaticDepsBuilder {
@@ -30,7 +29,9 @@ public class MethodLevelStaticDepsBuilder {
 
     public static Map<String, Set<String>> test2methods = new HashMap<>();
 
-    public static Map<String, MessageDigest> methodCheckSum = new HashMap<>();
+    public static Map<String, Set<String>> method2tests = new HashMap<>();
+
+    public static Map<String, String> methodCheckSum = new HashMap<>();
 
     public static void buildMethodsGraph(String... args) throws Exception {
         // find all the class files
@@ -57,9 +58,13 @@ public class MethodLevelStaticDepsBuilder {
         // Filter out the variables in the graph. We only need methods.
         filterVariables();
         addReflexiveClosure();
-        invertMap();
+        methodName2MethodNames = invertMap(methodName2MethodNames);
+        method2tests = invertMap(test2methods);
 
-        System.out.println(methodCheckSum);
+        System.out.println("test2methods: " + test2methods);
+        System.out.println("method2tests: " + method2tests);
+
+        // System.out.println(methodCheckSum);
         // // save debugging info
         // FileUtil.saveMap(methodName2MethodNames, Macros.SMETHODS_ROOT_DIR_NAME, "graph.txt");
         // FileUtil.saveMap(hierarchy_parents, Macros.SMETHODS_ROOT_DIR_NAME, "hierarchy_parents.txt");
@@ -69,6 +74,7 @@ public class MethodLevelStaticDepsBuilder {
     }
 
     public static void findMethodsinvoked(Set<String> classPaths) {
+        // finds class2ContainedMethodNames, hierarchy_parents, hierarchy_children, methodCheckSum
         for (String classPath : classPaths) {
             try {
                 ClassReader classReader = new ClassReader(new FileInputStream(new File(classPath)));
@@ -80,6 +86,12 @@ public class MethodLevelStaticDepsBuilder {
                 continue;
             }
         }
+
+        // System.out.println("class2ContainedMethodNames: " + class2ContainedMethodNames);
+        // System.out.println("hierarchy_parents: " + hierarchy_parents);
+        // System.out.println("hierarchy_children: " + hierarchy_children);
+        // System.out.println("methodCheckSum: " + methodCheckSum);
+
 
         for (String classPath : classPaths) {
             try {
@@ -210,8 +222,8 @@ public class MethodLevelStaticDepsBuilder {
         test2methods.values().forEach(methodList -> methodList.removeIf(method -> !method.matches(".*\\(.*\\)")));
     }
 
-    public static void invertMap() {
-        Map<String, Set<String>> map = methodName2MethodNames;
+    public static Map<String, Set<String>> invertMap(Map<String, Set<String>> mapToInvert) {
+        Map<String, Set<String>> map = mapToInvert;
         Map<String, Set<String>> invertedMap = new HashMap<>();
         for (Map.Entry<String, Set<String>> entry : map.entrySet()) {
             String key = entry.getKey();
@@ -223,7 +235,7 @@ public class MethodLevelStaticDepsBuilder {
                 invertedMap.get(value).add(key);
             }
         }
-        methodName2MethodNames = invertedMap;
+        return invertedMap;
     }
 
     public static void addReflexiveClosure() {
@@ -233,7 +245,7 @@ public class MethodLevelStaticDepsBuilder {
     }
 
 
-    private String bytesToHex(byte[] bytes) {
+    private static String bytesToHex(byte[] bytes) {
         StringBuilder hexString = new StringBuilder();
         for (byte b : bytes) {
             String hex = Integer.toHexString(0xFF & b);

@@ -213,5 +213,5 @@ public class RunMojo extends DiffMojo implements StartsConstants {
             cpPaths.add(paths[i]);
         }
         return cpPaths;
-    }
+    }     
 }

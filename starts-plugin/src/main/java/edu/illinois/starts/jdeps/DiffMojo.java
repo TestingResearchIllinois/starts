@@ -57,7 +57,7 @@ public class DiffMojo extends BaseMojo implements StartsConstants {
      * is useful for "dry runs" where one may want to see the diff without updating
      * the test dependencies.
      */
-    @Parameter(property = "updateDiffChecksums", defaultValue = FALSE)
+    @Parameter(property = "updateDiffChecksums", defaultValue = TRUE)
     private boolean updateDiffChecksums;
 
     public void execute() throws MojoExecutionException {

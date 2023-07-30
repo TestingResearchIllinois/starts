@@ -22,11 +22,11 @@ public class ClassToMethodsCollectorCV extends ClassVisitor {
     Map<String, Set<String>> class2ContainedMethodNames;
     Map<String, Set<String>> hierarchy_parents;
     Map<String, Set<String>> hierarchy_children;
-    Map<String, MessageDigest> methodCheckSum;
+    Map<String, String> methodCheckSum;
 
     public ClassToMethodsCollectorCV(Map<String, Set<String>> class2ContainedMethodNames,
             Map<String, Set<String>> hierarchy_parents,
-            Map<String, Set<String>> hierarchy_children, Map<String, MessageDigest> methodCheckSum) {
+            Map<String, Set<String>> hierarchy_children, Map<String, String> methodCheckSum) {
         super(ASM_VERSION);
         this.class2ContainedMethodNames = class2ContainedMethodNames;
         this.hierarchy_parents = hierarchy_parents;
@@ -67,18 +67,8 @@ public class ClassToMethodsCollectorCV extends ClassVisitor {
         methods.add(m);
         class2ContainedMethodNames.put(mClassName, methods);
         MethodVisitor methodVisitor = super.visitMethod(access, outerName, outerDesc, signature, exceptions);
-        MessageDigest messageDigest = null;
-        try{
-            messageDigest = MessageDigest.getInstance("MD5");
-        } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
-        }
-        String methodInfo = outerName + outerDesc;
-        byte[] methodBytes = methodInfo.getBytes();
-        messageDigest.update(methodBytes);
-        methodCheckSum.put(mClassName+"#"+outerName+"#"+outerDesc, messageDigest);
-        return new MethodChecksum(methodVisitor, messageDigest);
+        String methodKey = mClassName+"#"+outerName+"#"+outerDesc; 
+        return new MethodChecksum(methodVisitor,methodKey,  methodCheckSum);
     }
-
 
 }

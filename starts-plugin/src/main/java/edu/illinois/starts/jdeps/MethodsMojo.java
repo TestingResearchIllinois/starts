@@ -12,6 +12,8 @@ import edu.illinois.starts.helpers.Writer;
 import edu.illinois.starts.helpers.ZLCHelperMethods;
 import edu.illinois.starts.smethods.MethodLevelStaticDepsBuilder;
 import edu.illinois.starts.util.Logger;
+import edu.illinois.starts.util.Pair;
+
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.Execute;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
@@ -19,6 +21,10 @@ import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.maven.surefire.booter.Classpath;
+import java.nio.file.Paths;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
 
 // import static edu.illinois.starts.smethods.MethodLevelStaticDepsBuilder.buildMethodsGraph;
 // import static edu.illinois.starts.smethods.MethodLevelStaticDepsBuilder.methodName2MethodNames;
@@ -26,13 +32,16 @@ import org.apache.maven.surefire.booter.Classpath;
 @Mojo(name = "methods", requiresDirectInvocation = true, requiresDependencyResolution = ResolutionScope.TEST)
 @Execute(phase = LifecyclePhase.TEST_COMPILE)
 public class MethodsMojo extends DiffMojo {
+    private static final String TARGET = "target";
 
     private Logger logger;
-    private Set<String> impacted;
-    private Set<String> changed;
-    private Set<String> affected;
+    protected List<Pair> jarCheckSums = null;
+    private Set<String> impactedMethods;
+    private Set<String> changedMethods;
+    private Set<String> affectedMethods;
+    private Set<String> nonAffectedTestMethods;
 
-    @Parameter(property = "updateMethodsChecksums", defaultValue = FALSE)
+    @Parameter(property = "updateMethodsChecksums", defaultValue = TRUE)
     private boolean updateMethodsChecksums;
 
     public void setUpdateMethodsChecksums(boolean updateChecksums) {
@@ -51,32 +60,63 @@ public class MethodsMojo extends DiffMojo {
             throw new RuntimeException(e);
         }
 
-        List<Set<String>> data = ZLCHelperMethods.getChangedData(getArtifactsDir(), cleanBytes);
-
-        changed = data == null ? new HashSet<String>() : data.get(0);
-        affected = data == null ? new HashSet<String>() : data.get(1);
+        // runMethods()
         
-        // If it is first run with update methods checksums as true, then all methods are impacted.
-        impacted = (updateMethodsChecksums && data == null) ? getAllMethods() : findImpactedMethods(affected);
+        // // If it is first run with update methods checksums as true, then all methods are impacted.
+        // // impacted = (updateMethodsChecksums && data == null) ? getAllMethods() : findImpactedMethods(affected);
         
 
-        logger.log(Level.FINEST, "CHANGED: " + changed.toString());
-        logger.log(Level.FINEST, "IMPACTED: " + impacted.toString());
 
-        // Optionally update methods-deps.zlc
-        if (updateMethodsChecksums) {
-            this.updateForNextRun(null);
-        }
 
-        Writer.writeToFile(changed, "changed-methods", getArtifactsDir());
-        Writer.writeToFile(impacted, "impacted-methods", getArtifactsDir());
+        // // Optionally update methods-deps.zlc
+        // if (updateMethodsChecksums) {
+        //     this.updateForNextRun(null);
+        // }
+
+        // Writer.writeToFile(changed, "changed-methods", getArtifactsDir());
+        // Writer.writeToFile(impacted, "impacted-methods", getArtifactsDir());
     }
 
-    protected void updateForNextRun(Set<String> nonAffected) throws MojoExecutionException {
+
+    protected void runMethods() throws MojoExecutionException {
+        
+        String cpString = Writer.pathToString(getSureFireClassPath().getClassPath());
+        List<String> sfPathElements = getCleanClassPath(cpString); // Getting clean list of class pathes 
+        if (!isSameClassPath(sfPathElements) || !hasSameJarChecksum(sfPathElements)) {
+            // dynamicallyUpdateExcludes(new ArrayList<String>());
+            nonAffectedTestMethods = new HashSet<>();
+        } else {
+            setChangedAndNonaffectedMethods();
+            // List<String> excludePaths = Writer.fqnsToExcludePath(nonAffectedTestsMethods);
+            // dynamicallyUpdateExcludes(excludePaths);
+        }
+        long startUpdateTime = System.currentTimeMillis();
+        if (updateMethodsChecksums) {
+            updateForNextRunMethod(nonAffectedTestMethods);
+        }
+
+        logger.log(Level.FINEST, "CHANGED: " + changedMethods.toString());
+        logger.log(Level.FINEST, "IMPACTED: " + impactedMethods.toString());        
+
+        long endUpdateTime = System.currentTimeMillis();
+        logger.log(Level.FINE, PROFILE_STARTS_MOJO_UPDATE_TIME
+                + Writer.millsToSeconds(endUpdateTime - startUpdateTime));
+    }
+
+
+    protected void setChangedAndNonaffectedMethods() throws MojoExecutionException {
+        List<Set<String>> data = ZLCHelperMethods.getChangedData(getArtifactsDir(), cleanBytes);
+        changedMethods = data == null ? new HashSet<String>() : data.get(0);
+        affectedMethods = data == null ? new HashSet<String>() : data.get(1);
+        nonAffectedTestMethods = data == null ? new HashSet<String>() : data.get(3);
+    }
+
+
+    protected void updateForNextRunMethod(Set<String> nonAffected) throws MojoExecutionException {
         Classpath sfClassPath = getSureFireClassPath();
         ClassLoader loader = createClassLoader(sfClassPath);
-        ZLCHelperMethods.updateZLCFile(MethodLevelStaticDepsBuilder.methodName2MethodNames, loader, getArtifactsDir(),
-                nonAffected, useThirdParty, zlcFormat);
+        // ZLCHelperMethods.updateZLCFile(loader, getArtifactsDir(),
+        //         nonAffectedTestMethods, useThirdParty, zlcFormat);
     }
 
     private Set<String> findImpactedMethods(Set<String> affectedMethods) {
@@ -96,5 +136,77 @@ public class MethodsMojo extends DiffMojo {
             allMethods.addAll(methods);
         }
         return allMethods;
+    }
+
+
+    private boolean isSameClassPath(List<String> sfPathString) throws MojoExecutionException {
+        if (sfPathString.isEmpty()) {
+            return true;
+        }
+        String oldSfPathFileName = Paths.get(getArtifactsDir(), SF_CLASSPATH).toString();
+        if (!new File(oldSfPathFileName).exists()) {
+            return false;
+        }
+        try {
+            List<String> oldClassPathLines = Files.readAllLines(Paths.get(oldSfPathFileName));
+            if (oldClassPathLines.size() != 1) {
+                throw new MojoExecutionException(SF_CLASSPATH + " is corrupt! Expected only 1 line.");
+            }
+            List<String> oldClassPathelements = getCleanClassPath(oldClassPathLines.get(0));
+            // comparing lists and not sets in case order changes
+            if (sfPathString.equals(oldClassPathelements)) {
+                return true;
+            }
+        } catch (IOException ioe) {
+            ioe.printStackTrace();
+        }
+        return false;
+    }
+
+    private boolean hasSameJarChecksum(List<String> cleanSfClassPath) throws MojoExecutionException {
+        if (cleanSfClassPath.isEmpty()) {
+            return true;
+        }
+        String oldChecksumPathFileName = Paths.get(getArtifactsDir(), JAR_CHECKSUMS).toString();
+        if (!new File(oldChecksumPathFileName).exists()) {
+            return false;
+        }
+        boolean noException = true;
+        try {
+            List<String> lines = Files.readAllLines(Paths.get(oldChecksumPathFileName));
+            Map<String, String> checksumMap = new HashMap<>();
+            for (String line : lines) {
+                String[] elems = line.split(COMMA);
+                checksumMap.put(elems[0], elems[1]);
+            }
+            jarCheckSums = new ArrayList<>();
+            for (String path : cleanSfClassPath) {
+                Pair<String, String> pair = Writer.getJarToChecksumMapping(path);
+                jarCheckSums.add(pair);
+                String oldCS = checksumMap.get(pair.getKey());
+                noException &= pair.getValue().equals(oldCS);
+            }
+        } catch (IOException ioe) {
+            noException = false;
+            // reset to null because we don't know what/when exception happened
+            jarCheckSums = null;
+            ioe.printStackTrace();
+        }
+        return noException;
+    }
+
+    private List<String> getCleanClassPath(String cp) {
+        List<String> cpPaths = new ArrayList<>();
+        String[] paths = cp.split(File.pathSeparator);
+        String classes = File.separator + TARGET +  File.separator + CLASSES;
+        String testClasses = File.separator + TARGET + File.separator + TEST_CLASSES;
+        for (int i = 0; i < paths.length; i++) {
+            // TODO: should we also exclude SNAPSHOTS from same project?
+            if (paths[i].contains(classes) || paths[i].contains(testClasses)) {
+                continue;
+            }
+            cpPaths.add(paths[i]);
+        }
+        return cpPaths;
     }
 }
