@@ -107,6 +107,7 @@ public class RunMojo extends DiffMojo implements StartsConstants {
             dynamicallyUpdateExcludes(new ArrayList<String>());
             // Make nonAffected empty so dependencies can be updated
             nonAffectedTests = new HashSet<>();
+            
             Writer.writeClassPath(cpString, artifactsDir);
             Writer.writeJarChecksums(sfPathElements, artifactsDir, jarCheckSums);
         } else if (retestAll) {

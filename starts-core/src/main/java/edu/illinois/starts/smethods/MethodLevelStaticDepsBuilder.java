@@ -13,7 +13,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-
 public class MethodLevelStaticDepsBuilder {
     // mvn exec:java -Dexec.mainClass=org.smethods.MethodLevelStaticDepsBuilder
     // -Dexec.args="path to test project"
@@ -36,10 +35,10 @@ public class MethodLevelStaticDepsBuilder {
     public static void buildMethodsGraph(String... args) throws Exception {
         // find all the class files
         HashSet<String> classPaths = new HashSet<>(Files.walk(Paths.get("."))
-        .filter(Files::isRegularFile)
-        .filter(f -> (f.toString().endsWith(".class") && f.toString().contains("target")))
-        .map(f -> f.normalize().toAbsolutePath().toString())
-        .collect(Collectors.toList()));
+                .filter(Files::isRegularFile)
+                .filter(f -> (f.toString().endsWith(".class") && f.toString().contains("target")))
+                .map(f -> f.normalize().toAbsolutePath().toString())
+                .collect(Collectors.toList()));
 
         // Find the methods that each method calls
         findMethodsinvoked(classPaths);
@@ -61,20 +60,26 @@ public class MethodLevelStaticDepsBuilder {
         methodName2MethodNames = invertMap(methodName2MethodNames);
         method2tests = invertMap(test2methods);
 
-        System.out.println("test2methods: " + test2methods);
-        System.out.println("method2tests: " + method2tests);
+        // System.out.println("test2methods: " + test2methods);
+        // System.out.println("method2tests: " + method2tests);
 
         // System.out.println(methodCheckSum);
         // // save debugging info
-        // FileUtil.saveMap(methodName2MethodNames, Macros.SMETHODS_ROOT_DIR_NAME, "graph.txt");
-        // FileUtil.saveMap(hierarchy_parents, Macros.SMETHODS_ROOT_DIR_NAME, "hierarchy_parents.txt");
-        // FileUtil.saveMap(hierarchy_children, Macros.SMETHODS_ROOT_DIR_NAME, "hierarchy_children.txt");
-        // FileUtil.saveMap(class2ContainedMethodNames, Macros.SMETHODS_ROOT_DIR_NAME, "class2methods.txt");
-        // FileUtil.saveMap(test2methods, Macros.SMETHODS_ROOT_DIR_NAME, "test2methods.txt");
+        // FileUtil.saveMap(methodName2MethodNames, Macros.SMETHODS_ROOT_DIR_NAME,
+        // "graph.txt");
+        // FileUtil.saveMap(hierarchy_parents, Macros.SMETHODS_ROOT_DIR_NAME,
+        // "hierarchy_parents.txt");
+        // FileUtil.saveMap(hierarchy_children, Macros.SMETHODS_ROOT_DIR_NAME,
+        // "hierarchy_children.txt");
+        // FileUtil.saveMap(class2ContainedMethodNames, Macros.SMETHODS_ROOT_DIR_NAME,
+        // "class2methods.txt");
+        // FileUtil.saveMap(test2methods, Macros.SMETHODS_ROOT_DIR_NAME,
+        // "test2methods.txt");
     }
 
     public static void findMethodsinvoked(Set<String> classPaths) {
-        // finds class2ContainedMethodNames, hierarchy_parents, hierarchy_children, methodCheckSum
+        // finds class2ContainedMethodNames, hierarchy_parents, hierarchy_children,
+        // methodCheckSum
         for (String classPath : classPaths) {
             try {
                 ClassReader classReader = new ClassReader(new FileInputStream(new File(classPath)));
@@ -87,11 +92,11 @@ public class MethodLevelStaticDepsBuilder {
             }
         }
 
-        // System.out.println("class2ContainedMethodNames: " + class2ContainedMethodNames);
+        // System.out.println("class2ContainedMethodNames: " +
+        // class2ContainedMethodNames);
         // System.out.println("hierarchy_parents: " + hierarchy_parents);
         // System.out.println("hierarchy_children: " + hierarchy_children);
         // System.out.println("methodCheckSum: " + methodCheckSum);
-
 
         for (String classPath : classPaths) {
             try {
@@ -216,8 +221,9 @@ public class MethodLevelStaticDepsBuilder {
         methodName2MethodNames.keySet().removeIf(method -> !method.matches(".*\\(.*\\)"));
 
         // Filter values of methodName2MethodNames
-        methodName2MethodNames.values().forEach(methodList -> methodList.removeIf(method -> !method.matches(".*\\(.*\\)")));
-    
+        methodName2MethodNames.values()
+                .forEach(methodList -> methodList.removeIf(method -> !method.matches(".*\\(.*\\)")));
+
         // Filter from test2methods
         test2methods.values().forEach(methodList -> methodList.removeIf(method -> !method.matches(".*\\(.*\\)")));
     }
@@ -244,7 +250,6 @@ public class MethodLevelStaticDepsBuilder {
         }
     }
 
-
     private static String bytesToHex(byte[] bytes) {
         StringBuilder hexString = new StringBuilder();
         for (byte b : bytes) {
@@ -255,5 +260,21 @@ public class MethodLevelStaticDepsBuilder {
             hexString.append(hex);
         }
         return hexString.toString();
+    }
+
+    public static Set<String> getTests() {
+        Set<String> tests = new HashSet<>();
+        for (String test : test2methods.keySet()) {
+            tests.add(test);
+        }
+        return tests;
+    }   
+
+    public static Set<String> getMethods() {
+        Set<String> methodSigs = new HashSet<>();
+        for (String keyString : methodCheckSum.keySet()) {
+            methodSigs.add(keyString);
+        }
+        return methodSigs;
     }
 }

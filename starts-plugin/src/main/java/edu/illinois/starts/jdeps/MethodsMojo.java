@@ -10,6 +10,7 @@ import java.util.logging.Level;
 import edu.illinois.starts.constants.StartsConstants;
 import edu.illinois.starts.helpers.Writer;
 import edu.illinois.starts.helpers.ZLCHelperMethods;
+import edu.illinois.starts.maven.AgentLoader;
 import edu.illinois.starts.smethods.MethodLevelStaticDepsBuilder;
 import edu.illinois.starts.util.Logger;
 import edu.illinois.starts.util.Pair;
@@ -39,6 +40,7 @@ public class MethodsMojo extends DiffMojo {
     private Set<String> impactedMethods;
     private Set<String> changedMethods;
     private Set<String> affectedMethods;
+    private Set<String> affectedTests;
     private Set<String> nonAffectedTestMethods;
 
     @Parameter(property = "updateMethodsChecksums", defaultValue = TRUE)
@@ -60,7 +62,7 @@ public class MethodsMojo extends DiffMojo {
             throw new RuntimeException(e);
         }
 
-        // runMethods()
+        runMethods();
         
         // // If it is first run with update methods checksums as true, then all methods are impacted.
         // // impacted = (updateMethodsChecksums && data == null) ? getAllMethods() : findImpactedMethods(affected);
@@ -83,8 +85,16 @@ public class MethodsMojo extends DiffMojo {
         String cpString = Writer.pathToString(getSureFireClassPath().getClassPath());
         List<String> sfPathElements = getCleanClassPath(cpString); // Getting clean list of class pathes 
         if (!isSameClassPath(sfPathElements) || !hasSameJarChecksum(sfPathElements)) {
-            // dynamicallyUpdateExcludes(new ArrayList<String>());
             nonAffectedTestMethods = new HashSet<>();
+            changedMethods = MethodLevelStaticDepsBuilder.getMethods();
+            impactedMethods = MethodLevelStaticDepsBuilder.getMethods();
+            affectedTests = MethodLevelStaticDepsBuilder.getTests();
+            dynamicallyUpdateExcludes(new ArrayList<String>());
+
+            System.out.println("We are Here" );
+            logger.log(Level.INFO, "CHANGED: " + changedMethods.toString());
+            logger.log(Level.INFO, "IMPACTED: " + impactedMethods.toString());        
+
         } else {
             setChangedAndNonaffectedMethods();
             // List<String> excludePaths = Writer.fqnsToExcludePath(nonAffectedTestsMethods);
@@ -95,8 +105,6 @@ public class MethodsMojo extends DiffMojo {
             updateForNextRunMethod(nonAffectedTestMethods);
         }
 
-        logger.log(Level.FINEST, "CHANGED: " + changedMethods.toString());
-        logger.log(Level.FINEST, "IMPACTED: " + impactedMethods.toString());        
 
         long endUpdateTime = System.currentTimeMillis();
         logger.log(Level.FINE, PROFILE_STARTS_MOJO_UPDATE_TIME
@@ -136,6 +144,15 @@ public class MethodsMojo extends DiffMojo {
             allMethods.addAll(methods);
         }
         return allMethods;
+    }
+
+    private void dynamicallyUpdateExcludes(List<String> excludePaths) throws MojoExecutionException {
+        if (AgentLoader.loadDynamicAgent()) {
+            logger.log(Level.FINEST, "AGENT LOADED!!!");
+            System.setProperty(STARTS_EXCLUDE_PROPERTY, Arrays.toString(excludePaths.toArray(new String[0])));
+        } else {
+            throw new MojoExecutionException("I COULD NOT ATTACH THE AGENT");
+        }
     }
 
 
