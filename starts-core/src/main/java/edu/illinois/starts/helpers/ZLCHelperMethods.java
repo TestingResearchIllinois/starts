@@ -42,6 +42,66 @@ public class ZLCHelperMethods implements StartsConstants {
     private static final Logger LOGGER = Logger.getGlobal();
     private static final String NOEXISTING_ZLCFILE_FIRST_RUN = "@NoExistingZLCFile. First Run?";
 
+
+
+    public static void writeZLCFile(Map<String, Set<String>> method2tests,Map<String, String> checksumsMap ,ClassLoader loader,
+            String artifactsDir, Set<String> unreached, boolean useThirdParty,
+            ZLCFormat format) {
+        long start = System.currentTimeMillis();
+        LOGGER.log(Level.FINE, "ZLC format: " + format.toString());
+        ZLCFileContent zlc = createZLCFileData(method2tests,checksumsMap,loader, useThirdParty, format);
+        
+        Writer.writeToFile(zlc, METHODS_TEST_DEPS_ZLC_FILE, artifactsDir);
+        long end = System.currentTimeMillis();
+        LOGGER.log(Level.FINE, "[PROFILE] updateForNextRun(updateZLCFile): " + Writer.millsToSeconds(end - start));
+    }
+
+
+
+    public static ZLCFileContent createZLCFileData(
+            Map<String, Set<String>> method2tests,
+            Map<String, String> checksumMap,
+            ClassLoader loader,
+            boolean useJars,
+            ZLCFormat format) {
+
+        long start = System.currentTimeMillis();
+        List<ZLCData> zlcData = new ArrayList<>();
+        ArrayList<String> methodList = new ArrayList<>(method2tests.keySet()); 
+
+        for (Map.Entry<String, String> entry : checksumMap.entrySet()) {
+            String methodPath = entry.getKey();
+            String methodChecksum = entry.getValue();
+            Set<String> deps = method2tests.getOrDefault(methodPath, new HashSet<>());
+            
+            String klas = ChecksumUtil.toClassName(methodPath.split("#")[0]);
+            URL url = loader.getResource(klas);
+            String extForm = url.toExternalForm();
+            if (ChecksumUtil.isWellKnownUrl(extForm) || (!useJars && extForm.startsWith("jar:"))) {
+                continue;
+            }
+            String classURL = url.toString();
+            URL newUrl = null;
+            try {
+                newUrl = new URL(classURL + "#" + methodPath.split("#")[1]);
+            } catch (MalformedURLException e) {
+                throw new RuntimeException(e);
+            }
+            zlcData.add(new ZLCData(newUrl, methodChecksum, format, deps, null));
+        }
+
+        long end = System.currentTimeMillis();
+        LOGGER.log(Level.FINEST, "[TIME]CREATING ZLC FILE: " + (end - start) + MILLISECOND);
+        return new ZLCFileContent(methodList, zlcData, format);
+    }
+
+
+
+
+
+
+
+
     public static void updateZLCFile(Map<String, Set<String>> testDeps, ClassLoader loader,
             String artifactsDir, Set<String> unreached, boolean useThirdParty,
             ZLCFormat format) {
@@ -70,6 +130,7 @@ public class ZLCHelperMethods implements StartsConstants {
 
             String klas = ChecksumUtil.toClassName(methodPath.split("#")[0]);
             String methodName = methodPath.split("#")[1].replace("()", "");
+
 
             URL url = loader.getResource(klas);
 
@@ -153,8 +214,7 @@ public class ZLCHelperMethods implements StartsConstants {
                 String oldCheckSum = parts[1];
                 Set<String> dependencies;
                 dependencies = parts.length == 3 ? fromCSV(parts[2]) : new HashSet<>(); // Fields should be returned
-                
-                
+
                 URL url = new URL(classURL);
                 String path = url.getPath();
                 ClassNode node = new ClassNode(Opcodes.ASM5);
@@ -168,8 +228,7 @@ public class ZLCHelperMethods implements StartsConstants {
                 String newMethodChecksum = null;
                 reader.accept(node, ClassReader.SKIP_DEBUG);
                 List<MethodNode> methods = node.methods;
-                
-                
+
                 for (MethodNode method : methods) {
                     // methodName is from the generated graph
                     // method.name is from method visitor (ASM) -> does not have signatures
@@ -200,8 +259,6 @@ public class ZLCHelperMethods implements StartsConstants {
                     }
                 }
 
-
-                
             }
         } catch (IOException ioe) {
             ioe.printStackTrace();
@@ -232,11 +289,12 @@ public class ZLCHelperMethods implements StartsConstants {
         printer.print(new PrintWriter(sw));
         printer.getText().clear();
         // include the access code in case of access code changes
-        String methodContent = node.access + "\n" + node.signature + "\n"+ node.name + "\n"+ node.desc + "\n" + sw.toString();
+        String methodContent = node.access + "\n" + node.signature + "\n" + node.name + "\n" + node.desc + "\n"
+                + sw.toString();
         return methodContent;
     }
 
-    private static String appendParametersToMethodName(MethodNode methodNode) {
+    public static String appendParametersToMethodName(MethodNode methodNode) {
         String method1 = methodNode.name;
         String parameters = methodNode.desc;
         Pattern pattern = Pattern.compile("\\(.*?\\)");

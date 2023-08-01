@@ -55,15 +55,18 @@ public class MethodsMojo extends DiffMojo {
         Logger.getGlobal().setLoggingLevel(Level.parse(loggingLevel));
         logger = Logger.getGlobal();
         setIncludesExcludes(); 
+        Classpath sfClassPath = getSureFireClassPath();
+        ClassLoader loader = createClassLoader(sfClassPath);
+
 
         // Build method level static dependencies
         try {
-            MethodLevelStaticDepsBuilder.buildMethodsGraph();
+            MethodLevelStaticDepsBuilder.buildMethodsGraph(loader);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
 
-        runMethods();
+        runMethods(loader);
         
         // // If it is first run with update methods checksums as true, then all methods are impacted.
         // // impacted = (updateMethodsChecksums && data == null) ? getAllMethods() : findImpactedMethods(affected);
@@ -81,31 +84,24 @@ public class MethodsMojo extends DiffMojo {
     }
 
 
-    protected void runMethods() throws MojoExecutionException {
-        
-        String cpString = Writer.pathToString(getSureFireClassPath().getClassPath());
-        List<String> sfPathElements = getCleanClassPath(cpString); // Getting clean list of class pathes 
-        
-        // Type code that checks the existance of a file named .starts/depsMethods.zlc
+    protected void runMethods(ClassLoader loader) throws MojoExecutionException {
+        // Checking if the file of depedencies exists
         if (!Files.exists(Paths.get(getArtifactsDir()+ METHODS_TEST_DEPS_ZLC_FILE))) {
-            
             changedMethods = MethodLevelStaticDepsBuilder.getMethods();
             impactedMethods = MethodLevelStaticDepsBuilder.getMethods();
-            
-            logger.log(Level.INFO, "CHANGED: " + changedMethods.toString());
-            logger.log(Level.INFO, "IMPACTED: " + impactedMethods.toString()); 
-            
-            Classpath sfClassPath = getSureFireClassPath();
-            ClassLoader loader = createClassLoader(sfClassPath);
-            System.out.println(MethodLevelStaticDepsBuilder.method2tests);
-            ZLCHelperMethods.updateZLCFile(MethodLevelStaticDepsBuilder.method2tests, loader, getArtifactsDir(), null, false, zlcFormat);
+            affectedTests = MethodLevelStaticDepsBuilder.getTests();
+            Map<String, Set<String>> method2tests = MethodLevelStaticDepsBuilder.method2tests;
+            Map<String, String> methodsCheckSums = MethodLevelStaticDepsBuilder.methodsCheckSums;
 
+            logger.log(Level.INFO, "Changed: " + changedMethods.size());
+            logger.log(Level.INFO, "Impacted: " + impactedMethods.size()); 
+            logger.log(Level.INFO, "AffectedTestClasses: " + affectedTests.size()); 
+            ZLCHelperMethods.writeZLCFile(method2tests, methodsCheckSums, loader, getArtifactsDir(), null, false, zlcFormat);
             dynamicallyUpdateExcludes(new ArrayList<String>());
             
         } else {
-            // setChangedAndNonaffectedMethods();
             System.out.println("We are in second run" );
-
+            setChangedAndNonaffectedMethods();
             // Writer.writeToFile(zlc, zlcFile, artifactsDir);
             // List<String> excludePaths = Writer.fqnsToExcludePath(nonAffectedTestsMethods);
             // dynamicallyUpdateExcludes(excludePaths);

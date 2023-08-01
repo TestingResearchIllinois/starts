@@ -1,9 +1,18 @@
 package edu.illinois.starts.smethods;
 
+
 import org.objectweb.asm.ClassReader;
+import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.tree.ClassNode;
+import org.objectweb.asm.tree.MethodNode;
+
+
+import edu.illinois.starts.util.ChecksumUtil;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.*;
@@ -12,6 +21,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+
+import edu.illinois.starts.helpers.ZLCHelperMethods;
 
 public class MethodLevelStaticDepsBuilder {
     // mvn exec:java -Dexec.mainClass=org.smethods.MethodLevelStaticDepsBuilder
@@ -30,9 +41,9 @@ public class MethodLevelStaticDepsBuilder {
 
     public static Map<String, Set<String>> method2tests = new HashMap<>();
 
-    public static Map<String, String> methodCheckSum = new HashMap<>();
+    public static Map<String, String> methodsCheckSums = new HashMap<>();
 
-    public static void buildMethodsGraph(String... args) throws Exception {
+    public static void buildMethodsGraph(ClassLoader loader) throws Exception {
         // find all the class files
         HashSet<String> classPaths = new HashSet<>(Files.walk(Paths.get("."))
                 .filter(Files::isRegularFile)
@@ -59,6 +70,7 @@ public class MethodLevelStaticDepsBuilder {
         addReflexiveClosure();
         methodName2MethodNames = invertMap(methodName2MethodNames);
         method2tests = invertMap(test2methods);
+        computeChecksums(loader);
 
         // System.out.println("test2methods: " + test2methods);
         // System.out.println("method2tests: " + method2tests);
@@ -77,6 +89,38 @@ public class MethodLevelStaticDepsBuilder {
         // "test2methods.txt");
     }
 
+    public static void computeChecksums(ClassLoader loader) {
+        for (String class_name : class2ContainedMethodNames.keySet()) {
+            // String klas = ChecksumUtil.toClassName(methodPath.split("#")[0]);
+            String klas = ChecksumUtil.toClassName(class_name);
+            URL url = loader.getResource(klas);
+
+            String path = url.getPath();
+            ClassNode node = new ClassNode(Opcodes.ASM5);
+            ClassReader reader = null;
+            try {
+                reader = new ClassReader(new FileInputStream(path));
+            } catch (IOException e) {
+                System.out.println("[ERROR] reading class: " + klas);
+                continue;
+            }
+
+            String methodChecksum = null;
+            reader.accept(node, ClassReader.SKIP_DEBUG);
+            List<MethodNode> methods = node.methods;
+            for (MethodNode method : methods) {
+                String methodContent = ZLCHelperMethods.printMethodContent(method);
+                try {
+                    methodChecksum = ChecksumUtil.computeMethodChecksum(methodContent);
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+
+                methodsCheckSums.put(class_name + "#" + method.name + method.desc.substring(0, method.desc.indexOf(")") + 1), methodChecksum);
+            }
+        }
+    }
+
     public static void findMethodsinvoked(Set<String> classPaths) {
         // finds class2ContainedMethodNames, hierarchy_parents, hierarchy_children,
         // methodCheckSum
@@ -84,7 +128,7 @@ public class MethodLevelStaticDepsBuilder {
             try {
                 ClassReader classReader = new ClassReader(new FileInputStream(new File(classPath)));
                 ClassToMethodsCollectorCV classToMethodsVisitor = new ClassToMethodsCollectorCV(
-                        class2ContainedMethodNames, hierarchy_parents, hierarchy_children, methodCheckSum);
+                        class2ContainedMethodNames, hierarchy_parents, hierarchy_children);
                 classReader.accept(classToMethodsVisitor, ClassReader.SKIP_DEBUG);
             } catch (IOException e) {
                 System.out.println("Cannot parse file: " + classPath);
@@ -250,29 +294,17 @@ public class MethodLevelStaticDepsBuilder {
         }
     }
 
-    private static String bytesToHex(byte[] bytes) {
-        StringBuilder hexString = new StringBuilder();
-        for (byte b : bytes) {
-            String hex = Integer.toHexString(0xFF & b);
-            if (hex.length() == 1) {
-                hexString.append('0');
-            }
-            hexString.append(hex);
-        }
-        return hexString.toString();
-    }
-
     public static Set<String> getTests() {
         Set<String> tests = new HashSet<>();
         for (String test : test2methods.keySet()) {
             tests.add(test);
         }
         return tests;
-    }   
+    }
 
     public static Set<String> getMethods() {
         Set<String> methodSigs = new HashSet<>();
-        for (String keyString : methodCheckSum.keySet()) {
+        for (String keyString : methodsCheckSums.keySet()) {
             methodSigs.add(keyString);
         }
         return methodSigs;

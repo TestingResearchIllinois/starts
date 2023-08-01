@@ -1,11 +1,9 @@
 package edu.illinois.starts.smethods;
 
-import java.security.MessageDigest;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
-import java.security.NoSuchAlgorithmException;
 
 
 
@@ -22,16 +20,14 @@ public class ClassToMethodsCollectorCV extends ClassVisitor {
     Map<String, Set<String>> class2ContainedMethodNames;
     Map<String, Set<String>> hierarchy_parents;
     Map<String, Set<String>> hierarchy_children;
-    Map<String, String> methodCheckSum;
 
     public ClassToMethodsCollectorCV(Map<String, Set<String>> class2ContainedMethodNames,
             Map<String, Set<String>> hierarchy_parents,
-            Map<String, Set<String>> hierarchy_children, Map<String, String> methodCheckSum) {
+            Map<String, Set<String>> hierarchy_children) {
         super(ASM_VERSION);
         this.class2ContainedMethodNames = class2ContainedMethodNames;
         this.hierarchy_parents = hierarchy_parents;
         this.hierarchy_children = hierarchy_children;
-        this.methodCheckSum = methodCheckSum;
     }
 
     @Override
@@ -67,8 +63,7 @@ public class ClassToMethodsCollectorCV extends ClassVisitor {
         methods.add(m);
         class2ContainedMethodNames.put(mClassName, methods);
         MethodVisitor methodVisitor = super.visitMethod(access, outerName, outerDesc, signature, exceptions);
-        String methodKey = mClassName+"#"+outerName+"#"+outerDesc; 
-        return new MethodChecksum(methodVisitor,methodKey,  methodCheckSum);
+        return methodVisitor ;
     }
 
 }
