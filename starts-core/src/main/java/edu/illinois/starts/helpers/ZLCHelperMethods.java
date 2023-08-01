@@ -247,7 +247,6 @@ public class ZLCHelperMethods implements StartsConstants {
         newMethods.removeAll(oldMethods);
         changedMethods.addAll(newMethods);
         result.add(changedMethods);
-        result.add(changedMethods);
         result.add(affectedTests);
         LOGGER.log(Level.FINEST, TIME_COMPUTING_NON_AFFECTED + (end - start) + MILLISECOND);
         return result;

@@ -13,6 +13,7 @@ import edu.illinois.starts.helpers.ZLCHelperMethods;
 import edu.illinois.starts.maven.AgentLoader;
 import edu.illinois.starts.smethods.MethodLevelStaticDepsBuilder;
 import edu.illinois.starts.util.Logger;
+import edu.illinois.starts.util.Pair;
 
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.Execute;
@@ -27,24 +28,20 @@ import java.nio.file.Files;
 // import static edu.illinois.starts.smethods.MethodLevelStaticDepsBuilder.buildMethodsGraph;
 // import static edu.illinois.starts.smethods.MethodLevelStaticDepsBuilder.methodName2MethodNames;
 
-@Mojo(name = "methods", requiresDirectInvocation = true, requiresDependencyResolution = ResolutionScope.TEST)
+@Mojo(name = "methods-impacted", requiresDirectInvocation = true, requiresDependencyResolution = ResolutionScope.TEST)
 @Execute(phase = LifecyclePhase.TEST_COMPILE)
-public class MethodsMojo extends DiffMojo {
+public class MethodsImpactedMojo extends MethodsMojo {
+    
     private static final String TARGET = "target";
 
     private Logger logger;
+    private Set<String> impactedMethods;
     private Set<String> changedMethods;
     private Set<String> affectedTests;
     private Set<String> nonAffectedTests;
     private Map<String, String> methodsCheckSums;
     private Map<String, Set<String>> method2tests;
 
-    @Parameter(property = "updateMethodsChecksums", defaultValue = TRUE)
-    private boolean updateMethodsChecksums;
-
-    public void setUpdateMethodsChecksums(boolean updateChecksums) {
-        this.updateMethodsChecksums = updateChecksums;
-    }
 
     public void execute() throws MojoExecutionException {
         Logger.getGlobal().setLoggingLevel(Level.parse(loggingLevel));
@@ -70,10 +67,11 @@ public class MethodsMojo extends DiffMojo {
 
         if (!Files.exists(Paths.get(getArtifactsDir() + METHODS_TEST_DEPS_ZLC_FILE))) {
             changedMethods = MethodLevelStaticDepsBuilder.getMethods();
+            impactedMethods = MethodLevelStaticDepsBuilder.getMethods();
             affectedTests = MethodLevelStaticDepsBuilder.getTests();
 
             logger.log(Level.INFO, "Changed: " + changedMethods.size());
-            logger.log(Level.INFO, "Impacted: " + changedMethods.size());
+            logger.log(Level.INFO, "Impacted: " + impactedMethods.size());
             logger.log(Level.INFO, "AffectedTestClasses: " + affectedTests.size());
             ZLCHelperMethods.writeZLCFile(method2tests, methodsCheckSums, loader, getArtifactsDir(), null, false,
                     zlcFormat);
@@ -82,7 +80,7 @@ public class MethodsMojo extends DiffMojo {
         } else {
             setChangedAndNonaffectedMethods();
             logger.log(Level.INFO, "Changed: " + changedMethods.size());
-            logger.log(Level.INFO, "Impacted: " + changedMethods.size());
+            logger.log(Level.INFO, "Impacted: " + impactedMethods.size());
             logger.log(Level.INFO, "AffectedTestClasses: " + affectedTests.size());
             ZLCHelperMethods.writeZLCFile(method2tests, methodsCheckSums, loader, getArtifactsDir(), null, false,
                     zlcFormat);
@@ -95,6 +93,7 @@ public class MethodsMojo extends DiffMojo {
         List<Set<String>> data = ZLCHelperMethods.getChangedData(getArtifactsDir(), cleanBytes, methodsCheckSums);
         changedMethods = data == null ? new HashSet<String>() : data.get(0);
         affectedTests = data == null ? new HashSet<String>() : data.get(1);
+        impactedMethods = findImpactedMethods(changedMethods);
         nonAffectedTests = MethodLevelStaticDepsBuilder.getTests();
         nonAffectedTests.removeAll(affectedTests);
     }
@@ -110,6 +109,9 @@ public class MethodsMojo extends DiffMojo {
         return impactedMethods;
     }
 
+
+
+    
     private Set<String> getAllMethods() {
         Set<String> allMethods = new HashSet<>();
         for (Set<String> methods : MethodLevelStaticDepsBuilder.methodName2MethodNames.values()) {
