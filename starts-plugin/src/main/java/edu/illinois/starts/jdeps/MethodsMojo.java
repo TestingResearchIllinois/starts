@@ -40,9 +40,10 @@ public class MethodsMojo extends DiffMojo {
     protected List<Pair> jarCheckSums = null;
     private Set<String> impactedMethods;
     private Set<String> changedMethods;
-    private Set<String> affectedMethods;
     private Set<String> affectedTests;
-    private Set<String> nonAffectedTestMethods;
+    private Set<String> nonAffectedTests;
+    Map<String, String> methodsCheckSums;
+    Map<String, Set<String>> method2tests;
 
     @Parameter(property = "updateMethodsChecksums", defaultValue = TRUE)
     private boolean updateMethodsChecksums;
@@ -65,7 +66,9 @@ public class MethodsMojo extends DiffMojo {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
-
+        method2tests = MethodLevelStaticDepsBuilder.method2tests;
+        methodsCheckSums = MethodLevelStaticDepsBuilder.methodsCheckSums;
+        
         runMethods(loader);
         
         // // If it is first run with update methods checksums as true, then all methods are impacted.
@@ -86,12 +89,13 @@ public class MethodsMojo extends DiffMojo {
 
     protected void runMethods(ClassLoader loader) throws MojoExecutionException {
         // Checking if the file of depedencies exists
+        
+
         if (!Files.exists(Paths.get(getArtifactsDir()+ METHODS_TEST_DEPS_ZLC_FILE))) {
             changedMethods = MethodLevelStaticDepsBuilder.getMethods();
             impactedMethods = MethodLevelStaticDepsBuilder.getMethods();
             affectedTests = MethodLevelStaticDepsBuilder.getTests();
-            Map<String, Set<String>> method2tests = MethodLevelStaticDepsBuilder.method2tests;
-            Map<String, String> methodsCheckSums = MethodLevelStaticDepsBuilder.methodsCheckSums;
+
 
             logger.log(Level.INFO, "Changed: " + changedMethods.size());
             logger.log(Level.INFO, "Impacted: " + impactedMethods.size()); 
@@ -100,11 +104,13 @@ public class MethodsMojo extends DiffMojo {
             dynamicallyUpdateExcludes(new ArrayList<String>());
             
         } else {
-            System.out.println("We are in second run" );
             setChangedAndNonaffectedMethods();
-            // Writer.writeToFile(zlc, zlcFile, artifactsDir);
-            // List<String> excludePaths = Writer.fqnsToExcludePath(nonAffectedTestsMethods);
-            // dynamicallyUpdateExcludes(excludePaths);
+            logger.log(Level.INFO, "Changed: " + changedMethods.size());
+            logger.log(Level.INFO, "Impacted: " + impactedMethods.size()); 
+            logger.log(Level.INFO, "AffectedTestClasses: " + affectedTests.size()); 
+            ZLCHelperMethods.writeZLCFile(method2tests, methodsCheckSums, loader, getArtifactsDir(), null, false, zlcFormat);
+            List<String> excludePaths = Writer.fqnsToExcludePath(nonAffectedTests);
+            dynamicallyUpdateExcludes(excludePaths);
         }
 
         
@@ -140,10 +146,12 @@ public class MethodsMojo extends DiffMojo {
 
 
     protected void setChangedAndNonaffectedMethods() throws MojoExecutionException {
-        List<Set<String>> data = ZLCHelperMethods.getChangedData(getArtifactsDir(), cleanBytes);
+        List<Set<String>> data = ZLCHelperMethods.getChangedData(getArtifactsDir(), cleanBytes, methodsCheckSums);
         changedMethods = data == null ? new HashSet<String>() : data.get(0);
-        affectedMethods = data == null ? new HashSet<String>() : data.get(1);
-        nonAffectedTestMethods = data == null ? new HashSet<String>() : data.get(3);
+        impactedMethods = data == null ? new HashSet<String>() : data.get(1);
+        affectedTests = data == null ? new HashSet<String>() : data.get(2);
+        nonAffectedTests = MethodLevelStaticDepsBuilder.getTests();
+        nonAffectedTests.removeAll(affectedTests);
     }
 
 

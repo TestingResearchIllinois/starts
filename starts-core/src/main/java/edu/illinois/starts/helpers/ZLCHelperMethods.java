@@ -186,8 +186,9 @@ public class ZLCHelperMethods implements StartsConstants {
         return new ZLCFileContent(methodList, zlcData, format);
     }
 
-    public static List<Set<String>> getChangedData(String artifactsDir, boolean cleanBytes) {
+    public static List<Set<String>> getChangedData(String artifactsDir, boolean cleanBytes, Map<String, String> methodsChecksums) {
         long start = System.currentTimeMillis();
+        
         File zlc = new File(artifactsDir, METHODS_TEST_DEPS_ZLC_FILE);
         if (!zlc.exists()) {
             LOGGER.log(Level.FINEST, NOEXISTING_ZLCFILE_FIRST_RUN);
@@ -195,70 +196,46 @@ public class ZLCHelperMethods implements StartsConstants {
         }
 
         Set<String> changedMethods = new HashSet<>();
-        Set<String> affected = new HashSet<>();
+        Set<String> affectedTests = new HashSet<>();
+        Set<String> oldMethods = new HashSet<>();
         try {
             List<String> zlcLines = Files.readAllLines(zlc.toPath(), Charset.defaultCharset());
             String space = WHITE_SPACE;
-
             zlcLines.remove(0);
 
             // on PLAIN_TEXT, testsCount+1 will starts from 0
             for (int i = 0; i < zlcLines.size(); i++) {
+                
                 String line = zlcLines.get(i);
                 String[] parts = line.split(space);
                 // classURL#methodname
                 String stringURL = parts[0];
                 String classURL = stringURL.split("#")[0];
                 String methodName = stringURL.split("#")[1];
-
                 String oldCheckSum = parts[1];
-                Set<String> dependencies;
-                dependencies = parts.length == 3 ? fromCSV(parts[2]) : new HashSet<>(); // Fields should be returned
+                Set<String> deps;
+                deps = parts.length == 3 ? fromCSV(parts[2]) : new HashSet<>(); // Fields should be returned
 
-                URL url = new URL(classURL);
-                String path = url.getPath();
-                ClassNode node = new ClassNode(Opcodes.ASM5);
-                ClassReader reader = null;
-                try {
-                    reader = new ClassReader(new FileInputStream(path));
-                } catch (IOException e) {
-                    throw new IOException(e);
+
+                // convert classURL to class name   
+                String className = convertPath(classURL);
+                String methodPath = className + "#" + methodName;
+                String newChecksum = methodsChecksums.get(methodPath);
+                oldMethods.add(methodPath);
+                // System.out.println("***********************");
+                // System.out.println("methodPath: " + methodPath);
+                // System.out.println("new checksum: " + newChecksum);
+                // System.out.println("old checksum: " + oldCheckSum);
+                // System.out.println("***********************");
+
+                
+                
+                if (oldCheckSum.equals(newChecksum)) {
+                    continue;
+                }else{
+                    changedMethods.add(methodPath);
+                    affectedTests.addAll(deps);
                 }
-
-                String newMethodChecksum = null;
-                reader.accept(node, ClassReader.SKIP_DEBUG);
-                List<MethodNode> methods = node.methods;
-
-                for (MethodNode method : methods) {
-                    // methodName is from the generated graph
-                    // method.name is from method visitor (ASM) -> does not have signatures
-                    // We need to append the parameter signature to methodnode to be able to compare
-                    // with methodName
-                    String method1 = appendParametersToMethodName(method);
-                    if (!method1.equals(methodName))
-                        continue;
-                    String methodContent = printMethodContent(method);
-                    try {
-                        newMethodChecksum = ChecksumUtil.computeMethodChecksum(methodContent);
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
-                    }
-
-                    if (newMethodChecksum == null)
-                        newMethodChecksum = "null";
-
-                    if (!newMethodChecksum.equals(oldCheckSum)) {
-                        affected.addAll(dependencies);
-                        changedMethods.add(stringURL);
-                    }
-
-                    if (newMethodChecksum.equals("-1")) {
-                        // a class was deleted or auto-generated, no need to track it in zlc
-                        LOGGER.log(Level.FINEST, "Ignoring: " + url);
-                        continue;
-                    }
-                }
-
             }
         } catch (IOException ioe) {
             ioe.printStackTrace();
@@ -266,12 +243,36 @@ public class ZLCHelperMethods implements StartsConstants {
 
         long end = System.currentTimeMillis();
         List<Set<String>> result = new ArrayList<>();
-
+        Set<String> newMethods = new HashSet<>(methodsChecksums.keySet());
+        newMethods.removeAll(oldMethods);
+        changedMethods.addAll(newMethods);
         result.add(changedMethods);
-        result.add(affected);
+        result.add(changedMethods);
+        result.add(affectedTests);
         LOGGER.log(Level.FINEST, TIME_COMPUTING_NON_AFFECTED + (end - start) + MILLISECOND);
         return result;
     }
+
+
+    public static String convertPath(String fullPath) {
+        String[] parts = fullPath.split("/");
+        int index = 0;
+        for (int i = 0; i < parts.length; i++) {
+            if (parts[i].equals("classes") || parts[i].equals("test-classes")) {
+                index = i + 1;
+                break;
+            }
+        }
+        String result = "";
+        for (int i = index; i < parts.length; i++) {
+            result += parts[i];
+            if (i != parts.length - 1) {
+                result += "/";
+            }
+        }
+        return result.replace(".class", "");
+    }
+
 
     private static Set<String> fromCSV(String tests) {
         return new HashSet<>(Arrays.asList(tests.split(COMMA)));
