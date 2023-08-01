@@ -27,6 +27,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 
+
 // import static edu.illinois.starts.smethods.MethodLevelStaticDepsBuilder.buildMethodsGraph;
 // import static edu.illinois.starts.smethods.MethodLevelStaticDepsBuilder.methodName2MethodNames;
 
@@ -84,31 +85,61 @@ public class MethodsMojo extends DiffMojo {
         
         String cpString = Writer.pathToString(getSureFireClassPath().getClassPath());
         List<String> sfPathElements = getCleanClassPath(cpString); // Getting clean list of class pathes 
-        if (!isSameClassPath(sfPathElements) || !hasSameJarChecksum(sfPathElements)) {
-            nonAffectedTestMethods = new HashSet<>();
+        
+        // Type code that checks the existance of a file named .starts/depsMethods.zlc
+        if (!Files.exists(Paths.get(getArtifactsDir()+ METHODS_TEST_DEPS_ZLC_FILE))) {
+            
             changedMethods = MethodLevelStaticDepsBuilder.getMethods();
             impactedMethods = MethodLevelStaticDepsBuilder.getMethods();
-            affectedTests = MethodLevelStaticDepsBuilder.getTests();
-            dynamicallyUpdateExcludes(new ArrayList<String>());
-
-            System.out.println("We are Here" );
+            
             logger.log(Level.INFO, "CHANGED: " + changedMethods.toString());
-            logger.log(Level.INFO, "IMPACTED: " + impactedMethods.toString());        
+            logger.log(Level.INFO, "IMPACTED: " + impactedMethods.toString()); 
+            
+            Classpath sfClassPath = getSureFireClassPath();
+            ClassLoader loader = createClassLoader(sfClassPath);
+            System.out.println(MethodLevelStaticDepsBuilder.method2tests);
+            ZLCHelperMethods.updateZLCFile(MethodLevelStaticDepsBuilder.method2tests, loader, getArtifactsDir(), null, false, zlcFormat);
 
+            dynamicallyUpdateExcludes(new ArrayList<String>());
+            
         } else {
-            setChangedAndNonaffectedMethods();
+            // setChangedAndNonaffectedMethods();
+            System.out.println("We are in second run" );
+
+            // Writer.writeToFile(zlc, zlcFile, artifactsDir);
             // List<String> excludePaths = Writer.fqnsToExcludePath(nonAffectedTestsMethods);
             // dynamicallyUpdateExcludes(excludePaths);
         }
-        long startUpdateTime = System.currentTimeMillis();
-        if (updateMethodsChecksums) {
-            updateForNextRunMethod(nonAffectedTestMethods);
-        }
+
+        
+        
+        // if (!isSameClassPath(sfPathElements) || !hasSameJarChecksum(sfPathElements)) {
+        //     nonAffectedTestMethods = new HashSet<>();
+        //     changedMethods = MethodLevelStaticDepsBuilder.getMethods();
+        //     impactedMethods = MethodLevelStaticDepsBuilder.getMethods();
+        //     affectedTests = MethodLevelStaticDepsBuilder.getTests();
+        //     dynamicallyUpdateExcludes(new ArrayList<String>());
+
+        //     System.out.println("We are Here" );
+        //     logger.log(Level.INFO, "CHANGED: " + changedMethods.toString());
+        //     logger.log(Level.INFO, "IMPACTED: " + impactedMethods.toString()); 
+            
+        //     Writer.writeClassPath(cpString, artifactsDir);
+        //     Writer.writeJarChecksums(sfPathElements, artifactsDir, jarCheckSums);
+        // } else {
+        //     setChangedAndNonaffectedMethods();
+        //     // List<String> excludePaths = Writer.fqnsToExcludePath(nonAffectedTestsMethods);
+        //     // dynamicallyUpdateExcludes(excludePaths);
+        // }
+        // long startUpdateTime = System.currentTimeMillis();
+        // if (updateMethodsChecksums) {
+        //     updateForNextRunMethod(nonAffectedTestMethods);
+        // }
 
 
-        long endUpdateTime = System.currentTimeMillis();
-        logger.log(Level.FINE, PROFILE_STARTS_MOJO_UPDATE_TIME
-                + Writer.millsToSeconds(endUpdateTime - startUpdateTime));
+        // long endUpdateTime = System.currentTimeMillis();
+        // logger.log(Level.FINE, PROFILE_STARTS_MOJO_UPDATE_TIME
+        //         + Writer.millsToSeconds(endUpdateTime - startUpdateTime));
     }
 
 

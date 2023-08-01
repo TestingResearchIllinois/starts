@@ -39,7 +39,6 @@ import org.objectweb.asm.util.TraceMethodVisitor;
  * Utility methods for dealing with the .zlc format.
  */
 public class ZLCHelperMethods implements StartsConstants {
-    public static final String zlcFile = "method-deps.zlc";
     private static final Logger LOGGER = Logger.getGlobal();
     private static final String NOEXISTING_ZLCFILE_FIRST_RUN = "@NoExistingZLCFile. First Run?";
 
@@ -49,7 +48,7 @@ public class ZLCHelperMethods implements StartsConstants {
         long start = System.currentTimeMillis();
         LOGGER.log(Level.FINE, "ZLC format: " + format.toString());
         ZLCFileContent zlc = createZLCData(testDeps, loader, useThirdParty, format);
-        Writer.writeToFile(zlc, zlcFile, artifactsDir);
+        Writer.writeToFile(zlc, METHODS_TEST_DEPS_ZLC_FILE, artifactsDir);
         long end = System.currentTimeMillis();
         LOGGER.log(Level.FINE, "[PROFILE] updateForNextRun(updateZLCFile): " + Writer.millsToSeconds(end - start));
     }
@@ -128,7 +127,7 @@ public class ZLCHelperMethods implements StartsConstants {
 
     public static List<Set<String>> getChangedData(String artifactsDir, boolean cleanBytes) {
         long start = System.currentTimeMillis();
-        File zlc = new File(artifactsDir, zlcFile);
+        File zlc = new File(artifactsDir, METHODS_TEST_DEPS_ZLC_FILE);
         if (!zlc.exists()) {
             LOGGER.log(Level.FINEST, NOEXISTING_ZLCFILE_FIRST_RUN);
             return null;
@@ -233,7 +232,7 @@ public class ZLCHelperMethods implements StartsConstants {
         printer.print(new PrintWriter(sw));
         printer.getText().clear();
         // include the access code in case of access code changes
-        String methodContent = node.access + "\n" + node.signature + "\n" + sw.toString();
+        String methodContent = node.access + "\n" + node.signature + "\n"+ node.name + "\n"+ node.desc + "\n" + sw.toString();
         return methodContent;
     }
 
