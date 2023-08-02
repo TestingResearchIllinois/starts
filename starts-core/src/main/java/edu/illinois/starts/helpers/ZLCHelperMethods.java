@@ -58,6 +58,20 @@ public class ZLCHelperMethods implements StartsConstants {
 
 
 
+        public static void writeZLCFileTM(Map<String, Set<String>> method2tests,Map<String, String> checksumsMap ,ClassLoader loader,
+            String artifactsDir, Set<String> unreached, boolean useThirdParty,
+            ZLCFormat format) {
+        long start = System.currentTimeMillis();
+        LOGGER.log(Level.FINE, "ZLC format: " + format.toString());
+        ZLCFileContent zlc = createZLCFileData(method2tests,checksumsMap,loader, useThirdParty, format);
+        
+        Writer.writeToFile(zlc, METHODS_TEST_DEPS_ZLC_FILE_TM, artifactsDir);
+        long end = System.currentTimeMillis();
+        LOGGER.log(Level.FINE, "[PROFILE] updateForNextRun(updateZLCFile): " + Writer.millsToSeconds(end - start));
+    }
+
+
+
     public static ZLCFileContent createZLCFileData(
             Map<String, Set<String>> method2tests,
             Map<String, String> checksumMap,
@@ -186,10 +200,10 @@ public class ZLCHelperMethods implements StartsConstants {
         return new ZLCFileContent(methodList, zlcData, format);
     }
 
-    public static List<Set<String>> getChangedData(String artifactsDir, boolean cleanBytes, Map<String, String> methodsChecksums) {
+    public static List<Set<String>> getChangedData(String artifactsDir, boolean cleanBytes, Map<String, String> methodsChecksums, String filePath) {
         long start = System.currentTimeMillis();
         
-        File zlc = new File(artifactsDir, METHODS_TEST_DEPS_ZLC_FILE);
+        File zlc = new File(artifactsDir, filePath);
         if (!zlc.exists()) {
             LOGGER.log(Level.FINEST, NOEXISTING_ZLCFILE_FIRST_RUN);
             return null;

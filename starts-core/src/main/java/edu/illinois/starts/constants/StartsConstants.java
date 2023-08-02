@@ -62,5 +62,6 @@ public interface StartsConstants {
     String CLASS_EXTENSION = ".class";
 
     String METHODS_TEST_DEPS_ZLC_FILE = "method-deps.zlc";
+    String METHODS_TEST_DEPS_ZLC_FILE_TM = "method-deps-tm.zlc";
 
 }

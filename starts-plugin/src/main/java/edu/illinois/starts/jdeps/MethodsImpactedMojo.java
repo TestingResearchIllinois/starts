@@ -88,7 +88,7 @@ public class MethodsImpactedMojo extends MethodsMojo {
     }
 
     protected void setChangedAndNonaffectedMethods() throws MojoExecutionException {
-        List<Set<String>> data = ZLCHelperMethods.getChangedData(getArtifactsDir(), cleanBytes, methodsCheckSums);
+        List<Set<String>> data = ZLCHelperMethods.getChangedData(getArtifactsDir(), cleanBytes, methodsCheckSums, METHODS_TEST_DEPS_ZLC_FILE);
         changedMethods = data == null ? new HashSet<String>() : data.get(0);
         affectedTests = data == null ? new HashSet<String>() : data.get(1);
         impactedMethods = findImpactedMethods(changedMethods);

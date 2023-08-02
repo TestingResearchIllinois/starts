@@ -41,6 +41,8 @@ public class MethodLevelStaticDepsBuilder {
 
     public static Map<String, String> methodsCheckSums = new HashMap<>();
 
+    public static  Map<String, Set<String>> methods2testmethods = new HashMap<>();
+
     public static void buildMethodsGraph(ClassLoader loader) throws Exception {
         // find all the class files
         HashSet<String> classPaths = new HashSet<>(Files.walk(Paths.get("."))
@@ -69,21 +71,7 @@ public class MethodLevelStaticDepsBuilder {
         addVariableDeps();
         method2tests = invertMap(test2methods);
 
-        // System.out.println("test2methods: " + test2methods);
-        // System.out.println("method2tests: " + method2tests);
 
-        // System.out.println(methodCheckSum);
-        // // save debugging info
-        // FileUtil.saveMap(methodName2MethodNames, Macros.SMETHODS_ROOT_DIR_NAME,
-        // "graph.txt");
-        // FileUtil.saveMap(hierarchy_parents, Macros.SMETHODS_ROOT_DIR_NAME,
-        // "hierarchy_parents.txt");
-        // FileUtil.saveMap(hierarchy_children, Macros.SMETHODS_ROOT_DIR_NAME,
-        // "hierarchy_children.txt");
-        // FileUtil.saveMap(class2ContainedMethodNames, Macros.SMETHODS_ROOT_DIR_NAME,
-        // "class2methods.txt");
-        // FileUtil.saveMap(test2methods, Macros.SMETHODS_ROOT_DIR_NAME,
-        // "test2methods.txt");
     }
 
     public static void computeChecksums(ClassLoader loader) {
@@ -118,6 +106,36 @@ public class MethodLevelStaticDepsBuilder {
                         methodChecksum);
             }
         }
+    }
+
+
+
+    public static void computeMethod2TestMethods(){
+        for (String method : methodName2MethodNames.keySet()){
+            if (!method.contains("Test")){
+                Set<String> deps = getMethodDeps(method);
+                Set<String> to_remove = new HashSet<>();
+
+                for (String dep : deps){
+                    if (!dep.contains("Test")){
+                        to_remove.add(dep);
+                    }
+                }
+                deps.removeAll(to_remove);
+                methods2testmethods.put(method, deps);
+            }
+        }
+    }
+
+
+    public static Set<String> getTestMethods(){
+        Set<String> testMethods = new HashSet<>();
+        for (String testMethod : methodsCheckSums.keySet()){
+            if (testMethod.contains("Test")){
+                testMethods.add(testMethod);
+            }
+        }
+        return testMethods;
     }
 
 
