@@ -17,31 +17,24 @@ import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.Execute;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
-import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.maven.surefire.booter.Classpath;
 import java.nio.file.Paths;
 import java.nio.file.Files;
 
-
-@Mojo(name = "methods-tm", requiresDirectInvocation = true, requiresDependencyResolution = ResolutionScope.TEST)
+@Mojo(name = "methods-impacted-tm", requiresDirectInvocation = true, requiresDependencyResolution = ResolutionScope.TEST)
 @Execute(phase = LifecyclePhase.TEST_COMPILE)
-public class MethodsTMMojo extends MethodsMojo {
+public class MethodsImpactedTMMojo extends MethodsTMMojo {
+
     private static final String TARGET = "target";
 
     private Logger logger;
+    private Set<String> impactedMethods;
     private Set<String> changedMethods;
     private Set<String> affectedTestMethods;
     private Set<String> nonAffectedTestMethods;
     private Map<String, String> methodsCheckSums;
     private Map<String, Set<String>> methods2testmethods;
-
-    @Parameter(property = "updateMethodsChecksums", defaultValue = TRUE)
-    private boolean updateMethodsChecksums;
-
-    public void setUpdateMethodsChecksums(boolean updateChecksums) {
-        this.updateMethodsChecksums = updateChecksums;
-    }
 
     public void execute() throws MojoExecutionException {
         Logger.getGlobal().setLoggingLevel(Level.parse(loggingLevel));
@@ -54,7 +47,6 @@ public class MethodsTMMojo extends MethodsMojo {
         try {
             MethodLevelStaticDepsBuilder.buildMethodsGraph(loader);
             MethodLevelStaticDepsBuilder.computeChecksums(loader);
-
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -70,19 +62,24 @@ public class MethodsTMMojo extends MethodsMojo {
 
         if (!Files.exists(Paths.get(getArtifactsDir() + METHODS_TEST_DEPS_ZLC_FILE_TM))) {
             changedMethods = MethodLevelStaticDepsBuilder.getMethods();
+            impactedMethods = MethodLevelStaticDepsBuilder.getMethods();
             affectedTestMethods = MethodLevelStaticDepsBuilder.getTestMethods();
+
             logger.log(Level.INFO, "Changed: " + changedMethods.size());
-            logger.log(Level.INFO, "AffectedTestMethods: " + affectedTestMethods.size());            
-            ZLCHelperMethods.writeZLCFileTM(methods2testmethods, methodsCheckSums, loader, getArtifactsDir(), null, false,
+            logger.log(Level.INFO, "Impacted: " + impactedMethods.size());
+            logger.log(Level.INFO, "AffectedTestMethods: " + affectedTestMethods.size());
+            ZLCHelperMethods.writeZLCFileTM(methods2testmethods, methodsCheckSums, loader, getArtifactsDir(), null,
+                    false,
                     zlcFormat);
             dynamicallyUpdateExcludes(new ArrayList<String>());
 
         } else {
             setChangedAndNonaffectedMethods();
             logger.log(Level.INFO, "Changed: " + changedMethods.size());
+            logger.log(Level.INFO, "Impacted: " + impactedMethods.size());
             logger.log(Level.INFO, "AffectedTestMethods: " + affectedTestMethods.size());
-            logger.log(Level.INFO, "AffectedTestMethods: " + affectedTestMethods);
-            ZLCHelperMethods.writeZLCFileTM(methods2testmethods, methodsCheckSums, loader, getArtifactsDir(), null, false,
+            ZLCHelperMethods.writeZLCFileTM(methods2testmethods, methodsCheckSums, loader, getArtifactsDir(), null,
+                    false,
                     zlcFormat);
             List<String> excludePaths = Writer.fqnsToExcludePath(nonAffectedTestMethods);
             dynamicallyUpdateExcludes(excludePaths);
@@ -90,20 +87,24 @@ public class MethodsTMMojo extends MethodsMojo {
     }
 
     protected void setChangedAndNonaffectedMethods() throws MojoExecutionException {
-        List<Set<String>> data = ZLCHelperMethods.getChangedData(getArtifactsDir(), cleanBytes, methodsCheckSums,METHODS_TEST_DEPS_ZLC_FILE_TM );
+        List<Set<String>> data = ZLCHelperMethods.getChangedData(getArtifactsDir(), cleanBytes, methodsCheckSums,
+                METHODS_TEST_DEPS_ZLC_FILE_TM);
         changedMethods = data == null ? new HashSet<String>() : data.get(0);
         affectedTestMethods = data == null ? new HashSet<String>() : data.get(1);
+        impactedMethods = findImpactedMethods(changedMethods);
+        for (String impactedMethod : impactedMethods) {
+            affectedTestMethods.addAll(methods2testmethods.getOrDefault(impactedMethod, new HashSet<String>()));
+        }
         nonAffectedTestMethods = MethodLevelStaticDepsBuilder.getTests();
         nonAffectedTestMethods.removeAll(affectedTestMethods);
     }
 
     private Set<String> findImpactedMethods(Set<String> affectedMethods) {
         Set<String> impactedMethods = new HashSet<>(affectedMethods);
-        Map<String, Set<String>> graph = MethodLevelStaticDepsBuilder.methodName2MethodNames;
         for (String method : affectedMethods) {
-            if (graph.containsKey(method)) {
-                impactedMethods.addAll(graph.get(method));
-            }
+            System.out.println(method);
+            impactedMethods.addAll(MethodLevelStaticDepsBuilder.getMethodDeps(method));
+
         }
         return impactedMethods;
     }
