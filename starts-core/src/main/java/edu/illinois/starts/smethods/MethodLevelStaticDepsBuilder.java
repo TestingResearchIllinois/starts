@@ -1,11 +1,9 @@
 package edu.illinois.starts.smethods;
 
-
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.MethodNode;
-
 
 import edu.illinois.starts.util.ChecksumUtil;
 
@@ -66,11 +64,10 @@ public class MethodLevelStaticDepsBuilder {
         test2methods = getDepsSingleThread(testClasses);
 
         // Filter out the variables in the graph. We only need methods.
-        filterVariables();
         addReflexiveClosure();
         methodName2MethodNames = invertMap(methodName2MethodNames);
+        addVariableDeps();
         method2tests = invertMap(test2methods);
-        computeChecksums(loader);
 
         // System.out.println("test2methods: " + test2methods);
         // System.out.println("method2tests: " + method2tests);
@@ -116,8 +113,24 @@ public class MethodLevelStaticDepsBuilder {
                     throw new RuntimeException(e);
                 }
 
-                methodsCheckSums.put(class_name + "#" + method.name + method.desc.substring(0, method.desc.indexOf(")") + 1), methodChecksum);
+                methodsCheckSums.put(
+                        class_name + "#" + method.name + method.desc.substring(0, method.desc.indexOf(")") + 1),
+                        methodChecksum);
             }
+        }
+    }
+
+
+
+    public static void addVariableDeps() {
+        for (String key : methodName2MethodNames.keySet()) {
+            if (key.endsWith(")")) continue;
+            
+            Set<String> deps = methodName2MethodNames.get(key);
+            for (String dep : deps) {
+                methodName2MethodNames.get(dep).add(key);
+            }
+
         }
     }
 
@@ -204,6 +217,28 @@ public class MethodLevelStaticDepsBuilder {
                 }
             }
         }
+    }
+
+    public static Set<String> getMethodDeps(String methodSignature) {
+        
+        Set<String> visitedMethods = new HashSet<>();
+        // BFS
+        ArrayDeque<String> queue = new ArrayDeque<>();
+
+        // initialization
+        queue.add(methodSignature);
+        visitedMethods.add(methodSignature);
+
+        while (!queue.isEmpty()) {
+            String currentMethod = queue.pollFirst();
+            for (String invokedMethod : methodName2MethodNames.getOrDefault(currentMethod, new HashSet<>())) {
+                if (!visitedMethods.contains(invokedMethod)) {
+                    queue.add(invokedMethod);
+                    visitedMethods.add(invokedMethod);
+                }
+            }
+        }
+        return visitedMethods;
     }
 
     public static Set<String> getDeps(String testClass) {

@@ -7,19 +7,16 @@ package edu.illinois.starts.jdeps;
 import java.util.*;
 import java.util.logging.Level;
 
-import edu.illinois.starts.constants.StartsConstants;
 import edu.illinois.starts.helpers.Writer;
 import edu.illinois.starts.helpers.ZLCHelperMethods;
 import edu.illinois.starts.maven.AgentLoader;
 import edu.illinois.starts.smethods.MethodLevelStaticDepsBuilder;
 import edu.illinois.starts.util.Logger;
-import edu.illinois.starts.util.Pair;
 
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.Execute;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
-import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.maven.surefire.booter.Classpath;
 import java.nio.file.Paths;
@@ -53,6 +50,7 @@ public class MethodsImpactedMojo extends MethodsMojo {
         // Build method level static dependencies
         try {
             MethodLevelStaticDepsBuilder.buildMethodsGraph(loader);
+            MethodLevelStaticDepsBuilder.computeChecksums(loader);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -94,17 +92,19 @@ public class MethodsImpactedMojo extends MethodsMojo {
         changedMethods = data == null ? new HashSet<String>() : data.get(0);
         affectedTests = data == null ? new HashSet<String>() : data.get(1);
         impactedMethods = findImpactedMethods(changedMethods);
+        for (String impactedMethod : impactedMethods) {
+            affectedTests.addAll(method2tests.getOrDefault(impactedMethod, new HashSet<String>()));
+        }
         nonAffectedTests = MethodLevelStaticDepsBuilder.getTests();
         nonAffectedTests.removeAll(affectedTests);
     }
 
     private Set<String> findImpactedMethods(Set<String> affectedMethods) {
         Set<String> impactedMethods = new HashSet<>(affectedMethods);
-        Map<String, Set<String>> graph = MethodLevelStaticDepsBuilder.methodName2MethodNames;
         for (String method : affectedMethods) {
-            if (graph.containsKey(method)) {
-                impactedMethods.addAll(graph.get(method));
-            }
+            System.out.println(method);
+            impactedMethods.addAll(MethodLevelStaticDepsBuilder.getMethodDeps(method));
+
         }
         return impactedMethods;
     }

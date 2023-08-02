@@ -56,6 +56,8 @@ public class MethodsMojo extends DiffMojo {
         // Build method level static dependencies
         try {
             MethodLevelStaticDepsBuilder.buildMethodsGraph(loader);
+            MethodLevelStaticDepsBuilder.computeChecksums(loader);
+
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -73,7 +75,6 @@ public class MethodsMojo extends DiffMojo {
             affectedTests = MethodLevelStaticDepsBuilder.getTests();
 
             logger.log(Level.INFO, "Changed: " + changedMethods.size());
-            logger.log(Level.INFO, "Impacted: " + changedMethods.size());
             logger.log(Level.INFO, "AffectedTestClasses: " + affectedTests.size());
             ZLCHelperMethods.writeZLCFile(method2tests, methodsCheckSums, loader, getArtifactsDir(), null, false,
                     zlcFormat);
@@ -82,7 +83,6 @@ public class MethodsMojo extends DiffMojo {
         } else {
             setChangedAndNonaffectedMethods();
             logger.log(Level.INFO, "Changed: " + changedMethods.size());
-            logger.log(Level.INFO, "Impacted: " + changedMethods.size());
             logger.log(Level.INFO, "AffectedTestClasses: " + affectedTests.size());
             ZLCHelperMethods.writeZLCFile(method2tests, methodsCheckSums, loader, getArtifactsDir(), null, false,
                     zlcFormat);
