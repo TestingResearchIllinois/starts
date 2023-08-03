@@ -28,7 +28,6 @@ import java.nio.file.Files;
 @Mojo(name = "hybrid-impacted", requiresDirectInvocation = true, requiresDependencyResolution = ResolutionScope.TEST)
 @Execute(phase = LifecyclePhase.TEST_COMPILE)
 public class HybridImpactedMojo extends HybridMojo {
-    private static final String TARGET = "target";
 
     private Logger logger;
     private Set<String> changedMethods;
@@ -125,15 +124,6 @@ public class HybridImpactedMojo extends HybridMojo {
 
         }
         return impactedMethods;
-    }
-
-
-    private Set<String> getAllMethods() {
-        Set<String> allMethods = new HashSet<>();
-        for (Set<String> methods : MethodLevelStaticDepsBuilder.methodName2MethodNames.values()) {
-            allMethods.addAll(methods);
-        }
-        return allMethods;
     }
 
     private void dynamicallyUpdateExcludes(List<String> excludePaths) throws MojoExecutionException {
