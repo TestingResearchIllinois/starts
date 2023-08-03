@@ -26,8 +26,6 @@ import java.nio.file.Files;
 @Execute(phase = LifecyclePhase.TEST_COMPILE)
 public class MethodsImpactedTMMojo extends MethodsTMMojo {
 
-    private static final String TARGET = "target";
-
     private Logger logger;
     private Set<String> impactedMethods;
     private Set<String> changedMethods;
@@ -65,8 +63,8 @@ public class MethodsImpactedTMMojo extends MethodsTMMojo {
             impactedMethods = MethodLevelStaticDepsBuilder.getMethods();
             affectedTestMethods = MethodLevelStaticDepsBuilder.getTestMethods();
 
-            logger.log(Level.INFO, "Changed: " + changedMethods.size());
-            logger.log(Level.INFO, "Impacted: " + impactedMethods.size());
+            logger.log(Level.INFO, "ChangedMethods: " + changedMethods.size());
+            logger.log(Level.INFO, "ImpactedMethods: " + impactedMethods.size());
             logger.log(Level.INFO, "AffectedTestMethods: " + affectedTestMethods.size());
             ZLCHelperMethods.writeZLCFileTM(methods2testmethods, methodsCheckSums, loader, getArtifactsDir(), null,
                     false,
@@ -75,8 +73,8 @@ public class MethodsImpactedTMMojo extends MethodsTMMojo {
 
         } else {
             setChangedAndNonaffectedMethods();
-            logger.log(Level.INFO, "Changed: " + changedMethods.size());
-            logger.log(Level.INFO, "Impacted: " + impactedMethods.size());
+            logger.log(Level.INFO, "ChangedMethods: " + changedMethods.size());
+            logger.log(Level.INFO, "ImpactedMethods: " + impactedMethods.size());
             logger.log(Level.INFO, "AffectedTestMethods: " + affectedTestMethods.size());
             ZLCHelperMethods.writeZLCFileTM(methods2testmethods, methodsCheckSums, loader, getArtifactsDir(), null,
                     false,
@@ -107,14 +105,6 @@ public class MethodsImpactedTMMojo extends MethodsTMMojo {
 
         }
         return impactedMethods;
-    }
-
-    private Set<String> getAllMethods() {
-        Set<String> allMethods = new HashSet<>();
-        for (Set<String> methods : MethodLevelStaticDepsBuilder.methodName2MethodNames.values()) {
-            allMethods.addAll(methods);
-        }
-        return allMethods;
     }
 
     private void dynamicallyUpdateExcludes(List<String> excludePaths) throws MojoExecutionException {
