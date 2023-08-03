@@ -11,6 +11,7 @@ import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -23,6 +24,7 @@ import edu.illinois.starts.constants.StartsConstants;
 import edu.illinois.starts.data.ZLCData;
 import edu.illinois.starts.data.ZLCFileContent;
 import edu.illinois.starts.data.ZLCFormat;
+import edu.illinois.starts.smethods.MethodLevelStaticDepsBuilder;
 import edu.illinois.starts.util.ChecksumUtil;
 import edu.illinois.starts.util.Logger;
 
@@ -58,7 +60,24 @@ public class ZLCHelperMethods implements StartsConstants {
 
 
 
-        public static void writeZLCFileTM(Map<String, Set<String>> method2tests,Map<String, String> checksumsMap ,ClassLoader loader,
+
+    public static void writeZLCFileH(Map<String, Set<String>> method2tests,Map<String, String> methodsChecksums, Map<String, String> classesChecksums ,ClassLoader loader,
+            String artifactsDir, Set<String> unreached, boolean useThirdParty,
+            ZLCFormat format) {
+        long start = System.currentTimeMillis();
+        LOGGER.log(Level.FINE, "ZLC format: " + format.toString());
+        ZLCFileContent zlc = createZLCFileData(method2tests,methodsChecksums,loader, useThirdParty, format);
+        Writer.writeToFile(zlc, METHODS_TEST_DEPS_ZLC_FILE, artifactsDir);
+        
+        zlc = createZLCFileDataClasses(classesChecksums,loader, useThirdParty, format);
+        
+        Writer.writeToFile(zlc, CLASSES_ZLC_FILE, artifactsDir);
+        long end = System.currentTimeMillis();
+        LOGGER.log(Level.FINE, "[PROFILE] updateForNextRun(updateZLCFile): " + Writer.millsToSeconds(end - start));
+    }
+
+
+    public static void writeZLCFileTM(Map<String, Set<String>> method2tests,Map<String, String> checksumsMap ,ClassLoader loader,
             String artifactsDir, Set<String> unreached, boolean useThirdParty,
             ZLCFormat format) {
         long start = System.currentTimeMillis();
@@ -69,6 +88,48 @@ public class ZLCHelperMethods implements StartsConstants {
         long end = System.currentTimeMillis();
         LOGGER.log(Level.FINE, "[PROFILE] updateForNextRun(updateZLCFile): " + Writer.millsToSeconds(end - start));
     }
+
+
+
+    public static ZLCFileContent createZLCFileDataClasses(
+            Map<String, String> checksumMap,
+            ClassLoader loader,
+            boolean useJars,
+            ZLCFormat format) {
+
+        long start = System.currentTimeMillis();
+        List<ZLCData> zlcData = new ArrayList<>();
+        ArrayList<String> classList = new ArrayList<>(checksumMap.keySet()); 
+
+        for (Map.Entry<String, String> entry : checksumMap.entrySet()) {
+            String klasName = entry.getKey();
+            String klasChecksum = entry.getValue();
+            
+            String klas = ChecksumUtil.toClassName(klasName);
+            URL url = loader.getResource(klas);
+            String extForm = url.toExternalForm();
+            if (ChecksumUtil.isWellKnownUrl(extForm) || (!useJars && extForm.startsWith("jar:"))) {
+                continue;
+            }
+            String classURL = url.toString();
+            URL newUrl = null;
+            try {
+                newUrl = new URL(classURL);
+            } catch (MalformedURLException e) {
+                throw new RuntimeException(e);
+            }
+            zlcData.add(new ZLCData(newUrl, klasChecksum, format, new HashSet<>(), null));
+        }
+
+        long end = System.currentTimeMillis();
+        LOGGER.log(Level.FINEST, "[TIME]CREATING ZLC FILE: " + (end - start) + MILLISECOND);
+        return new ZLCFileContent(classList, zlcData, format);
+    }
+
+
+
+
+
 
 
 
@@ -199,6 +260,140 @@ public class ZLCHelperMethods implements StartsConstants {
         LOGGER.log(Level.FINEST, "[TIME]CREATING ZLC FILE: " + (end - start) + MILLISECOND);
         return new ZLCFileContent(methodList, zlcData, format);
     }
+
+
+
+ public static List<Set<String>> getChangedDataH(ClassLoader loader, String artifactsDir, boolean cleanBytes ,Map<String, String> classesChecksums, String methodFilePath,String classesFilePath ) {
+        long start = System.currentTimeMillis();
+        
+        File zlc = new File(artifactsDir, classesFilePath);
+        if (!zlc.exists()) {
+            LOGGER.log(Level.FINEST, NOEXISTING_ZLCFILE_FIRST_RUN);
+            return null;
+        }
+
+        Set<String> changedClasses = new HashSet<>();
+        Set<String> oldClasses = new HashSet<>();
+
+
+        try {
+            List<String> zlcLines = Files.readAllLines(zlc.toPath(), Charset.defaultCharset());
+            String space = WHITE_SPACE;
+            zlcLines.remove(0);
+
+            // on PLAIN_TEXT, testsCount+1 will starts from 0
+            for (int i = 0; i < zlcLines.size(); i++) {
+                
+                String line = zlcLines.get(i);
+                String[] parts = line.split(space);
+                String classURL = parts[0];
+                String oldCheckSum = parts[1];
+
+
+
+                // convert classURL to class name   
+                String className = convertPath(classURL);
+                String newChecksum = classesChecksums.get(className);
+                oldClasses.add(className);
+                if (oldCheckSum.equals(newChecksum)) {
+                    continue;
+                }else{
+                    changedClasses.add(className);
+                }
+            }
+        } catch (IOException ioe) {
+            ioe.printStackTrace();
+        }
+        Set<String> newClasses = new HashSet<>(classesChecksums.keySet());
+        newClasses.removeAll(oldClasses);
+        changedClasses.addAll(newClasses);
+
+
+
+
+
+        zlc = new File(artifactsDir, methodFilePath);
+        if (!zlc.exists()) {
+            LOGGER.log(Level.FINEST, NOEXISTING_ZLCFILE_FIRST_RUN);
+            return null;
+        }
+
+
+
+
+
+        Map<String, String>  methodsChecksums = MethodLevelStaticDepsBuilder.getMethodsChecksumsForClasses(changedClasses, loader);
+
+
+        Set<String> changedMethods = new HashSet<>();
+        Set<String> affectedTestClasses = new HashSet<>();
+        Map<String, String> oldMethodsChecksums = new HashMap<>();
+        Map<String, Set<String>> oldMethodsDeps = new HashMap<>();
+        try {
+            List<String> zlcLines = Files.readAllLines(zlc.toPath(), Charset.defaultCharset());
+            String space = WHITE_SPACE;
+            zlcLines.remove(0);
+
+            // on PLAIN_TEXT, testsCount+1 will starts from 0
+            for (int i = 0; i < zlcLines.size(); i++) {
+                
+                String line = zlcLines.get(i);
+                String[] parts = line.split(space);
+                // classURL#methodname
+                String stringURL = parts[0];
+                String classURL = stringURL.split("#")[0];
+                String methodName = stringURL.split("#")[1];
+                String oldCheckSum = parts[1];
+                Set<String> deps;
+                deps = parts.length == 3 ? fromCSV(parts[2]) : new HashSet<>(); // Fields should be returned
+
+
+                // convert classURL to class name   
+                String className = convertPath(classURL);
+                String methodPath = className + "#" + methodName;
+                oldMethodsDeps.put(methodPath, deps);
+                oldMethodsChecksums.put(methodPath, oldCheckSum);
+            }
+        } catch (IOException ioe) {
+            ioe.printStackTrace();
+        }
+
+
+        for (String methodPath : methodsChecksums.keySet()) {
+            String newChecksum = methodsChecksums.get(methodPath);
+            String oldChecksum = oldMethodsChecksums.get(methodPath);
+            
+            if (oldChecksum == null) {
+                changedMethods.add(methodPath);
+                continue;
+            }
+            if (!oldChecksum.equals(newChecksum)) {
+                changedMethods.add(methodPath);
+                affectedTestClasses.addAll(oldMethodsDeps.getOrDefault(methodPath, new HashSet<>()));
+            }
+        }
+
+
+        for (String methodPath : oldMethodsChecksums.keySet()) {
+            String newChecksum = methodsChecksums.get(methodPath);
+            String oldChecksum = oldMethodsChecksums.get(methodPath);
+            if (newChecksum == null) {
+                methodsChecksums.put(methodPath, oldChecksum);
+            }
+        }
+
+        long end = System.currentTimeMillis();
+        List<Set<String>> result = new ArrayList<>();
+        result.add(changedClasses);
+        result.add(changedMethods);
+        result.add(affectedTestClasses);
+        LOGGER.log(Level.FINEST, TIME_COMPUTING_NON_AFFECTED + (end - start) + MILLISECOND);
+        return result;
+    }
+
+
+
+
 
     public static List<Set<String>> getChangedData(String artifactsDir, boolean cleanBytes, Map<String, String> methodsChecksums, String filePath) {
         long start = System.currentTimeMillis();

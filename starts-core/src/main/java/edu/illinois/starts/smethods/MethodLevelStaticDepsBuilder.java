@@ -43,6 +43,8 @@ public class MethodLevelStaticDepsBuilder {
 
     public static  Map<String, Set<String>> methods2testmethods = new HashMap<>();
 
+    public static  Map<String, String> classesChecksums = new HashMap<>();
+
     public static void buildMethodsGraph(ClassLoader loader) throws Exception {
         // find all the class files
         HashSet<String> classPaths = new HashSet<>(Files.walk(Paths.get("."))
@@ -72,6 +74,69 @@ public class MethodLevelStaticDepsBuilder {
         method2tests = invertMap(test2methods);
 
 
+    }
+
+
+
+
+
+    public static Map<String, String> getMethodsChecksumsForClasses(Set<String> classes, ClassLoader loader){
+        for (String className: classes){
+            // String klas = ChecksumUtil.toClassName(methodPath.split("#")[0]);
+            String klas = ChecksumUtil.toClassName(className);
+            URL url = loader.getResource(klas);
+
+            String path = url.getPath();
+            ClassNode node = new ClassNode(Opcodes.ASM5);
+            ClassReader reader = null;
+            try {
+                reader = new ClassReader(new FileInputStream(path));
+            } catch (IOException e) {
+                System.out.println("[ERROR] reading class: " + klas);
+                continue;
+            }
+
+            String methodChecksum = null;
+            reader.accept(node, ClassReader.SKIP_DEBUG);
+            List<MethodNode> methods = node.methods;
+            for (MethodNode method : methods) {
+                String methodContent = ZLCHelperMethods.printMethodContent(method);
+                try {
+                    methodChecksum = ChecksumUtil.computeMethodChecksum(methodContent);
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+
+                methodsCheckSums.put(
+                        className + "#" + method.name + method.desc.substring(0, method.desc.indexOf(")") + 1),
+                        methodChecksum);
+            }
+        }
+        return methodsCheckSums;
+    }
+
+
+
+
+
+
+    public static Set<String> getClasses(){
+        Set<String> classes = new HashSet<>();
+        for (String className: class2ContainedMethodNames.keySet()){
+            classes.add(className);
+        }
+        return classes;
+    }
+
+
+    public static void computeClassesChecksums(ClassLoader loader, boolean cleanBytes){
+        for (String className: class2ContainedMethodNames.keySet()){
+            String klas = ChecksumUtil.toClassName(className);
+            URL url = loader.getResource(klas);
+            ChecksumUtil checksumUtil = new ChecksumUtil(cleanBytes);
+            String checkSum = checksumUtil.computeSingleCheckSum(url);
+            classesChecksums.put(className, checkSum);
+        }
     }
 
     public static void computeChecksums(ClassLoader loader) {

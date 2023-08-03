@@ -63,5 +63,6 @@ public interface StartsConstants {
 
     String METHODS_TEST_DEPS_ZLC_FILE = "method-deps.zlc";
     String METHODS_TEST_DEPS_ZLC_FILE_TM = "method-deps-tm.zlc";
+    String CLASSES_ZLC_FILE = "classes-checksums.zlc";
 
 }
