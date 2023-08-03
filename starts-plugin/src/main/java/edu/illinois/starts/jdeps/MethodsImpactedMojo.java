@@ -29,15 +29,13 @@ import java.nio.file.Files;
 @Execute(phase = LifecyclePhase.TEST_COMPILE)
 public class MethodsImpactedMojo extends MethodsMojo {
     
-    private static final String TARGET = "target";
-
     private Logger logger;
     private Set<String> impactedMethods;
     private Set<String> changedMethods;
-    private Set<String> affectedTests;
-    private Set<String> nonAffectedTests;
+    private Set<String> affectedTestClasses;
+    private Set<String> nonAffectedTestClasses;
     private Map<String, String> methodsCheckSums;
-    private Map<String, Set<String>> method2tests;
+    private Map<String, Set<String>> method2testClasses;
 
 
     public void execute() throws MojoExecutionException {
@@ -54,7 +52,7 @@ public class MethodsImpactedMojo extends MethodsMojo {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
-        method2tests = MethodLevelStaticDepsBuilder.method2tests;
+        method2testClasses = MethodLevelStaticDepsBuilder.method2tests;
         methodsCheckSums = MethodLevelStaticDepsBuilder.methodsCheckSums;
 
         runMethods(loader);
@@ -66,23 +64,23 @@ public class MethodsImpactedMojo extends MethodsMojo {
         if (!Files.exists(Paths.get(getArtifactsDir() + METHODS_TEST_DEPS_ZLC_FILE))) {
             changedMethods = MethodLevelStaticDepsBuilder.getMethods();
             impactedMethods = MethodLevelStaticDepsBuilder.getMethods();
-            affectedTests = MethodLevelStaticDepsBuilder.getTests();
+            affectedTestClasses = MethodLevelStaticDepsBuilder.getTests();
 
-            logger.log(Level.INFO, "Changed: " + changedMethods.size());
-            logger.log(Level.INFO, "Impacted: " + impactedMethods.size());
-            logger.log(Level.INFO, "AffectedTestClasses: " + affectedTests.size());
-            ZLCHelperMethods.writeZLCFile(method2tests, methodsCheckSums, loader, getArtifactsDir(), null, false,
+            logger.log(Level.INFO, "ChangedMethods: " + changedMethods.size());
+            logger.log(Level.INFO, "ImpactedMethods: " + impactedMethods.size());
+            logger.log(Level.INFO, "AffectedTestClasses: " + affectedTestClasses.size());
+            ZLCHelperMethods.writeZLCFile(method2testClasses, methodsCheckSums, loader, getArtifactsDir(), null, false,
                     zlcFormat);
             dynamicallyUpdateExcludes(new ArrayList<String>());
 
         } else {
             setChangedAndNonaffectedMethods();
-            logger.log(Level.INFO, "Changed: " + changedMethods.size());
-            logger.log(Level.INFO, "Impacted: " + impactedMethods.size());
-            logger.log(Level.INFO, "AffectedTestClasses: " + affectedTests.size());
-            ZLCHelperMethods.writeZLCFile(method2tests, methodsCheckSums, loader, getArtifactsDir(), null, false,
+            logger.log(Level.INFO, "ChangedMethods: " + changedMethods.size());
+            logger.log(Level.INFO, "ImpactedMethods: " + impactedMethods.size());
+            logger.log(Level.INFO, "AffectedTestClasses: " + affectedTestClasses.size());
+            ZLCHelperMethods.writeZLCFile(method2testClasses, methodsCheckSums, loader, getArtifactsDir(), null, false,
                     zlcFormat);
-            List<String> excludePaths = Writer.fqnsToExcludePath(nonAffectedTests);
+            List<String> excludePaths = Writer.fqnsToExcludePath(nonAffectedTestClasses);
             dynamicallyUpdateExcludes(excludePaths);
         }
     }
@@ -90,13 +88,13 @@ public class MethodsImpactedMojo extends MethodsMojo {
     protected void setChangedAndNonaffectedMethods() throws MojoExecutionException {
         List<Set<String>> data = ZLCHelperMethods.getChangedData(getArtifactsDir(), cleanBytes, methodsCheckSums, METHODS_TEST_DEPS_ZLC_FILE);
         changedMethods = data == null ? new HashSet<String>() : data.get(0);
-        affectedTests = data == null ? new HashSet<String>() : data.get(1);
+        affectedTestClasses = data == null ? new HashSet<String>() : data.get(1);
         impactedMethods = findImpactedMethods(changedMethods);
         for (String impactedMethod : impactedMethods) {
-            affectedTests.addAll(method2tests.getOrDefault(impactedMethod, new HashSet<String>()));
+            affectedTestClasses.addAll(method2testClasses.getOrDefault(impactedMethod, new HashSet<String>()));
         }
-        nonAffectedTests = MethodLevelStaticDepsBuilder.getTests();
-        nonAffectedTests.removeAll(affectedTests);
+        nonAffectedTestClasses = MethodLevelStaticDepsBuilder.getTests();
+        nonAffectedTestClasses.removeAll(affectedTestClasses);
     }
 
     private Set<String> findImpactedMethods(Set<String> affectedMethods) {
@@ -107,17 +105,6 @@ public class MethodsImpactedMojo extends MethodsMojo {
 
         }
         return impactedMethods;
-    }
-
-
-
-    
-    private Set<String> getAllMethods() {
-        Set<String> allMethods = new HashSet<>();
-        for (Set<String> methods : MethodLevelStaticDepsBuilder.methodName2MethodNames.values()) {
-            allMethods.addAll(methods);
-        }
-        return allMethods;
     }
 
     private void dynamicallyUpdateExcludes(List<String> excludePaths) throws MojoExecutionException {
