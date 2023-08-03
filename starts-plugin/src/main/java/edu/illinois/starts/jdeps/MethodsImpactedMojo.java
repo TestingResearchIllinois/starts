@@ -22,8 +22,6 @@ import org.apache.maven.surefire.booter.Classpath;
 import java.nio.file.Paths;
 import java.nio.file.Files;
 
-// import static edu.illinois.starts.smethods.MethodLevelStaticDepsBuilder.buildMethodsGraph;
-// import static edu.illinois.starts.smethods.MethodLevelStaticDepsBuilder.methodName2MethodNames;
 
 @Mojo(name = "methods-impacted", requiresDirectInvocation = true, requiresDependencyResolution = ResolutionScope.TEST)
 @Execute(phase = LifecyclePhase.TEST_COMPILE)
@@ -60,7 +58,6 @@ public class MethodsImpactedMojo extends MethodsMojo {
 
     protected void runMethods(ClassLoader loader) throws MojoExecutionException {
         // Checking if the file of depedencies exists
-
         if (!Files.exists(Paths.get(getArtifactsDir() + METHODS_TEST_DEPS_ZLC_FILE))) {
             changedMethods = MethodLevelStaticDepsBuilder.getMethods();
             impactedMethods = MethodLevelStaticDepsBuilder.getMethods();
