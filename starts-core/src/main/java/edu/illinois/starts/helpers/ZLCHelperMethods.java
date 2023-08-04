@@ -91,6 +91,23 @@ public class ZLCHelperMethods implements StartsConstants {
 
 
 
+    public static void writeZLCFileHTM(Map<String, Set<String>> method2tests,Map<String, String> methodsChecksums, Map<String, String> classesChecksums ,ClassLoader loader,
+            String artifactsDir, Set<String> unreached, boolean useThirdParty,
+            ZLCFormat format) {
+        long start = System.currentTimeMillis();
+        LOGGER.log(Level.FINE, "ZLC format: " + format.toString());
+        ZLCFileContent zlc = createZLCFileData(method2tests,methodsChecksums,loader, useThirdParty, format);
+        Writer.writeToFile(zlc, METHODS_TEST_DEPS_ZLC_FILE_TM, artifactsDir);
+        
+
+        zlc = createZLCFileDataClasses(classesChecksums,loader, useThirdParty, format);
+        Writer.writeToFile(zlc, CLASSES_ZLC_FILE, artifactsDir);
+        
+        long end = System.currentTimeMillis();
+        LOGGER.log(Level.FINE, "[PROFILE] updateForNextRun(updateZLCFile): " + Writer.millsToSeconds(end - start));
+    }
+
+
     public static ZLCFileContent createZLCFileDataClasses(
             Map<String, String> checksumMap,
             ClassLoader loader,
@@ -272,6 +289,7 @@ public class ZLCHelperMethods implements StartsConstants {
             return null;
         }
 
+
         Set<String> changedClasses = new HashSet<>();
         Set<String> oldClasses = new HashSet<>();
 
@@ -317,7 +335,6 @@ public class ZLCHelperMethods implements StartsConstants {
             LOGGER.log(Level.FINEST, NOEXISTING_ZLCFILE_FIRST_RUN);
             return null;
         }
-
 
 
 
