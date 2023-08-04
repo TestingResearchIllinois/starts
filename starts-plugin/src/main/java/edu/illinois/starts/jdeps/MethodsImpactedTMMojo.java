@@ -100,7 +100,6 @@ public class MethodsImpactedTMMojo extends MethodsTMMojo {
     private Set<String> findImpactedMethods(Set<String> affectedMethods) {
         Set<String> impactedMethods = new HashSet<>(affectedMethods);
         for (String method : affectedMethods) {
-            System.out.println(method);
             impactedMethods.addAll(MethodLevelStaticDepsBuilder.getMethodDeps(method));
 
         }
