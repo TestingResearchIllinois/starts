@@ -41,6 +41,11 @@ public class MethodsMojo extends DiffMojo {
         this.updateMethodsChecksums = updateChecksums;
     }
 
+
+    public Set<String> getChangedMethods() {
+        return Collections.unmodifiableSet(changedMethods);
+    }
+
     public void execute() throws MojoExecutionException {
         Logger.getGlobal().setLoggingLevel(Level.parse(loggingLevel));
         logger = Logger.getGlobal();
