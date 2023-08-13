@@ -29,6 +29,9 @@ public class MethodsMojo extends DiffMojo {
 
     private Logger logger;
     private Set<String> changedMethods;
+    private Set<String> newClasses;
+    private Set<String> oldClasses;
+    private Set<String> changedClasses;
     private Set<String> affectedTestClasses;
     private Set<String> nonAffectedTestClasses;
     private Map<String, String> methodsCheckSums;
@@ -45,6 +48,21 @@ public class MethodsMojo extends DiffMojo {
     public Set<String> getChangedMethods() {
         return Collections.unmodifiableSet(changedMethods);
     }
+
+    public Set<String> getNewClasses() {
+        return Collections.unmodifiableSet(newClasses);
+    }
+
+    public Set<String> getOldClasses() {
+        return Collections.unmodifiableSet(oldClasses);
+    }
+
+    public Set<String> getChangedClasses() {
+        return Collections.unmodifiableSet(changedClasses);
+    }
+
+
+
 
     public void execute() throws MojoExecutionException {
         Logger.getGlobal().setLoggingLevel(Level.parse(loggingLevel));
@@ -72,9 +90,15 @@ public class MethodsMojo extends DiffMojo {
         if (!Files.exists(Paths.get(getArtifactsDir() + METHODS_TEST_DEPS_ZLC_FILE))) {
             changedMethods = MethodLevelStaticDepsBuilder.getMethods();
             affectedTestClasses = MethodLevelStaticDepsBuilder.getTests();
+            oldClasses = new HashSet<>(); 
+            changedClasses = new HashSet<>(); 
+            newClasses = MethodLevelStaticDepsBuilder.getClasses();
 
             logger.log(Level.INFO, "ChangedMethods: " + changedMethods.size());
             logger.log(Level.INFO, "AffectedTestClasses: " + affectedTestClasses.size());
+            logger.log(Level.INFO, "NewClasses: " + newClasses.size());
+            logger.log(Level.INFO, "OldClasses: " + oldClasses.size());
+            logger.log(Level.INFO, "ChangedClasses: " + changedClasses.size());
             ZLCHelperMethods.writeZLCFile(method2testClasses, methodsCheckSums, loader, getArtifactsDir(), null, false,
                     zlcFormat);
             dynamicallyUpdateExcludes(new ArrayList<String>());
@@ -83,6 +107,9 @@ public class MethodsMojo extends DiffMojo {
             setChangedAndNonaffectedMethods();
             logger.log(Level.INFO, "Changed: " + changedMethods.size());
             logger.log(Level.INFO, "AffectedTestClasses: " + affectedTestClasses.size());
+            logger.log(Level.INFO, "NewClasses: " + newClasses.size());
+            logger.log(Level.INFO, "OldClasses: " + oldClasses.size());
+            logger.log(Level.INFO, "ChangedClasses: " + changedClasses.size());
             ZLCHelperMethods.writeZLCFile(method2testClasses, methodsCheckSums, loader, getArtifactsDir(), null, false,
                     zlcFormat);
             List<String> excludePaths = Writer.fqnsToExcludePath(nonAffectedTestClasses);
@@ -95,6 +122,10 @@ public class MethodsMojo extends DiffMojo {
                 METHODS_TEST_DEPS_ZLC_FILE);
         changedMethods = data == null ? new HashSet<String>() : data.get(0);
         affectedTestClasses = data == null ? new HashSet<String>() : data.get(1);
+        oldClasses = data == null ? new HashSet<String>() : data.get(2);
+        changedClasses = data == null ? new HashSet<String>() : data.get(3);
+        newClasses = MethodLevelStaticDepsBuilder.getClasses();
+        newClasses.removeAll(oldClasses);
         nonAffectedTestClasses = MethodLevelStaticDepsBuilder.getTests();
         nonAffectedTestClasses.removeAll(affectedTestClasses);
     }

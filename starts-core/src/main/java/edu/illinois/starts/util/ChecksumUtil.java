@@ -91,6 +91,10 @@ public class ChecksumUtil implements StartsConstants {
         return fqn.replace(DOT, File.separator) + CLASS_EXTENSION;
     }
 
+    public static String toJavaName(String fqn) {
+        return fqn.replace(DOT, File.separator) + JAVA_EXTENSION;
+    }
+
     public static void saveCheckSums(Map<String, Set<RegData>> newCheckSums, String artifactsDir) {
         for (String test : newCheckSums.keySet()) {
             String checksumPath = makeCheckSumPath(test, artifactsDir);

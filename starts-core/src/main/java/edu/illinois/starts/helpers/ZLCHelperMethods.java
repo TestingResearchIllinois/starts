@@ -424,6 +424,8 @@ public class ZLCHelperMethods implements StartsConstants {
         Set<String> changedMethods = new HashSet<>();
         Set<String> affectedTests = new HashSet<>();
         Set<String> oldMethods = new HashSet<>();
+        Set<String> oldClasses = new HashSet<>();
+        Set<String> changedClasses = new HashSet<>();
         try {
             List<String> zlcLines = Files.readAllLines(zlc.toPath(), Charset.defaultCharset());
             String space = WHITE_SPACE;
@@ -447,20 +449,14 @@ public class ZLCHelperMethods implements StartsConstants {
                 String className = convertPath(classURL);
                 String methodPath = className + "#" + methodName;
                 String newChecksum = methodsChecksums.get(methodPath);
-                oldMethods.add(methodPath);
-                // System.out.println("***********************");
-                // System.out.println("methodPath: " + methodPath);
-                // System.out.println("new checksum: " + newChecksum);
-                // System.out.println("old checksum: " + oldCheckSum);
-                // System.out.println("***********************");
-
-                
-                
+                oldClasses.add(className);
+                oldMethods.add(methodPath);                
                 if (oldCheckSum.equals(newChecksum)) {
                     continue;
                 }else{
                     changedMethods.add(methodPath);
                     affectedTests.addAll(deps);
+                    changedClasses.add(className);
                 }
             }
         } catch (IOException ioe) {
@@ -474,6 +470,8 @@ public class ZLCHelperMethods implements StartsConstants {
         changedMethods.addAll(newMethods);
         result.add(changedMethods);
         result.add(affectedTests);
+        result.add(oldClasses);
+        result.add(changedClasses);
         LOGGER.log(Level.FINEST, TIME_COMPUTING_NON_AFFECTED + (end - start) + MILLISECOND);
         return result;
     }

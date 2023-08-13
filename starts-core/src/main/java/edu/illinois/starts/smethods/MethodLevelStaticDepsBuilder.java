@@ -41,9 +41,9 @@ public class MethodLevelStaticDepsBuilder {
 
     public static Map<String, String> methodsCheckSums = new HashMap<>();
 
-    public static  Map<String, Set<String>> methods2testmethods = new HashMap<>();
+    public static Map<String, Set<String>> methods2testmethods = new HashMap<>();
 
-    public static  Map<String, String> classesChecksums = new HashMap<>();
+    public static Map<String, String> classesChecksums = new HashMap<>();
 
     public static void buildMethodsGraph(ClassLoader loader) throws Exception {
         // find all the class files
@@ -73,15 +73,10 @@ public class MethodLevelStaticDepsBuilder {
         addVariableDeps();
         method2tests = invertMap(test2methods);
 
-
     }
 
-
-
-
-
-    public static Map<String, String> getMethodsChecksumsForClasses(Set<String> classes, ClassLoader loader){
-        for (String className: classes){
+    public static Map<String, String> getMethodsChecksumsForClasses(Set<String> classes, ClassLoader loader) {
+        for (String className : classes) {
             // String klas = ChecksumUtil.toClassName(methodPath.split("#")[0]);
             String klas = ChecksumUtil.toClassName(className);
             URL url = loader.getResource(klas);
@@ -115,22 +110,16 @@ public class MethodLevelStaticDepsBuilder {
         return methodsCheckSums;
     }
 
-
-
-
-
-
-    public static Set<String> getClasses(){
+    public static Set<String> getClasses() {
         Set<String> classes = new HashSet<>();
-        for (String className: class2ContainedMethodNames.keySet()){
+        for (String className : class2ContainedMethodNames.keySet()) {
             classes.add(className);
         }
         return classes;
     }
 
-
-    public static void computeClassesChecksums(ClassLoader loader, boolean cleanBytes){
-        for (String className: class2ContainedMethodNames.keySet()){
+    public static void computeClassesChecksums(ClassLoader loader, boolean cleanBytes) {
+        for (String className : class2ContainedMethodNames.keySet()) {
             String klas = ChecksumUtil.toClassName(className);
             URL url = loader.getResource(klas);
             ChecksumUtil checksumUtil = new ChecksumUtil(cleanBytes);
@@ -144,6 +133,11 @@ public class MethodLevelStaticDepsBuilder {
             // String klas = ChecksumUtil.toClassName(methodPath.split("#")[0]);
             String klas = ChecksumUtil.toClassName(class_name);
             URL url = loader.getResource(klas);
+            
+            // System.out.println("class_name: " + class_name);
+            // System.out.println("klas: " + klas);
+            // System.out.println("url: " + url);
+            // System.out.println("=====================================");
 
             String path = url.getPath();
             ClassNode node = new ClassNode(Opcodes.ASM5);
@@ -173,16 +167,14 @@ public class MethodLevelStaticDepsBuilder {
         }
     }
 
-
-
-    public static void computeMethod2TestMethods(){
-        for (String method : methodName2MethodNames.keySet()){
-            if (!method.contains("Test")){
+    public static void computeMethod2TestMethods() {
+        for (String method : methodName2MethodNames.keySet()) {
+            if (!method.contains("Test")) {
                 Set<String> deps = getMethodDeps(method);
                 Set<String> to_remove = new HashSet<>();
 
-                for (String dep : deps){
-                    if (!dep.contains("Test")){
+                for (String dep : deps) {
+                    if (!dep.contains("Test")) {
                         to_remove.add(dep);
                     }
                 }
@@ -192,23 +184,21 @@ public class MethodLevelStaticDepsBuilder {
         }
     }
 
-
-    public static Set<String> getTestMethods(){
+    public static Set<String> getTestMethods() {
         Set<String> testMethods = new HashSet<>();
-        for (String testMethod : methodsCheckSums.keySet()){
-            if (testMethod.contains("Test")){
+        for (String testMethod : methodsCheckSums.keySet()) {
+            if (testMethod.contains("Test")) {
                 testMethods.add(testMethod);
             }
         }
         return testMethods;
     }
 
-
-
     public static void addVariableDeps() {
         for (String key : methodName2MethodNames.keySet()) {
-            if (key.endsWith(")")) continue;
-            
+            if (key.endsWith(")"))
+                continue;
+
             Set<String> deps = methodName2MethodNames.get(key);
             for (String dep : deps) {
                 methodName2MethodNames.get(dep).add(key);
@@ -232,8 +222,7 @@ public class MethodLevelStaticDepsBuilder {
             }
         }
 
-        // System.out.println("class2ContainedMethodNames: " +
-        // class2ContainedMethodNames);
+        // System.out.println("class2ContainedMethodNames: " + class2ContainedMethodNames);
         // System.out.println("hierarchy_parents: " + hierarchy_parents);
         // System.out.println("hierarchy_children: " + hierarchy_children);
         // System.out.println("methodCheckSum: " + methodCheckSum);
@@ -303,7 +292,7 @@ public class MethodLevelStaticDepsBuilder {
     }
 
     public static Set<String> getMethodDeps(String methodSignature) {
-        
+
         Set<String> visitedMethods = new HashSet<>();
         // BFS
         ArrayDeque<String> queue = new ArrayDeque<>();

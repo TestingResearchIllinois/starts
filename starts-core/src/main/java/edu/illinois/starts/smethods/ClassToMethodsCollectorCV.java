@@ -33,7 +33,7 @@ public class ClassToMethodsCollectorCV extends ClassVisitor {
     @Override
     public void visit(int version, int access, String name, String signature, String superName, String[] interfaces) {
         super.visit(version, access, name, signature, superName, interfaces);
-        mClassName = name;
+        mClassName = name;        
         Set<String> parents = hierarchy_parents.getOrDefault(name, new HashSet<>());
         if (superName != null && !superName.startsWith("java/") && !superName.startsWith("org/junit/")
                 && !superName.startsWith(Macros.PROJECT_PACKAGE)) {
