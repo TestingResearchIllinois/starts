@@ -21,6 +21,7 @@ import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.maven.surefire.booter.Classpath;
 import java.nio.file.Paths;
+import java.net.URL;
 import java.nio.file.Files;
 
 @Mojo(name = "methods", requiresDirectInvocation = true, requiresDependencyResolution = ResolutionScope.TEST)
@@ -34,6 +35,7 @@ public class MethodsMojo extends DiffMojo {
     private Set<String> changedClasses;
     private Set<String> affectedTestClasses;
     private Set<String> nonAffectedTestClasses;
+    private Set<String> nonAffectedMethods;
     private Map<String, String> methodsCheckSums;
     private Map<String, Set<String>> method2testClasses;
 
@@ -57,8 +59,21 @@ public class MethodsMojo extends DiffMojo {
         return Collections.unmodifiableSet(oldClasses);
     }
 
-    public Set<String> getChangedClasses() {
-        return Collections.unmodifiableSet(changedClasses);
+    public Set<String> getChangedClasses() throws MojoExecutionException {
+        Classpath sfClassPath = getSureFireClassPath();
+        ClassLoader loader = createClassLoader(sfClassPath);
+        Set<String> changedC = new HashSet<>();
+        for (String c : changedClasses) {
+            URL url = loader.getResource(c);
+            String extForm = url.toExternalForm();
+            changedC.add(extForm);
+        }
+        return Collections.unmodifiableSet(changedC);
+    }
+
+
+    public Set<String> getNonAffectedMethods() {
+        return Collections.unmodifiableSet(nonAffectedMethods);
     }
 
 
@@ -93,6 +108,7 @@ public class MethodsMojo extends DiffMojo {
             oldClasses = new HashSet<>(); 
             changedClasses = new HashSet<>(); 
             newClasses = MethodLevelStaticDepsBuilder.getClasses();
+            nonAffectedMethods = new HashSet<>();
 
             logger.log(Level.INFO, "ChangedMethods: " + changedMethods.size());
             logger.log(Level.INFO, "AffectedTestClasses: " + affectedTestClasses.size());
@@ -128,6 +144,8 @@ public class MethodsMojo extends DiffMojo {
         newClasses.removeAll(oldClasses);
         nonAffectedTestClasses = MethodLevelStaticDepsBuilder.getTests();
         nonAffectedTestClasses.removeAll(affectedTestClasses);
+        nonAffectedMethods = MethodLevelStaticDepsBuilder.getMethods();
+        nonAffectedMethods.removeAll(changedMethods);
     }
 
     private void dynamicallyUpdateExcludes(List<String> excludePaths) throws MojoExecutionException {

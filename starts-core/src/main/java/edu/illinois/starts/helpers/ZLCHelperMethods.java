@@ -467,6 +467,10 @@ public class ZLCHelperMethods implements StartsConstants {
         List<Set<String>> result = new ArrayList<>();
         Set<String> newMethods = new HashSet<>(methodsChecksums.keySet());
         newMethods.removeAll(oldMethods);
+        for (String method: newMethods) {
+            changedClasses.add(convertPath(method.split("#")[0]));
+        }
+        
         changedMethods.addAll(newMethods);
         result.add(changedMethods);
         result.add(affectedTests);
