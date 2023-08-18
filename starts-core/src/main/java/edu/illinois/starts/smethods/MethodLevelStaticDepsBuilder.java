@@ -179,7 +179,7 @@ public class MethodLevelStaticDepsBuilder {
     }
 
     public static void computeMethod2TestMethods() {
-        for (String method : methodName2MethodNames.keySet()) {
+        for (String method : methodDependencyGraph.keySet()) {
             if (!method.contains("Test")) {
                 Set<String> deps = getMethodDeps(method);
                 Set<String> to_remove = new HashSet<>();
@@ -265,7 +265,7 @@ public class MethodLevelStaticDepsBuilder {
         ArrayDeque<String> queue = new ArrayDeque<>();
 
         // initialization
-        for (String method : methodName2MethodNames.keySet()) {
+        for (String method : methodDependencyGraph.keySet()) {
             if (method.startsWith(testClass + "#")) {
                 queue.add(method);
                 visitedMethods.add(method);
@@ -274,7 +274,7 @@ public class MethodLevelStaticDepsBuilder {
 
         while (!queue.isEmpty()) {
             String currentMethod = queue.pollFirst();
-            for (String invokedMethod : methodName2MethodNames.getOrDefault(currentMethod, new HashSet<>())) {
+            for (String invokedMethod : methodDependencyGraph.getOrDefault(currentMethod, new HashSet<>())) {
                 if (!visitedMethods.contains(invokedMethod)) {
                     queue.add(invokedMethod);
                     visitedMethods.add(invokedMethod);
@@ -286,8 +286,8 @@ public class MethodLevelStaticDepsBuilder {
 
     // simple DFS
     public static void getDepsDFS(String methodName, Set<String> visitedMethods) {
-        if (methodName2MethodNames.containsKey(methodName)) {
-            for (String method : methodName2MethodNames.get(methodName)) {
+        if (methodDependencyGraph.containsKey(methodName)) {
+            for (String method : methodDependencyGraph.get(methodName)) {
                 if (!visitedMethods.contains(method)) {
                     visitedMethods.add(method);
                     getDepsDFS(method, visitedMethods);
@@ -308,7 +308,7 @@ public class MethodLevelStaticDepsBuilder {
 
         while (!queue.isEmpty()) {
             String currentMethod = queue.pollFirst();
-            for (String invokedMethod : methodName2MethodNames.getOrDefault(currentMethod, new HashSet<>())) {
+            for (String invokedMethod : methodDependencyGraph.getOrDefault(currentMethod, new HashSet<>())) {
                 if (!visitedMethods.contains(invokedMethod)) {
                     queue.add(invokedMethod);
                     visitedMethods.add(invokedMethod);
@@ -320,7 +320,7 @@ public class MethodLevelStaticDepsBuilder {
 
     public static Set<String> getDeps(String testClass) {
         Set<String> visited = new HashSet<>();
-        for (String method : methodName2MethodNames.keySet()) {
+        for (String method : methodDependencyGraph.keySet()) {
             if (method.startsWith(testClass + "#")) {
                 visited.add(method);
                 getDepsDFS(method, visited);
@@ -372,18 +372,6 @@ public class MethodLevelStaticDepsBuilder {
         return res;
     }
 
-    public static void filterVariables() {
-        // Filter out keys that are variables.
-        methodName2MethodNames.keySet().removeIf(method -> !method.matches(".*\\(.*\\)"));
-
-        // Filter values of methodName2MethodNames
-        methodName2MethodNames.values()
-                .forEach(methodList -> methodList.removeIf(method -> !method.matches(".*\\(.*\\)")));
-
-        // Filter from test2methods
-        testClasses2methods.values()
-                .forEach(methodList -> methodList.removeIf(method -> !method.matches(".*\\(.*\\)")));
-    }
 
     public static Map<String, Set<String>> invertMap(Map<String, Set<String>> mapToInvert) {
         Map<String, Set<String>> map = mapToInvert;

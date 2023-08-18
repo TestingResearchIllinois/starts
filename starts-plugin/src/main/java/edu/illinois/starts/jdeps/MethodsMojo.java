@@ -33,7 +33,7 @@ public class MethodsMojo extends DiffMojo {
      * Set this to "true" to compute impaced methods as well. False indicated only
      * changed methods will be compute.
      */
-    @Parameter(property = "computeImpactedMethods", defaultValue = FALSE)
+    @Parameter(property = "computeImpactedMethods", defaultValue = TRUE)
     private boolean computeImpactedMethods;
 
     public void setComputeImpactedMethods(boolean computeImpactedMethods) {
@@ -50,13 +50,14 @@ public class MethodsMojo extends DiffMojo {
     private Logger logger;
     private Set<String> changedMethods;
     private Set<String> newMethods;
+    private Set<String> impactedMethods;
     private Set<String> newClasses;
     private Set<String> oldClasses;
     private Set<String> changedClasses;
     private Set<String> affectedTestClasses;
-    // private Set<String> nonAffectedTestClasses;
+    private Set<String> nonAffectedTestClasses;
     private Set<String> nonAffectedMethods;
-    private Map<String, String> methodsCheckSums;
+    private Map<String, String> methodsCheckSum;
     private Map<String, Set<String>> method2testClasses;
     private ClassLoader loader;
 
@@ -101,14 +102,14 @@ public class MethodsMojo extends DiffMojo {
         // Build method level static dependencies
         try {
             MethodLevelStaticDepsBuilder.buildMethodsGraph();
-            methodsCheckSums = MethodLevelStaticDepsBuilder.computeMethodsChecksum(loader);
+            methodsCheckSum = MethodLevelStaticDepsBuilder.computeMethodsChecksum(loader);
             method2testClasses = MethodLevelStaticDepsBuilder.computeMethod2testClasses();
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
 
         if (computeImpactedMethods) {
-            // runMethodsImpacted();
+            runMethodsImpacted();
         } else {
             runMethodsChanged();
         }
@@ -117,7 +118,8 @@ public class MethodsMojo extends DiffMojo {
     protected void runMethodsChanged() throws MojoExecutionException {
 
         if (!Files.exists(Paths.get(getArtifactsDir() + METHODS_TEST_DEPS_ZLC_FILE))) {
-            changedMethods = MethodLevelStaticDepsBuilder.getMethods();
+            changedMethods = new HashSet<>();
+            newMethods = MethodLevelStaticDepsBuilder.getMethods();
             affectedTestClasses = MethodLevelStaticDepsBuilder.getTests();
             oldClasses = new HashSet<>();
             changedClasses = new HashSet<>();
@@ -125,13 +127,13 @@ public class MethodsMojo extends DiffMojo {
             nonAffectedMethods = new HashSet<>();
 
             logger.log(Level.INFO, "ChangedMethods: " + changedMethods.size());
-            logger.log(Level.INFO, "newMethods: " + changedMethods.size());
+            logger.log(Level.INFO, "NewMethods: " + newMethods.size());
             logger.log(Level.INFO, "AffectedTestClasses: " + affectedTestClasses.size());
             logger.log(Level.INFO, "NewClasses: " + newClasses.size());
             logger.log(Level.INFO, "OldClasses: " + oldClasses.size());
             logger.log(Level.INFO, "ChangedClasses: " + changedClasses.size());
             if (updateMethodsChecksums) {
-                ZLCHelperMethods.writeZLCFile(method2testClasses, methodsCheckSums, loader, getArtifactsDir(), null,
+                ZLCHelperMethods.writeZLCFile(method2testClasses, methodsCheckSum, loader, getArtifactsDir(), null,
                         false,
                         zlcFormat);
             }
@@ -139,13 +141,13 @@ public class MethodsMojo extends DiffMojo {
         } else {
             setChangedMethods();
             logger.log(Level.INFO, "ChangedMethods: " + changedMethods.size());
-            logger.log(Level.INFO, "newMethods: " + newMethods.size());
+            logger.log(Level.INFO, "NewMethods: " + newMethods.size());
             logger.log(Level.INFO, "AffectedTestClasses: " + affectedTestClasses.size());
             logger.log(Level.INFO, "NewClasses: " + newClasses.size());
             logger.log(Level.INFO, "OldClasses: " + oldClasses.size());
             logger.log(Level.INFO, "ChangedClasses: " + changedClasses.size());
             if (updateMethodsChecksums) {
-                ZLCHelperMethods.writeZLCFile(method2testClasses, methodsCheckSums, loader, getArtifactsDir(), null,
+                ZLCHelperMethods.writeZLCFile(method2testClasses, methodsCheckSum, loader, getArtifactsDir(), null,
                         false,
                         zlcFormat);
             }
@@ -153,15 +155,15 @@ public class MethodsMojo extends DiffMojo {
     }
 
     protected void setChangedMethods() throws MojoExecutionException {
-        List<Set<String>> data = ZLCHelperMethods.getChangedDataMethods(getArtifactsDir(), cleanBytes, methodsCheckSums,
+        List<Set<String>> data = ZLCHelperMethods.getChangedDataMethods(getArtifactsDir(), cleanBytes, methodsCheckSum,
                 METHODS_TEST_DEPS_ZLC_FILE);
         changedMethods = data == null ? new HashSet<String>() : data.get(0);
         newMethods = data == null ? new HashSet<String>() : data.get(1);
 
         affectedTestClasses = data == null ? new HashSet<String>() : data.get(2);
-        for (String newMethod : newMethods){
+        for (String newMethod : newMethods) {
             affectedTestClasses.addAll(method2testClasses.getOrDefault(newMethod, new HashSet<>()));
-        }   
+        }
 
         oldClasses = data == null ? new HashSet<String>() : data.get(3);
         changedClasses = data == null ? new HashSet<String>() : data.get(4);
@@ -172,5 +174,65 @@ public class MethodsMojo extends DiffMojo {
         nonAffectedMethods = MethodLevelStaticDepsBuilder.getMethods();
         nonAffectedMethods.removeAll(changedMethods);
         nonAffectedMethods.removeAll(newMethods);
+    }
+
+    protected void runMethodsImpacted() throws MojoExecutionException {
+        // Checking if the file of depedencies exists
+        if (!Files.exists(Paths.get(getArtifactsDir() + METHODS_TEST_DEPS_ZLC_FILE))) {
+            changedMethods = new HashSet<>();
+            newMethods = MethodLevelStaticDepsBuilder.getMethods();
+            impactedMethods = newMethods;
+            affectedTestClasses = MethodLevelStaticDepsBuilder.getTests();
+            oldClasses = new HashSet<>();
+            changedClasses = new HashSet<>();
+            newClasses = MethodLevelStaticDepsBuilder.getClasses();
+            nonAffectedMethods = new HashSet<>();
+
+            logger.log(Level.INFO, "ChangedMethods: " + changedMethods.size());
+            logger.log(Level.INFO, "NewMethods: " + newMethods.size());
+            logger.log(Level.INFO, "ImpactedMethods: " + impactedMethods.size());
+            logger.log(Level.INFO, "AffectedTestClasses: " + affectedTestClasses.size());
+            logger.log(Level.INFO, "NewClasses: " + newClasses.size());
+            logger.log(Level.INFO, "OldClasses: " + oldClasses.size());
+            logger.log(Level.INFO, "ChangedClasses: " + changedClasses.size());
+            if (updateMethodsChecksums) {
+                ZLCHelperMethods.writeZLCFile(method2testClasses, methodsCheckSum, loader, getArtifactsDir(), null,
+                        false,
+                        zlcFormat);
+            }
+        } else {
+            setChangedMethods();
+            computeImpacedMethods();
+            logger.log(Level.INFO, "ChangedMethods: " + changedMethods.size());
+            logger.log(Level.INFO, "NewMethods: " + newMethods.size());
+            logger.log(Level.INFO, "ImpactedMethods: " + impactedMethods.size());
+            logger.log(Level.INFO, "AffectedTestClasses: " + affectedTestClasses.size());
+            logger.log(Level.INFO, "NewClasses: " + newClasses.size());
+            logger.log(Level.INFO, "OldClasses: " + oldClasses.size());
+            logger.log(Level.INFO, "ChangedClasses: " + changedClasses.size());
+            if (updateMethodsChecksums) {
+                ZLCHelperMethods.writeZLCFile(method2testClasses, methodsCheckSum, loader, getArtifactsDir(), null,
+                        false,
+                        zlcFormat);
+            }
+        }
+    }
+
+    private void computeImpacedMethods() {
+        impactedMethods = new HashSet<>();
+        impactedMethods.addAll(findImpactedMethods(changedMethods));
+        impactedMethods.addAll(findImpactedMethods(newMethods));
+        for (String impactedMethod : impactedMethods) {
+            affectedTestClasses.addAll(method2testClasses.getOrDefault(impactedMethod, new HashSet<String>()));
+        }
+    }
+
+    private Set<String> findImpactedMethods(Set<String> affectedMethods) {
+        Set<String> methods = new HashSet<>(affectedMethods);
+        for (String method : affectedMethods) {
+            methods.addAll(MethodLevelStaticDepsBuilder.getMethodDeps(method));
+
+        }
+        return methods;
     }
 }
