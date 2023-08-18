@@ -412,7 +412,7 @@ public class ZLCHelperMethods implements StartsConstants {
 
 
 
-    public static List<Set<String>> getChangedData(String artifactsDir, boolean cleanBytes, Map<String, String> methodsChecksums, String filePath) {
+    public static List<Set<String>> getChangedDataMethods(String artifactsDir, boolean cleanBytes, Map<String, String> methodsChecksums, String filePath) {
         long start = System.currentTimeMillis();
         
         File zlc = new File(artifactsDir, filePath);
@@ -471,8 +471,11 @@ public class ZLCHelperMethods implements StartsConstants {
             changedClasses.add(convertPath(method.split("#")[0]));
         }
         
-        changedMethods.addAll(newMethods);
+
+
+
         result.add(changedMethods);
+        result.add(newMethods);
         result.add(affectedTests);
         result.add(oldClasses);
         result.add(changedClasses);

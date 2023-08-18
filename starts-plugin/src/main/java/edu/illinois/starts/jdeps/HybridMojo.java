@@ -54,11 +54,11 @@ public class HybridMojo extends DiffMojo {
 
         // Build method level static dependencies
         try {
-            MethodLevelStaticDepsBuilder.buildMethodsGraph(loader);
+            MethodLevelStaticDepsBuilder.buildMethodsGraph();
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
-        method2testClasses = MethodLevelStaticDepsBuilder.method2tests;
+        method2testClasses = MethodLevelStaticDepsBuilder.method2testClasses;
         MethodLevelStaticDepsBuilder.computeClassesChecksums(loader, cleanBytes);
         classesChecksums = MethodLevelStaticDepsBuilder.classesChecksums;
 
@@ -69,8 +69,8 @@ public class HybridMojo extends DiffMojo {
         // Checking if the file of depedencies exists
 
         if (!Files.exists(Paths.get(getArtifactsDir() + METHODS_TEST_DEPS_ZLC_FILE)) && !Files.exists(Paths.get(getArtifactsDir() + CLASSES_ZLC_FILE))) {
-            MethodLevelStaticDepsBuilder.computeChecksums(loader);
-            methodsCheckSums = MethodLevelStaticDepsBuilder.methodsCheckSums;
+            MethodLevelStaticDepsBuilder.computeMethodsChecksum(loader);
+            methodsCheckSums = MethodLevelStaticDepsBuilder.getMethodsCheckSum();
             changedMethods = MethodLevelStaticDepsBuilder.getMethods();
             affectedTestClasses = MethodLevelStaticDepsBuilder.getTests();
             changedClasses = MethodLevelStaticDepsBuilder.getClasses();
@@ -96,7 +96,7 @@ public class HybridMojo extends DiffMojo {
 
     protected void setChangedAndNonaffectedMethods(ClassLoader loader) throws MojoExecutionException {
         List<Set<String>> data = ZLCHelperMethods.getChangedDataH(loader ,getArtifactsDir(), cleanBytes,classesChecksums, METHODS_TEST_DEPS_ZLC_FILE, CLASSES_ZLC_FILE);
-        methodsCheckSums = MethodLevelStaticDepsBuilder.methodsCheckSums;
+        methodsCheckSums = MethodLevelStaticDepsBuilder.getMethodsCheckSum();
         changedClasses = data == null ? new HashSet<String>() : data.get(0);
         changedMethods = data == null ? new HashSet<String>() : data.get(1);
         affectedTestClasses = data == null ? new HashSet<String>() : data.get(2);

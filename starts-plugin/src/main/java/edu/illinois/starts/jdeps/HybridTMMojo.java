@@ -54,7 +54,7 @@ public class HybridTMMojo extends DiffMojo {
 
         // Build method level static dependencies
         try {
-            MethodLevelStaticDepsBuilder.buildMethodsGraph(loader);
+            MethodLevelStaticDepsBuilder.buildMethodsGraph();
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -71,8 +71,8 @@ public class HybridTMMojo extends DiffMojo {
         // Checking if the file of depedencies exists
 
         if (!Files.exists(Paths.get(getArtifactsDir() + METHODS_TEST_DEPS_ZLC_FILE_TM)) || !Files.exists(Paths.get(getArtifactsDir() + CLASSES_ZLC_FILE))) {
-            MethodLevelStaticDepsBuilder.computeChecksums(loader);
-            methodsCheckSums = MethodLevelStaticDepsBuilder.methodsCheckSums;
+            MethodLevelStaticDepsBuilder.computeMethodsChecksum(loader);
+            methodsCheckSums = MethodLevelStaticDepsBuilder.getMethodsCheckSum();
             changedMethods = MethodLevelStaticDepsBuilder.getMethods();
             affectedTestMethods = MethodLevelStaticDepsBuilder.getTestMethods();
             changedClasses = MethodLevelStaticDepsBuilder.getClasses();
@@ -99,7 +99,7 @@ public class HybridTMMojo extends DiffMojo {
 
     protected void setChangedAndNonaffectedMethods(ClassLoader loader) throws MojoExecutionException {
         List<Set<String>> data = ZLCHelperMethods.getChangedDataH(loader ,getArtifactsDir(), cleanBytes,classesChecksums, METHODS_TEST_DEPS_ZLC_FILE_TM, CLASSES_ZLC_FILE);
-        methodsCheckSums = MethodLevelStaticDepsBuilder.methodsCheckSums;
+        methodsCheckSums = MethodLevelStaticDepsBuilder.getMethodsCheckSum();
         changedClasses = data == null ? new HashSet<String>() : data.get(0);
         changedMethods = data == null ? new HashSet<String>() : data.get(1);
         affectedTestMethods = data == null ? new HashSet<String>() : data.get(2);

@@ -40,18 +40,19 @@ public class MethodsImpactedMojo extends MethodsMojo {
         Logger.getGlobal().setLoggingLevel(Level.parse(loggingLevel));
         logger = Logger.getGlobal();
         setIncludesExcludes();
+        
         Classpath sfClassPath = getSureFireClassPath();
         ClassLoader loader = createClassLoader(sfClassPath);
 
         // Build method level static dependencies
         try {
-            MethodLevelStaticDepsBuilder.buildMethodsGraph(loader);
-            MethodLevelStaticDepsBuilder.computeChecksums(loader);
+            MethodLevelStaticDepsBuilder.buildMethodsGraph();
+            MethodLevelStaticDepsBuilder.computeMethodsChecksum(loader);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
-        method2testClasses = MethodLevelStaticDepsBuilder.method2tests;
-        methodsCheckSums = MethodLevelStaticDepsBuilder.methodsCheckSums;
+        method2testClasses = MethodLevelStaticDepsBuilder.method2testClasses;
+        methodsCheckSums = MethodLevelStaticDepsBuilder.getMethodsCheckSum();
 
         runMethods(loader);
     }
@@ -71,7 +72,7 @@ public class MethodsImpactedMojo extends MethodsMojo {
             dynamicallyUpdateExcludes(new ArrayList<String>());
 
         } else {
-            setChangedAndNonaffectedMethods();
+            setChangedMethods();
             logger.log(Level.INFO, "ChangedMethods: " + changedMethods.size());
             logger.log(Level.INFO, "ImpactedMethods: " + impactedMethods.size());
             logger.log(Level.INFO, "AffectedTestClasses: " + affectedTestClasses.size());
@@ -82,8 +83,8 @@ public class MethodsImpactedMojo extends MethodsMojo {
         }
     }
 
-    protected void setChangedAndNonaffectedMethods() throws MojoExecutionException {
-        List<Set<String>> data = ZLCHelperMethods.getChangedData(getArtifactsDir(), cleanBytes, methodsCheckSums, METHODS_TEST_DEPS_ZLC_FILE);
+    protected void setChangedMethods() throws MojoExecutionException {
+        List<Set<String>> data = ZLCHelperMethods.getChangedDataMethods(getArtifactsDir(), cleanBytes, methodsCheckSums, METHODS_TEST_DEPS_ZLC_FILE);
         changedMethods = data == null ? new HashSet<String>() : data.get(0);
         affectedTestClasses = data == null ? new HashSet<String>() : data.get(1);
         impactedMethods = findImpactedMethods(changedMethods);

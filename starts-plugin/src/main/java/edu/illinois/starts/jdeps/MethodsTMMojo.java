@@ -51,15 +51,15 @@ public class MethodsTMMojo extends MethodsMojo {
 
         // Build method level static dependencies
         try {
-            MethodLevelStaticDepsBuilder.buildMethodsGraph(loader);
-            MethodLevelStaticDepsBuilder.computeChecksums(loader);
+            MethodLevelStaticDepsBuilder.buildMethodsGraph();
+            MethodLevelStaticDepsBuilder.computeMethodsChecksum(loader);
 
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
         MethodLevelStaticDepsBuilder.computeMethod2TestMethods();
         methods2testmethods = MethodLevelStaticDepsBuilder.methods2testmethods;
-        methodsCheckSums = MethodLevelStaticDepsBuilder.methodsCheckSums;
+        methodsCheckSums = MethodLevelStaticDepsBuilder.getMethodsCheckSum();
 
         runMethods(loader);
     }
@@ -77,7 +77,7 @@ public class MethodsTMMojo extends MethodsMojo {
             dynamicallyUpdateExcludes(new ArrayList<String>());
 
         } else {
-            setChangedAndNonaffectedMethods();
+            setChangedMethods();
             logger.log(Level.INFO, "ChangedMethods: " + changedMethods.size());
             logger.log(Level.INFO, "AffectedTestMethods: " + affectedTestMethods.size());
             ZLCHelperMethods.writeZLCFileTM(methods2testmethods, methodsCheckSums, loader, getArtifactsDir(), null, false,
@@ -87,8 +87,8 @@ public class MethodsTMMojo extends MethodsMojo {
         }
     }
 
-    protected void setChangedAndNonaffectedMethods() throws MojoExecutionException {
-        List<Set<String>> data = ZLCHelperMethods.getChangedData(getArtifactsDir(), cleanBytes, methodsCheckSums,METHODS_TEST_DEPS_ZLC_FILE_TM);
+    protected void setChangedMethods() throws MojoExecutionException {
+        List<Set<String>> data = ZLCHelperMethods.getChangedDataMethods(getArtifactsDir(), cleanBytes, methodsCheckSums,METHODS_TEST_DEPS_ZLC_FILE_TM);
         changedMethods = data == null ? new HashSet<String>() : data.get(0);
         affectedTestMethods = data == null ? new HashSet<String>() : data.get(1);
         nonAffectedTestMethods = MethodLevelStaticDepsBuilder.getTests();
