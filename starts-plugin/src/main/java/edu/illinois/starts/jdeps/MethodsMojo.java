@@ -54,15 +54,22 @@ public class MethodsMojo extends DiffMojo {
     private Set<String> newClasses;
     private Set<String> oldClasses;
     private Set<String> changedClasses;
-    private Set<String> affectedTestClasses;
-    private Set<String> nonAffectedTestClasses;
+    private Set<String> impactedTestClasses;
+    private Set<String> nonImpactedTestClasses;
     private Set<String> nonAffectedMethods;
     private Map<String, String> methodsCheckSum;
     private Map<String, Set<String>> method2testClasses;
     private ClassLoader loader;
 
-    public Set<String> getChangedMethods() {
-        return Collections.unmodifiableSet(changedMethods);
+    public Set<String> getAffectedMethods() {
+        Set<String> affectedMethods = new HashSet<>();
+        affectedMethods.addAll(changedMethods);
+        affectedMethods.addAll(newMethods);
+        return Collections.unmodifiableSet(affectedMethods);
+    }
+
+    public Set<String> getImpactedMethods() {
+        return Collections.unmodifiableSet(impactedMethods);
     }
 
     public Set<String> getNewClasses() {
@@ -95,7 +102,6 @@ public class MethodsMojo extends DiffMojo {
     public void execute() throws MojoExecutionException {
         Logger.getGlobal().setLoggingLevel(Level.parse(loggingLevel));
         logger = Logger.getGlobal();
-        setIncludesExcludes();
         Classpath sfClassPath = getSureFireClassPath();
         loader = createClassLoader(sfClassPath);
 
@@ -120,7 +126,7 @@ public class MethodsMojo extends DiffMojo {
         if (!Files.exists(Paths.get(getArtifactsDir() + METHODS_TEST_DEPS_ZLC_FILE))) {
             changedMethods = new HashSet<>();
             newMethods = MethodLevelStaticDepsBuilder.getMethods();
-            affectedTestClasses = MethodLevelStaticDepsBuilder.getTests();
+            impactedTestClasses = MethodLevelStaticDepsBuilder.getTests();
             oldClasses = new HashSet<>();
             changedClasses = new HashSet<>();
             newClasses = MethodLevelStaticDepsBuilder.getClasses();
@@ -128,7 +134,7 @@ public class MethodsMojo extends DiffMojo {
 
             logger.log(Level.INFO, "ChangedMethods: " + changedMethods.size());
             logger.log(Level.INFO, "NewMethods: " + newMethods.size());
-            logger.log(Level.INFO, "AffectedTestClasses: " + affectedTestClasses.size());
+            logger.log(Level.INFO, "AffectedTestClasses: " + impactedTestClasses.size());
             logger.log(Level.INFO, "NewClasses: " + newClasses.size());
             logger.log(Level.INFO, "OldClasses: " + oldClasses.size());
             logger.log(Level.INFO, "ChangedClasses: " + changedClasses.size());
@@ -142,7 +148,7 @@ public class MethodsMojo extends DiffMojo {
             setChangedMethods();
             logger.log(Level.INFO, "ChangedMethods: " + changedMethods.size());
             logger.log(Level.INFO, "NewMethods: " + newMethods.size());
-            logger.log(Level.INFO, "AffectedTestClasses: " + affectedTestClasses.size());
+            logger.log(Level.INFO, "AffectedTestClasses: " + impactedTestClasses.size());
             logger.log(Level.INFO, "NewClasses: " + newClasses.size());
             logger.log(Level.INFO, "OldClasses: " + oldClasses.size());
             logger.log(Level.INFO, "ChangedClasses: " + changedClasses.size());
@@ -160,9 +166,9 @@ public class MethodsMojo extends DiffMojo {
         changedMethods = data == null ? new HashSet<String>() : data.get(0);
         newMethods = data == null ? new HashSet<String>() : data.get(1);
 
-        affectedTestClasses = data == null ? new HashSet<String>() : data.get(2);
+        impactedTestClasses = data == null ? new HashSet<String>() : data.get(2);
         for (String newMethod : newMethods) {
-            affectedTestClasses.addAll(method2testClasses.getOrDefault(newMethod, new HashSet<>()));
+            impactedTestClasses.addAll(method2testClasses.getOrDefault(newMethod, new HashSet<>()));
         }
 
         oldClasses = data == null ? new HashSet<String>() : data.get(3);
@@ -182,7 +188,7 @@ public class MethodsMojo extends DiffMojo {
             changedMethods = new HashSet<>();
             newMethods = MethodLevelStaticDepsBuilder.getMethods();
             impactedMethods = newMethods;
-            affectedTestClasses = MethodLevelStaticDepsBuilder.getTests();
+            impactedTestClasses = MethodLevelStaticDepsBuilder.getTests();
             oldClasses = new HashSet<>();
             changedClasses = new HashSet<>();
             newClasses = MethodLevelStaticDepsBuilder.getClasses();
@@ -191,7 +197,7 @@ public class MethodsMojo extends DiffMojo {
             logger.log(Level.INFO, "ChangedMethods: " + changedMethods.size());
             logger.log(Level.INFO, "NewMethods: " + newMethods.size());
             logger.log(Level.INFO, "ImpactedMethods: " + impactedMethods.size());
-            logger.log(Level.INFO, "AffectedTestClasses: " + affectedTestClasses.size());
+            logger.log(Level.INFO, "AffectedTestClasses: " + impactedTestClasses.size());
             logger.log(Level.INFO, "NewClasses: " + newClasses.size());
             logger.log(Level.INFO, "OldClasses: " + oldClasses.size());
             logger.log(Level.INFO, "ChangedClasses: " + changedClasses.size());
@@ -206,7 +212,7 @@ public class MethodsMojo extends DiffMojo {
             logger.log(Level.INFO, "ChangedMethods: " + changedMethods.size());
             logger.log(Level.INFO, "NewMethods: " + newMethods.size());
             logger.log(Level.INFO, "ImpactedMethods: " + impactedMethods.size());
-            logger.log(Level.INFO, "AffectedTestClasses: " + affectedTestClasses.size());
+            logger.log(Level.INFO, "AffectedTestClasses: " + impactedTestClasses.size());
             logger.log(Level.INFO, "NewClasses: " + newClasses.size());
             logger.log(Level.INFO, "OldClasses: " + oldClasses.size());
             logger.log(Level.INFO, "ChangedClasses: " + changedClasses.size());
@@ -223,7 +229,7 @@ public class MethodsMojo extends DiffMojo {
         impactedMethods.addAll(findImpactedMethods(changedMethods));
         impactedMethods.addAll(findImpactedMethods(newMethods));
         for (String impactedMethod : impactedMethods) {
-            affectedTestClasses.addAll(method2testClasses.getOrDefault(impactedMethod, new HashSet<String>()));
+            impactedTestClasses.addAll(method2testClasses.getOrDefault(impactedMethod, new HashSet<String>()));
         }
     }
 
