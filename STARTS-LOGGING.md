@@ -5,7 +5,7 @@
 
 Logging in STARTS is a customized (read: simpler) version of [java.util.logging (JUL)](https://docs.oracle.com/javase/8/docs/api/java/util/logging/package-summary.html).
 
-The code for logging is located in starts-core/src/main/java/edu/illinois/starts/util/Logger.java
+The code for logging is located in [util/Logger.java](./starts-core/src/main/java/edu/illinois/starts/util/Logger.java).
 
 
 For any piece of starts that you'd like to add logging to, begin by adding two import statements at the top:
