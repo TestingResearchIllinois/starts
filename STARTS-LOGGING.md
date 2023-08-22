@@ -13,7 +13,7 @@ For any piece of starts that you'd like to add logging to, begin by adding two i
 - ``import edu.illinois.starts.util.Logger;``
 - ``import java.util.logging.Level;``
 
-_note: you may need to make minor changes to the positioning of these two import statements to ensure checkstyle does not break. Place ``edu.illinois.starts.util.Logger`` directly underneath the other imports with the same package name, and do the same with ``java.util.logging.Level``. Additionally, ensure you have a newline separating different package names_
+_note: You may need to make minor changes to the positioning of these two import statements to ensure checkstyle does not break. Place ``edu.illinois.starts.util.Logger`` directly underneath the other imports with the same package name, and do the same with ``java.util.logging.Level``. Additionally, ensure you have a newline separating different package names_
 
 
 Next, instantiate your Logger as a class variable:
