@@ -4,7 +4,11 @@
 
 package edu.illinois.starts.helpers;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.charset.Charset;
@@ -126,8 +130,8 @@ public class ZLCHelperMethods implements StartsConstants {
             URL newUrl = null;
             try {
                 newUrl = new URL(classURL);
-            } catch (MalformedURLException e) {
-                throw new RuntimeException(e);
+            } catch (MalformedURLException malformedURLException) {
+                throw new RuntimeException(malformedURLException);
             }
             zlcData.add(new ZLCData(newUrl, klasChecksum, format, new HashSet<>(), null));
         }
@@ -163,8 +167,8 @@ public class ZLCHelperMethods implements StartsConstants {
             URL newUrl = null;
             try {
                 newUrl = new URL(classURL + "#" + methodPath.split("#")[1]);
-            } catch (MalformedURLException e) {
-                throw new RuntimeException(e);
+            } catch (MalformedURLException malformedURLException) {
+                throw new RuntimeException(malformedURLException);
             }
             zlcData.add(new ZLCData(newUrl, methodChecksum, format, deps, null));
         }
@@ -210,8 +214,8 @@ public class ZLCHelperMethods implements StartsConstants {
             ClassReader reader = null;
             try {
                 reader = new ClassReader(new FileInputStream(path));
-            } catch (IOException e) {
-                System.out.println("[ERROR] reading class: " + klas);
+            } catch (IOException ioException) {
+                LOGGER.log(Level.INFO, "error reading class file: " + path);
                 continue;
             }
 
@@ -223,13 +227,14 @@ public class ZLCHelperMethods implements StartsConstants {
                 // method.name is from method visitor (ASM) -> does not have signatures
                 // Append the parameter signature
                 String method1 = appendParametersToMethodName(method);
-                if (!method1.equals(methodName))
+                if (!method1.equals(methodName)) {
                     continue;
+                }
                 String methodContent = printMethodContent(method);
                 try {
                     methodChecksum = ChecksumUtil.computeMethodChecksum(methodContent);
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
+                } catch (IOException ioException) {
+                    throw new RuntimeException(ioException);
                 }
             }
 
@@ -246,8 +251,8 @@ public class ZLCHelperMethods implements StartsConstants {
                 newUrl = new URL(classURL + "#" + methodName);
                 // }
 
-            } catch (MalformedURLException e) {
-                throw new RuntimeException(e);
+            } catch (MalformedURLException malformedURLException) {
+                throw new RuntimeException(malformedURLException);
             }
             zlcData.add(new ZLCData(newUrl, methodChecksum, format, deps, null));
         }
@@ -372,9 +377,9 @@ public class ZLCHelperMethods implements StartsConstants {
         return result;
     }
 
-
     /*
-     * Finds the changedMethods, oldAffectedTests, newMethods, oldClasses, changedClasses
+     * Finds the changedMethods, oldAffectedTests, newMethods, oldClasses,
+     * changedClasses
      */
     public static List<Set<String>> getChangedDataMethods(String artifactsDir, boolean cleanBytes,
             Map<String, String> methodsChecksums, String filePath) {
@@ -442,7 +447,6 @@ public class ZLCHelperMethods implements StartsConstants {
         return result;
     }
 
-    
     public static String convertPath(String fullPath) {
         String[] parts = fullPath.split("/");
         int index = 0;
@@ -491,8 +495,9 @@ public class ZLCHelperMethods implements StartsConstants {
         if (matcher.find()) {
             String extracted = matcher.group();
             // Handle the case where there are no parameters
-            if (extracted.equals("()"))
+            if (extracted.equals("()")) {
                 return method1;
+            }
 
             method1 += extracted;
             return method1;

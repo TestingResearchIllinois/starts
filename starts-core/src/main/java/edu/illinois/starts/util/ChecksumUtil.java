@@ -37,15 +37,16 @@ public class ChecksumUtil implements StartsConstants {
     }
 
     /**
-     * This method creates the checksum map only for tests that are affected by changes.
+     * This method creates the checksum map only for tests that are affected by
+     * changes.
      *
      * @param loader   The classloader from which to find .class files
      * @param testDeps The transitive closure of dependencies for each test
      * @param affected The set of tests that are affected by the changes
      * @return The checksum map
      */
-    public static Map<String, Set<RegData>> makeCheckSumMap(ClassLoader loader, Map<String,
-            Set<String>> testDeps, Set<String> affected) {
+    public static Map<String, Set<RegData>> makeCheckSumMap(ClassLoader loader, Map<String, Set<String>> testDeps,
+            Set<String> affected) {
         Map<String, Set<RegData>> checksums = new HashMap<>();
         ChecksumUtil checksumUtil = new ChecksumUtil(true);
         for (String test : affected) {
@@ -62,9 +63,12 @@ public class ChecksumUtil implements StartsConstants {
                             checksums.get(test).add(checksumUtil.computeChecksumRegData(url));
                         }
                     } else {
-                        // Known benign cases where this can happen: (i) dep is from a shaded jar which is itself on
-                        // the classpath; (ii) dep is from an optional jar dependency of a direct jar dependency (e.g.,
-                        // users of joda-time-*.jar do not necessarily depend on classes from joda-convert-8.jar
+                        // Known benign cases where this can happen: (i) dep is from a shaded jar which
+                        // is itself on
+                        // the classpath; (ii) dep is from an optional jar dependency of a direct jar
+                        // dependency (e.g.,
+                        // users of joda-time-*.jar do not necessarily depend on classes from
+                        // joda-convert-8.jar
                         LOGGER.log(Level.FINEST, "@@LoadedNullURLForDep: " + dep);
                     }
                 }
@@ -76,7 +80,8 @@ public class ChecksumUtil implements StartsConstants {
     }
 
     /**
-     * Check for so-called "well-known" classes that we don't track for RTS purposes.
+     * Check for so-called "well-known" classes that we don't track for RTS
+     * purposes.
      * Copied from Ekstazi.
      *
      * @param klas The class we want to check
@@ -149,7 +154,7 @@ public class ChecksumUtil implements StartsConstants {
         }
     }
 
-    public static String computeMethodChecksum(String content) throws IOException{
+    public static String computeMethodChecksum(String content) throws IOException {
         return org.apache.commons.codec.digest.DigestUtils.md5Hex(content);
     }
 }
