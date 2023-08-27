@@ -15,6 +15,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 
+import edu.illinois.starts.helpers.Writer;
 import edu.illinois.starts.helpers.ZLCHelperMethods;
 import edu.illinois.starts.smethods.MethodLevelStaticDepsBuilder;
 import edu.illinois.starts.util.ChecksumUtil;
@@ -162,6 +163,7 @@ public class MethodsMojo extends DiffMojo {
                         zlcFormat);
             }
         }
+        Writer.writeToFile(changedMethods, "changed-methods", getArtifactsDir());
     }
 
     protected void setChangedMethods() throws MojoExecutionException {
@@ -226,6 +228,8 @@ public class MethodsMojo extends DiffMojo {
                         zlcFormat);
             }
         }
+        Writer.writeToFile(changedMethods, "changed-methods", getArtifactsDir());
+        Writer.writeToFile(impactedMethods, "impacted-methods", getArtifactsDir());
     }
 
     private void computeImpacedMethods() {
