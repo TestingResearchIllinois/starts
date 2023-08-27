@@ -48,20 +48,24 @@ public class ZLCHelperMethods implements StartsConstants {
     private static final Logger LOGGER = Logger.getGlobal();
     private static final String NOEXISTING_ZLCFILE_FIRST_RUN = "@NoExistingZLCFile. First Run?";
 
-    public static void writeZLCFile(Map<String, Set<String>> method2tests, Map<String, String> checksumsMap,
+    // This method creates a file that stores the method-level dependency graph.
+    public static void writeZLCFile(Map<String, Set<String>> methodsToTests, Map<String, String> checksumsMap,
             ClassLoader loader,
             String artifactsDir, Set<String> unreached, boolean useThirdParty,
             ZLCFormat format) {
         long start = System.currentTimeMillis();
         LOGGER.log(Level.FINE, "ZLC format: " + format.toString());
-        ZLCFileContent zlc = createZLCFileData(method2tests, checksumsMap, loader, useThirdParty, format);
+        ZLCFileContent zlc = createZLCFileData(methodsToTests, checksumsMap, loader, useThirdParty, format);
 
         Writer.writeToFile(zlc, METHODS_TEST_DEPS_ZLC_FILE, artifactsDir);
         long end = System.currentTimeMillis();
         LOGGER.log(Level.FINE, "[PROFILE] updateForNextRun(updateZLCFile): " + Writer.millsToSeconds(end - start));
     }
 
-    public static void writeZLCFileH(Map<String, Set<String>> method2tests, Map<String, String> methodsChecksums,
+    // This method creates a file that stores 2 things:
+    // 1. method-level dependency graph used in hybrid analysis.
+    // 2. class-level checksums used in hybrid analysis.
+    public static void writeZLCFileHybrid(Map<String, Set<String>> method2tests, Map<String, String> methodsChecksums,
             Map<String, String> classesChecksums, ClassLoader loader,
             String artifactsDir, Set<String> unreached, boolean useThirdParty,
             ZLCFormat format) {
@@ -77,35 +81,7 @@ public class ZLCHelperMethods implements StartsConstants {
         LOGGER.log(Level.FINE, "[PROFILE] updateForNextRun(updateZLCFile): " + Writer.millsToSeconds(end - start));
     }
 
-    public static void writeZLCFileTM(Map<String, Set<String>> method2tests, Map<String, String> checksumsMap,
-            ClassLoader loader,
-            String artifactsDir, Set<String> unreached, boolean useThirdParty,
-            ZLCFormat format) {
-        long start = System.currentTimeMillis();
-        LOGGER.log(Level.FINE, "ZLC format: " + format.toString());
-        ZLCFileContent zlc = createZLCFileData(method2tests, checksumsMap, loader, useThirdParty, format);
-
-        Writer.writeToFile(zlc, METHODS_TEST_DEPS_ZLC_FILE_TM, artifactsDir);
-        long end = System.currentTimeMillis();
-        LOGGER.log(Level.FINE, "[PROFILE] updateForNextRun(updateZLCFile): " + Writer.millsToSeconds(end - start));
-    }
-
-    public static void writeZLCFileHTM(Map<String, Set<String>> method2tests, Map<String, String> methodsChecksums,
-            Map<String, String> classesChecksums, ClassLoader loader,
-            String artifactsDir, Set<String> unreached, boolean useThirdParty,
-            ZLCFormat format) {
-        long start = System.currentTimeMillis();
-        LOGGER.log(Level.FINE, "ZLC format: " + format.toString());
-        ZLCFileContent zlc = createZLCFileData(method2tests, methodsChecksums, loader, useThirdParty, format);
-        Writer.writeToFile(zlc, METHODS_TEST_DEPS_ZLC_FILE_TM, artifactsDir);
-
-        zlc = createZLCFileDataClasses(classesChecksums, loader, useThirdParty, format);
-        Writer.writeToFile(zlc, CLASSES_ZLC_FILE, artifactsDir);
-
-        long end = System.currentTimeMillis();
-        LOGGER.log(Level.FINE, "[PROFILE] updateForNextRun(updateZLCFile): " + Writer.millsToSeconds(end - start));
-    }
-
+    // This method computes the class-level checksums.
     public static ZLCFileContent createZLCFileDataClasses(
             Map<String, String> checksumMap,
             ClassLoader loader,
@@ -141,6 +117,7 @@ public class ZLCHelperMethods implements StartsConstants {
         return new ZLCFileContent(classList, zlcData, format);
     }
 
+    // This method computes the method-level checksums.
     public static ZLCFileContent createZLCFileData(
             Map<String, Set<String>> method2tests,
             Map<String, String> checksumMap,
