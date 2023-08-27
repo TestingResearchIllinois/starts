@@ -1,17 +1,16 @@
 package edu.illinois.starts.smethods;
 
-import static edu.illinois.starts.smethods.Macros.ASM_VERSION;
-import static edu.illinois.starts.smethods.Macros.PROJECT_PACKAGE;
-
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
+import edu.illinois.starts.constants.StartsConstants;
+
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.MethodVisitor;
 
-public class ClassToMethodsCollectorCV extends ClassVisitor {
+public class ClassToMethodsCollectorCV extends ClassVisitor implements StartsConstants {
 
     Map<String, Set<String>> class2ContainedMethodNames;
     Map<String, Set<String>> hierarchyParents;
@@ -35,7 +34,7 @@ public class ClassToMethodsCollectorCV extends ClassVisitor {
         methodClassName = name;
         Set<String> parents = hierarchyParents.getOrDefault(name, new HashSet<>());
         if (superName != null && !superName.startsWith("java/") && !superName.startsWith("org/junit/")
-                && !superName.startsWith(Macros.PROJECT_PACKAGE)) {
+                && !superName.startsWith(PROJECT_PACKAGE)) {
             parents.add(superName);
             Set<String> subClasses = hierarchyChildren.getOrDefault(superName, new HashSet<>());
             subClasses.add(name);

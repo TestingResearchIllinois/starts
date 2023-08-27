@@ -1,18 +1,17 @@
 package edu.illinois.starts.smethods;
 
-import static edu.illinois.starts.smethods.Macros.ASM_VERSION;
-import static edu.illinois.starts.smethods.Macros.PROJECT_PACKAGE;
-
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
+import edu.illinois.starts.constants.StartsConstants;
+
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 
-public class MethodCallCollectorCV extends ClassVisitor {
+public class MethodCallCollectorCV extends ClassVisitor implements StartsConstants {
 
     Map<String, Set<String>> methodName2InvokedMethodNames;
     Map<String, Set<String>> hierarchyParents;
