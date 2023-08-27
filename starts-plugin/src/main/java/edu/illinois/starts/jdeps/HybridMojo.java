@@ -94,7 +94,7 @@ public class HybridMojo extends DiffMojo {
             logger.log(Level.INFO, "ChangedMethods: " + changedMethods.size());
             logger.log(Level.INFO, "ChangedClasses: " + changedClasses.size());
             logger.log(Level.INFO, "AffectedTestClasses: " + affectedTestClasses.size());
-            ZLCHelperMethods.writeZLCFileH(method2testClasses, methodsCheckSum, classesChecksum, loader,
+            ZLCHelperMethods.writeZLCFileHybrid(method2testClasses, methodsCheckSum, classesChecksum, loader,
                     getArtifactsDir(), null, false,
                     zlcFormat);
             dynamicallyUpdateExcludes(new ArrayList<String>());
@@ -104,7 +104,7 @@ public class HybridMojo extends DiffMojo {
             logger.log(Level.INFO, "ChangedMethods: " + changedMethods.size());
             logger.log(Level.INFO, "ChangedClasses: " + changedClasses.size());
             logger.log(Level.INFO, "AffectedTestClasses: " + affectedTestClasses.size());
-            ZLCHelperMethods.writeZLCFileH(method2testClasses, methodsCheckSum, classesChecksum, loader,
+            ZLCHelperMethods.writeZLCFileHybrid(method2testClasses, methodsCheckSum, classesChecksum, loader,
                     getArtifactsDir(), null, false,
                     zlcFormat);
             List<String> excludePaths = Writer.fqnsToExcludePath(nonAffectedTestClasses);
