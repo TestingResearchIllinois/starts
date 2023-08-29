@@ -239,7 +239,11 @@ public class ZLCHelperMethods implements StartsConstants {
         return new ZLCFileContent(methodList, zlcData, format);
     }
 
-    public static List<Set<String>> getChangedDataH(ClassLoader loader, String artifactsDir, boolean cleanBytes,
+    /*
+     * Finds the changedMethods, oldAffectedTests, newMethods, oldClasses,
+     * changedClasses
+     */
+    public static List<Set<String>> getChangedDataHybrid(ClassLoader loader, String artifactsDir, boolean cleanBytes,
             Map<String, String> classesChecksums, String methodFilePath, String classesFilePath) {
         long start = System.currentTimeMillis();
 
@@ -280,7 +284,6 @@ public class ZLCHelperMethods implements StartsConstants {
         }
         Set<String> newClasses = new HashSet<>(classesChecksums.keySet());
         newClasses.removeAll(oldClasses);
-        changedClasses.addAll(newClasses);
 
         zlc = new File(artifactsDir, methodFilePath);
         if (!zlc.exists()) {
@@ -292,6 +295,7 @@ public class ZLCHelperMethods implements StartsConstants {
                 .getMethodsChecksumsForClasses(changedClasses, loader);
 
         Set<String> changedMethods = new HashSet<>();
+        Set<String> newMethods = new HashSet<>();
         Set<String> affectedTestClasses = new HashSet<>();
         Map<String, String> oldMethodsChecksums = new HashMap<>();
         Map<String, Set<String>> oldMethodsDeps = new HashMap<>();
@@ -327,8 +331,9 @@ public class ZLCHelperMethods implements StartsConstants {
             String newChecksum = methodsChecksums.get(methodPath);
             String oldChecksum = oldMethodsChecksums.get(methodPath);
 
+            // If the old checksum is null, it means that this method is a new method.
             if (oldChecksum == null) {
-                changedMethods.add(methodPath);
+                newMethods.add(methodPath);
                 continue;
             }
             if (!oldChecksum.equals(newChecksum)) {
@@ -337,6 +342,7 @@ public class ZLCHelperMethods implements StartsConstants {
             }
         }
 
+        // Updateing methods checksums
         for (String methodPath : oldMethodsChecksums.keySet()) {
             String newChecksum = methodsChecksums.get(methodPath);
             String oldChecksum = oldMethodsChecksums.get(methodPath);
@@ -347,9 +353,12 @@ public class ZLCHelperMethods implements StartsConstants {
 
         long end = System.currentTimeMillis();
         List<Set<String>> result = new ArrayList<>();
-        result.add(changedClasses);
         result.add(changedMethods);
+        result.add(newMethods);
         result.add(affectedTestClasses);
+        result.add(changedClasses);
+        result.add(newClasses);
+        result.add(oldClasses);
         LOGGER.log(Level.FINEST, TIME_COMPUTING_NON_AFFECTED + (end - start) + MILLISECOND);
         return result;
     }
