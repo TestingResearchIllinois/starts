@@ -102,9 +102,9 @@ public class HybridMojo extends DiffMojo {
 
             if (updateMethodsChecksums) {
 
-                ZLCHelperMethods.writeZLCFileHybrid(method2testClasses, methodsCheckSum, classesChecksum, loader,
+                ZLCHelperMethods.writeZLCFile(method2testClasses, methodsCheckSum, classesChecksum, loader,
                         getArtifactsDir(), null, false,
-                        zlcFormat);
+                        zlcFormat, true);
             }
         } else {
             setChangedAndNonaffectedMethods();
@@ -116,9 +116,9 @@ public class HybridMojo extends DiffMojo {
             logger.log(Level.INFO, "OldClasses: " + oldClasses.size());
             if (updateMethodsChecksums) {
 
-                ZLCHelperMethods.writeZLCFileHybrid(method2testClasses, methodsCheckSum, classesChecksum, loader,
+                ZLCHelperMethods.writeZLCFile(method2testClasses, methodsCheckSum, classesChecksum, loader,
                         getArtifactsDir(), null, false,
-                        zlcFormat);
+                        zlcFormat, true);
             }
         }
     }
@@ -149,9 +149,9 @@ public class HybridMojo extends DiffMojo {
 
             if (updateMethodsChecksums) {
 
-                ZLCHelperMethods.writeZLCFileHybrid(method2testClasses, methodsCheckSum, classesChecksum, loader,
+                ZLCHelperMethods.writeZLCFile(method2testClasses, methodsCheckSum, classesChecksum, loader,
                         getArtifactsDir(), null, false,
-                        zlcFormat);
+                        zlcFormat, true);
             }
         } else {
             setChangedAndNonaffectedMethods();
@@ -165,9 +165,9 @@ public class HybridMojo extends DiffMojo {
             logger.log(Level.INFO, "OldClasses: " + oldClasses.size());
             if (updateMethodsChecksums) {
 
-                ZLCHelperMethods.writeZLCFileHybrid(method2testClasses, methodsCheckSum, classesChecksum, loader,
+                ZLCHelperMethods.writeZLCFile(method2testClasses, methodsCheckSum, classesChecksum, loader,
                         getArtifactsDir(), null, false,
-                        zlcFormat);
+                        zlcFormat, true);
             }
         }
     }
