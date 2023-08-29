@@ -24,7 +24,6 @@ import edu.illinois.starts.helpers.ZLCHelperMethods;
 import edu.illinois.starts.util.ChecksumUtil;
 import edu.illinois.starts.util.Logger;
 
-import org.ekstazi.log.Log;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.ClassNode;
@@ -33,8 +32,10 @@ import org.objectweb.asm.tree.MethodNode;
 public class MethodLevelStaticDepsBuilder {
     // mvn exec:java -Dexec.mainClass=org.smethods.MethodLevelStaticDepsBuilder
     // -Dexec.args="path to test project"
+
     // for every class, get the methods it implements
     public static Map<String, Set<String>> class2ContainedMethodNames = new HashMap<>();
+
     // for every method, get the methods it invokes
     public static Map<String, Set<String>> methodName2MethodNames = new HashMap<>();
 
@@ -42,10 +43,10 @@ public class MethodLevelStaticDepsBuilder {
     public static Map<String, Set<String>> methodDependencyGraph = new HashMap<>();
 
     // for every class, find its parents.
-    public static Map<String, Set<String>> hierarchyParents = new HashMap<>();
+    public static Map<String, Set<String>> hierarchy_parents = new HashMap<>();
 
     // for every class, find its children.
-    public static Map<String, Set<String>> hierarchyChildren = new HashMap<>();
+    public static Map<String, Set<String>> hierarchy_children = new HashMap<>();
 
     public static Map<String, Set<String>> testClasses2methods = new HashMap<>();
 
@@ -60,7 +61,8 @@ public class MethodLevelStaticDepsBuilder {
     private static final Logger LOGGER = Logger.getGlobal();
 
     public static void buildMethodsGraph() throws Exception {
-        // find all the class files
+
+        // find all the classes' files
         HashSet<String> classPaths = new HashSet<>(Files.walk(Paths.get("."))
                 .filter(Files::isRegularFile)
                 .filter(f -> (f.toString().endsWith(".class") && f.toString().contains("target")))
@@ -91,6 +93,48 @@ public class MethodLevelStaticDepsBuilder {
         addVariableDepsToDependencyGraph();
     }
 
+    public static void findMethodsinvoked(Set<String> classPaths) {
+        // Finding class2ContainedMethodNames, hierarchy_parents, hierarchy_children,
+        for (String classPath : classPaths) {
+            try {
+                ClassReader classReader = new ClassReader(new FileInputStream(new File(classPath)));
+                ClassToMethodsCollectorCV classToMethodsVisitor = new ClassToMethodsCollectorCV(
+                        class2ContainedMethodNames, hierarchy_parents, hierarchy_children);
+                classReader.accept(classToMethodsVisitor, ClassReader.SKIP_DEBUG);
+            } catch (IOException exception) {
+                LOGGER.log(Level.INFO, "[ERROR] cannot parse file: " + classPath);
+                continue;
+            }
+        }
+
+        // Finding methodName2MethodNames map
+        for (String classPath : classPaths) {
+            try {
+                ClassReader classReader = new ClassReader(new FileInputStream(new File(classPath)));
+                MethodCallCollectorCV methodClassVisitor = new MethodCallCollectorCV(methodName2MethodNames,
+                        hierarchy_parents, hierarchy_children, class2ContainedMethodNames);
+                classReader.accept(methodClassVisitor, ClassReader.SKIP_DEBUG);
+            } catch (IOException exception) {
+                LOGGER.log(Level.INFO, "[ERROR] cannot parse file: " + classPath);
+                continue;
+            }
+        }
+
+        // deal with test class in a special way, all the @test method in hierarchy
+        // should be considered
+        for (String superClass : hierarchy_children.keySet()) {
+            if (superClass.contains("Test")) {
+                for (String subClass : hierarchy_children.getOrDefault(superClass, new HashSet<>())) {
+                    for (String methodSig : class2ContainedMethodNames.getOrDefault(superClass, new HashSet<>())) {
+                        String subClassKey = subClass + "#" + methodSig;
+                        String superClassKey = superClass + "#" + methodSig;
+                        methodName2MethodNames.computeIfAbsent(subClassKey, k -> new TreeSet<>()).add(superClassKey);
+                    }
+                }
+            }
+        }
+    }
+
     public static Map<String, String> getMethodsCheckSum() {
         return methodsCheckSum;
     }
@@ -111,8 +155,8 @@ public class MethodLevelStaticDepsBuilder {
             ClassReader reader = null;
             try {
                 reader = new ClassReader(new FileInputStream(path));
-            } catch (IOException ioException) {
-                LOGGER.log(Level.INFO, "[ERROR] reading class: " + klas);
+            } catch (IOException exception) {
+                LOGGER.log(Level.INFO, "[ERROR] reading class: " + path);
                 continue;
             }
 
@@ -123,8 +167,8 @@ public class MethodLevelStaticDepsBuilder {
                 String methodContent = ZLCHelperMethods.printMethodContent(method);
                 try {
                     methodChecksum = ChecksumUtil.computeMethodChecksum(methodContent);
-                } catch (IOException ioException) {
-                    throw new RuntimeException(ioException);
+                } catch (IOException exception) {
+                    throw new RuntimeException(exception);
                 }
 
                 methodsCheckSum.put(
@@ -163,8 +207,8 @@ public class MethodLevelStaticDepsBuilder {
             ClassReader reader = null;
             try {
                 reader = new ClassReader(new FileInputStream(path));
-            } catch (IOException ioException) {
-                LOGGER.log(Level.INFO, "[ERROR] reading class: " + klas);
+            } catch (IOException exception) {
+                LOGGER.log(Level.INFO, "[ERROR] reading class file: " + path);
                 continue;
             }
 
@@ -175,8 +219,8 @@ public class MethodLevelStaticDepsBuilder {
                 String methodContent = ZLCHelperMethods.printMethodContent(method);
                 try {
                     methodChecksum = ChecksumUtil.computeMethodChecksum(methodContent);
-                } catch (IOException ioException) {
-                    throw new RuntimeException(ioException);
+                } catch (IOException exception) {
+                    throw new RuntimeException(exception);
                 }
 
                 methodsCheckSum.put(
@@ -227,48 +271,6 @@ public class MethodLevelStaticDepsBuilder {
         }
     }
 
-    public static void findMethodsinvoked(Set<String> classPaths) {
-        // Finding class2ContainedMethodNames, hierarchy_parents, hierarchy_children,
-        for (String classPath : classPaths) {
-            try {
-                ClassReader classReader = new ClassReader(new FileInputStream(new File(classPath)));
-                ClassToMethodsCollectorCV classToMethodsVisitor = new ClassToMethodsCollectorCV(
-                        class2ContainedMethodNames, hierarchyParents, hierarchyChildren);
-                classReader.accept(classToMethodsVisitor, ClassReader.SKIP_DEBUG);
-            } catch (IOException ioException) {
-                LOGGER.log(Level.INFO, "[ERROR] cannot parse file: " + classPath);
-                continue;
-            }
-        }
-
-        // Finding methodName2MethodNames map
-        for (String classPath : classPaths) {
-            try {
-                ClassReader classReader = new ClassReader(new FileInputStream(new File(classPath)));
-                MethodCallCollectorCV methodClassVisitor = new MethodCallCollectorCV(methodName2MethodNames,
-                        hierarchyParents, hierarchyChildren, class2ContainedMethodNames);
-                classReader.accept(methodClassVisitor, ClassReader.SKIP_DEBUG);
-            } catch (IOException ioException) {
-                LOGGER.log(Level.INFO, "[ERROR] cannot parse file: " + classPath);
-                continue;
-            }
-        }
-
-        // deal with test class in a special way, all the @test method in hierarchy
-        // should be considered
-        for (String superClass : hierarchyChildren.keySet()) {
-            if (superClass.contains("Test")) {
-                for (String subClass : hierarchyChildren.getOrDefault(superClass, new HashSet<>())) {
-                    for (String methodSig : class2ContainedMethodNames.getOrDefault(superClass, new HashSet<>())) {
-                        String subClassKey = subClass + "#" + methodSig;
-                        String superClassKey = superClass + "#" + methodSig;
-                        methodName2MethodNames.computeIfAbsent(subClassKey, k -> new TreeSet<>()).add(superClassKey);
-                    }
-                }
-            }
-        }
-    }
-
     public static Set<String> getDepsHelper(String testClass) {
         Set<String> visitedMethods = new TreeSet<>();
         // BFS
@@ -297,7 +299,7 @@ public class MethodLevelStaticDepsBuilder {
     // simple DFS
     public static void getDepsDFS(String methodName, Set<String> visitedMethods) {
         if (methodDependencyGraph.containsKey(methodName)) {
-            for (String method : methodDependencyGraph.get(methodName)) {
+            for (String method : methodName2MethodNames.get(methodName)) {
                 if (!visitedMethods.contains(method)) {
                     visitedMethods.add(method);
                     getDepsDFS(method, visitedMethods);
@@ -330,7 +332,7 @@ public class MethodLevelStaticDepsBuilder {
 
     public static Set<String> getDeps(String testClass) {
         Set<String> visited = new HashSet<>();
-        for (String method : methodDependencyGraph.keySet()) {
+        for (String method : methodName2MethodNames.keySet()) {
             if (method.startsWith(testClass + "#")) {
                 visited.add(method);
                 getDepsDFS(method, visited);
@@ -373,10 +375,10 @@ public class MethodLevelStaticDepsBuilder {
         String currentMethodSig = currentMethod.split("#")[1];
         if (!currentMethodSig.startsWith("<init>") && !currentMethodSig.startsWith("<clinit>")) {
             String currentClass = currentMethod.split("#")[0];
-            for (String hiClass : hierarchies.getOrDefault(currentClass, new HashSet<>())) {
-                String hiMethod = hiClass + "#" + currentMethodSig;
-                res.addAll(getMethodsFromHierarchies(hiMethod, hierarchies));
-                res.add(hiMethod);
+            for (String hyClass : hierarchies.getOrDefault(currentClass, new HashSet<>())) {
+                String hyMethod = hyClass + "#" + currentMethodSig;
+                res.addAll(getMethodsFromHierarchies(hyMethod, hierarchies));
+                res.add(hyMethod);
             }
         }
         return res;
