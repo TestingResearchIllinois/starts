@@ -7,17 +7,13 @@ package edu.illinois.starts.jdeps;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 
-import edu.illinois.starts.helpers.Writer;
 import edu.illinois.starts.helpers.ZLCHelperMethods;
-import edu.illinois.starts.maven.AgentLoader;
 import edu.illinois.starts.smethods.MethodLevelStaticDepsBuilder;
 import edu.illinois.starts.util.Logger;
 
@@ -41,7 +37,6 @@ public class HybridMojo extends DiffMojo {
     private Set<String> oldClasses;
     private Set<String> changedClasses;
     private Set<String> impactedTestClasses;
-    private Set<String> affectedTestClasses;
     private Set<String> nonAffectedTestClasses;
     private Map<String, String> methodsCheckSum;
     private Map<String, String> classesChecksum;
@@ -77,59 +72,138 @@ public class HybridMojo extends DiffMojo {
             throw new RuntimeException(exception);
         }
 
-        runMethods(loader);
+        if (computeImpactedMethods) {
+            runImpactedMethods();
+        } else {
+            runChangedMethods();
+        }
     }
 
-    protected void runMethods(ClassLoader loader) throws MojoExecutionException {
+    protected void runChangedMethods() throws MojoExecutionException {
         // Checking if the file of depedencies exists
 
         if (!Files.exists(Paths.get(getArtifactsDir() + METHODS_TEST_DEPS_ZLC_FILE))
                 && !Files.exists(Paths.get(getArtifactsDir() + CLASSES_ZLC_FILE))) {
             MethodLevelStaticDepsBuilder.computeMethodsChecksum(loader);
             methodsCheckSum = MethodLevelStaticDepsBuilder.getMethodsCheckSum();
-            changedMethods = MethodLevelStaticDepsBuilder.getMethods();
-            affectedTestClasses = MethodLevelStaticDepsBuilder.getTests();
-            changedClasses = MethodLevelStaticDepsBuilder.getClasses();
+            changedMethods = new HashSet<>();
+            newMethods = MethodLevelStaticDepsBuilder.getMethods();
+            impactedTestClasses = MethodLevelStaticDepsBuilder.getTests();
+            newClasses = MethodLevelStaticDepsBuilder.getClasses();
+            changedClasses = new HashSet<>();
+            oldClasses = new HashSet<>();
 
             logger.log(Level.INFO, "ChangedMethods: " + changedMethods.size());
+            logger.log(Level.INFO, "NewMethods: " + newMethods.size());
+            logger.log(Level.INFO, "ImpactedTestClasses: " + impactedTestClasses.size());
             logger.log(Level.INFO, "ChangedClasses: " + changedClasses.size());
-            logger.log(Level.INFO, "AffectedTestClasses: " + affectedTestClasses.size());
-            ZLCHelperMethods.writeZLCFileHybrid(method2testClasses, methodsCheckSum, classesChecksum, loader,
-                    getArtifactsDir(), null, false,
-                    zlcFormat);
-            dynamicallyUpdateExcludes(new ArrayList<String>());
+            logger.log(Level.INFO, "NewClasses: " + newClasses.size());
+            logger.log(Level.INFO, "OldClasses: " + oldClasses.size());
 
+            if (updateMethodsChecksums) {
+
+                ZLCHelperMethods.writeZLCFileHybrid(method2testClasses, methodsCheckSum, classesChecksum, loader,
+                        getArtifactsDir(), null, false,
+                        zlcFormat);
+            }
         } else {
-            setChangedAndNonaffectedMethods(loader);
+            setChangedAndNonaffectedMethods();
             logger.log(Level.INFO, "ChangedMethods: " + changedMethods.size());
+            logger.log(Level.INFO, "NewMethods: " + newMethods.size());
+            logger.log(Level.INFO, "ImpactedTestClasses: " + impactedTestClasses.size());
             logger.log(Level.INFO, "ChangedClasses: " + changedClasses.size());
-            logger.log(Level.INFO, "AffectedTestClasses: " + affectedTestClasses.size());
-            ZLCHelperMethods.writeZLCFileHybrid(method2testClasses, methodsCheckSum, classesChecksum, loader,
-                    getArtifactsDir(), null, false,
-                    zlcFormat);
-            List<String> excludePaths = Writer.fqnsToExcludePath(nonAffectedTestClasses);
-            dynamicallyUpdateExcludes(excludePaths);
+            logger.log(Level.INFO, "NewClasses: " + newClasses.size());
+            logger.log(Level.INFO, "OldClasses: " + oldClasses.size());
+            if (updateMethodsChecksums) {
+
+                ZLCHelperMethods.writeZLCFileHybrid(method2testClasses, methodsCheckSum, classesChecksum, loader,
+                        getArtifactsDir(), null, false,
+                        zlcFormat);
+            }
         }
     }
 
-    protected void setChangedAndNonaffectedMethods(ClassLoader loader) throws MojoExecutionException {
-        List<Set<String>> data = ZLCHelperMethods.getChangedDataH(loader, getArtifactsDir(), cleanBytes,
+    protected void runImpactedMethods() throws MojoExecutionException {
+        // Checking if the file of depedencies exists
+
+        if (!Files.exists(Paths.get(getArtifactsDir() + METHODS_TEST_DEPS_ZLC_FILE))
+                && !Files.exists(Paths.get(getArtifactsDir() + CLASSES_ZLC_FILE))) {
+            MethodLevelStaticDepsBuilder.computeMethodsChecksum(loader);
+            methodsCheckSum = MethodLevelStaticDepsBuilder.getMethodsCheckSum();
+            changedMethods = new HashSet<>();
+            newMethods = MethodLevelStaticDepsBuilder.getMethods();
+            impactedMethods = newMethods;
+
+            impactedTestClasses = MethodLevelStaticDepsBuilder.getTests();
+            newClasses = MethodLevelStaticDepsBuilder.getClasses();
+            changedClasses = new HashSet<>();
+            oldClasses = new HashSet<>();
+
+            logger.log(Level.INFO, "ChangedMethods: " + changedMethods.size());
+            logger.log(Level.INFO, "NewMethods: " + newMethods.size());
+            logger.log(Level.INFO, "ImpactedMethods: " + impactedMethods.size());
+            logger.log(Level.INFO, "ImpactedTestClasses: " + impactedTestClasses.size());
+            logger.log(Level.INFO, "ChangedClasses: " + changedClasses.size());
+            logger.log(Level.INFO, "NewClasses: " + newClasses.size());
+            logger.log(Level.INFO, "OldClasses: " + oldClasses.size());
+
+            if (updateMethodsChecksums) {
+
+                ZLCHelperMethods.writeZLCFileHybrid(method2testClasses, methodsCheckSum, classesChecksum, loader,
+                        getArtifactsDir(), null, false,
+                        zlcFormat);
+            }
+        } else {
+            setChangedAndNonaffectedMethods();
+            computeImpacedMethods();
+            logger.log(Level.INFO, "ChangedMethods: " + changedMethods.size());
+            logger.log(Level.INFO, "NewMethods: " + newMethods.size());
+            logger.log(Level.INFO, "ImpactedMethods: " + impactedMethods.size());
+            logger.log(Level.INFO, "ImpactedTestClasses: " + impactedTestClasses.size());
+            logger.log(Level.INFO, "ChangedClasses: " + changedClasses.size());
+            logger.log(Level.INFO, "NewClasses: " + newClasses.size());
+            logger.log(Level.INFO, "OldClasses: " + oldClasses.size());
+            if (updateMethodsChecksums) {
+
+                ZLCHelperMethods.writeZLCFileHybrid(method2testClasses, methodsCheckSum, classesChecksum, loader,
+                        getArtifactsDir(), null, false,
+                        zlcFormat);
+            }
+        }
+    }
+
+    protected void setChangedAndNonaffectedMethods() throws MojoExecutionException {
+        List<Set<String>> data = ZLCHelperMethods.getChangedDataHybrid(loader, getArtifactsDir(), cleanBytes,
                 classesChecksum, METHODS_TEST_DEPS_ZLC_FILE, CLASSES_ZLC_FILE);
+        changedMethods = data == null ? new HashSet<String>() : data.get(0);
+        newMethods = data == null ? new HashSet<String>() : data.get(1);
+        impactedTestClasses = data == null ? new HashSet<String>() : data.get(2);
+        for (String newMethod : newMethods) {
+            impactedTestClasses.addAll(method2testClasses.getOrDefault(newMethod, new HashSet<>()));
+        }
+
+        changedClasses = data == null ? new HashSet<String>() : data.get(3);
+        newClasses = data == null ? new HashSet<String>() : data.get(4);
+        oldClasses = data == null ? new HashSet<String>() : data.get(5);
         methodsCheckSum = MethodLevelStaticDepsBuilder.getMethodsCheckSum();
-        changedClasses = data == null ? new HashSet<String>() : data.get(0);
-        changedMethods = data == null ? new HashSet<String>() : data.get(1);
-        affectedTestClasses = data == null ? new HashSet<String>() : data.get(2);
-        nonAffectedTestClasses = MethodLevelStaticDepsBuilder.getTests();
-        nonAffectedTestClasses.removeAll(affectedTestClasses);
     }
 
-    private void dynamicallyUpdateExcludes(List<String> excludePaths) throws MojoExecutionException {
-        if (AgentLoader.loadDynamicAgent()) {
-            logger.log(Level.FINEST, "AGENT LOADED!!!");
-            System.setProperty(STARTS_EXCLUDE_PROPERTY, Arrays.toString(excludePaths.toArray(new String[0])));
-        } else {
-            throw new MojoExecutionException("I COULD NOT ATTACH THE AGENT");
+    private void computeImpacedMethods() {
+        impactedMethods = new HashSet<>();
+        impactedMethods.addAll(findImpactedMethods(changedMethods));
+        impactedMethods.addAll(findImpactedMethods(newMethods));
+        for (String impactedMethod : impactedMethods) {
+            impactedTestClasses.addAll(method2testClasses.getOrDefault(impactedMethod, new HashSet<String>()));
         }
+    }
+
+    private Set<String> findImpactedMethods(Set<String> affectedMethods) {
+        Set<String> methods = new HashSet<>(affectedMethods);
+        for (String method : affectedMethods) {
+            methods.addAll(MethodLevelStaticDepsBuilder.getMethodDeps(method));
+
+        }
+        return methods;
     }
 
 }
