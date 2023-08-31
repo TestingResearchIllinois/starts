@@ -5,7 +5,6 @@
 package edu.illinois.starts.helpers;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -15,14 +14,13 @@ import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import edu.illinois.starts.constants.StartsConstants;
 import edu.illinois.starts.data.ZLCData;
@@ -32,10 +30,8 @@ import edu.illinois.starts.smethods.MethodLevelStaticDepsBuilder;
 import edu.illinois.starts.util.ChecksumUtil;
 import edu.illinois.starts.util.Logger;
 
-import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.Opcodes;
-import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.MethodNode;
 import org.objectweb.asm.util.Printer;
 import org.objectweb.asm.util.Textifier;
@@ -56,7 +52,7 @@ public class ZLCHelperMethods implements StartsConstants {
             ZLCFormat format, boolean isHybrid) {
         long start = System.currentTimeMillis();
         LOGGER.log(Level.FINE, "ZLC format: " + format.toString());
-        ZLCFileContent zlc = createZLCFileDataMethods(methodsToTests, checksumsMap, loader, useThirdParty, format);
+        ZLCFileContent zlc = createZLCFileData(methodsToTests, checksumsMap, loader, useThirdParty, format, true);
         // ZLCFileContent zlc = createZLCFileData(method2tests, methodsChecksums,
         // loader, useThirdParty, format);
         Writer.writeToFile(zlc, METHODS_TEST_DEPS_ZLC_FILE, artifactsDir);
@@ -64,7 +60,8 @@ public class ZLCHelperMethods implements StartsConstants {
         if (isHybrid) {
             // Writer.writeToFile(zlc, METHODS_TEST_DEPS_ZLC_FILE, artifactsDir);
 
-            zlc = createZLCFileDataClasses(classesChecksums, loader, useThirdParty, format);
+            // compute the class-level checksums, used for hybrid analysis only.
+            zlc = createZLCFileData(null, classesChecksums, loader, useThirdParty, format, false);
 
             Writer.writeToFile(zlc, CLASSES_ZLC_FILE, artifactsDir);
         }
@@ -72,60 +69,26 @@ public class ZLCHelperMethods implements StartsConstants {
         LOGGER.log(Level.FINE, "[PROFILE] updateForNextRun(updateZLCFile): " + Writer.millsToSeconds(end - start));
     }
 
-    // This method computes the class-level checksums.
-    public static ZLCFileContent createZLCFileDataClasses(
-            Map<String, String> checksumMap,
-            ClassLoader loader,
-            boolean useJars,
-            ZLCFormat format) {
-
-        long start = System.currentTimeMillis();
-        List<ZLCData> zlcData = new ArrayList<>();
-        ArrayList<String> classList = new ArrayList<>(checksumMap.keySet());
-
-        for (Map.Entry<String, String> entry : checksumMap.entrySet()) {
-            String klasName = entry.getKey();
-            String klasChecksum = entry.getValue();
-
-            String klas = ChecksumUtil.toClassName(klasName);
-            URL url = loader.getResource(klas);
-            String extForm = url.toExternalForm();
-            if (ChecksumUtil.isWellKnownUrl(extForm) || (!useJars && extForm.startsWith("jar:"))) {
-                continue;
-            }
-            String classURL = url.toString();
-            URL newUrl = null;
-            try {
-                newUrl = new URL(classURL);
-            } catch (MalformedURLException malformedURLException) {
-                throw new RuntimeException(malformedURLException);
-            }
-            zlcData.add(new ZLCData(newUrl, klasChecksum, format, new HashSet<>(), null));
-        }
-
-        long end = System.currentTimeMillis();
-        LOGGER.log(Level.FINEST, "[TIME]CREATING ZLC FILE: " + (end - start) + MILLISECOND);
-        return new ZLCFileContent(classList, zlcData, format);
-    }
-
-    // This method computes the method-level checksums.
-    public static ZLCFileContent createZLCFileDataMethods(
+    // This method computes the method-level checksums or class-level checksums (for hybrid) based on isMethod flag.
+    public static ZLCFileContent createZLCFileData(
             Map<String, Set<String>> methodToTests,
             Map<String, String> checksumMap,
             ClassLoader loader,
             boolean useJars,
-            ZLCFormat format) {
+            ZLCFormat format,
+            boolean isMethod) {
 
         long start = System.currentTimeMillis();
         List<ZLCData> zlcData = new ArrayList<>();
-        ArrayList<String> methodList = new ArrayList<>(methodToTests.keySet());
+        ArrayList<String> itemList = isMethod ? new ArrayList<>(methodToTests.keySet())
+                : new ArrayList<>(checksumMap.keySet());
 
         for (Map.Entry<String, String> entry : checksumMap.entrySet()) {
-            String methodPath = entry.getKey();
-            String methodChecksum = entry.getValue();
-            Set<String> deps = methodToTests.getOrDefault(methodPath, new HashSet<>());
+            String itemPath = entry.getKey();
+            String itemChecksum = entry.getValue();
+            Set<String> deps = isMethod ? methodToTests.getOrDefault(itemPath, new HashSet<>()) : new HashSet<>();
 
-            String klas = ChecksumUtil.toClassName(methodPath.split("#")[0]);
+            String klas = ChecksumUtil.toClassName(isMethod ? itemPath.split("#")[0] : itemPath);
             URL url = loader.getResource(klas);
             String extForm = url.toExternalForm();
             if (ChecksumUtil.isWellKnownUrl(extForm) || (!useJars && extForm.startsWith("jar:"))) {
@@ -134,16 +97,16 @@ public class ZLCHelperMethods implements StartsConstants {
             String classURL = url.toString();
             URL newUrl = null;
             try {
-                newUrl = new URL(classURL + "#" + methodPath.split("#")[1]);
+                newUrl = isMethod ? new URL(classURL + "#" + itemPath.split("#")[1]) : new URL(classURL);
             } catch (MalformedURLException malformedURLException) {
                 throw new RuntimeException(malformedURLException);
             }
-            zlcData.add(new ZLCData(newUrl, methodChecksum, format, deps, null));
+            zlcData.add(new ZLCData(newUrl, itemChecksum, format, deps, null));
         }
 
         long end = System.currentTimeMillis();
         LOGGER.log(Level.FINEST, "[TIME]CREATING ZLC FILE: " + (end - start) + MILLISECOND);
-        return new ZLCFileContent(methodList, zlcData, format);
+        return new ZLCFileContent(itemList, zlcData, format);
     }
 
     /*
@@ -207,11 +170,7 @@ public class ZLCHelperMethods implements StartsConstants {
         for (String method : newMethods) {
             changedClasses.add(convertPath(method.split("#")[0]));
         }
-        result.add(changedMethods);
-        result.add(newMethods);
-        result.add(affectedTests);
-        result.add(oldClasses);
-        result.add(changedClasses);
+        Collections.addAll(result, changedMethods, newMethods, affectedTests, oldClasses, changedClasses);
         LOGGER.log(Level.FINEST, TIME_COMPUTING_NON_AFFECTED + (end - start) + MILLISECOND);
         return result;
     }
@@ -332,12 +291,8 @@ public class ZLCHelperMethods implements StartsConstants {
 
         long end = System.currentTimeMillis();
         List<Set<String>> result = new ArrayList<>();
-        result.add(changedMethods);
-        result.add(newMethods);
-        result.add(affectedTestClasses);
-        result.add(changedClasses);
-        result.add(newClasses);
-        result.add(oldClasses);
+        Collections.addAll(result, changedMethods, newMethods, affectedTestClasses, changedClasses, newClasses,
+                oldClasses);
         LOGGER.log(Level.FINEST, TIME_COMPUTING_NON_AFFECTED + (end - start) + MILLISECOND);
         return result;
     }
