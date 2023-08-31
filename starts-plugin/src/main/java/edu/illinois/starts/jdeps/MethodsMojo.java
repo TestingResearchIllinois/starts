@@ -142,9 +142,9 @@ public class MethodsMojo extends DiffMojo {
             logger.log(Level.INFO, "OldClasses: " + oldClasses.size());
             logger.log(Level.INFO, "ChangedClasses: " + changedClasses.size());
             if (updateMethodsChecksums) {
-                ZLCHelperMethods.writeZLCFile(method2testClasses, methodsCheckSum, loader, getArtifactsDir(), null,
+                ZLCHelperMethods.writeZLCFile(method2testClasses, methodsCheckSum, null, loader, getArtifactsDir(), null,
                         false,
-                        zlcFormat);
+                        zlcFormat, false);
             }
 
         } else {
@@ -156,9 +156,9 @@ public class MethodsMojo extends DiffMojo {
             logger.log(Level.INFO, "OldClasses: " + oldClasses.size());
             logger.log(Level.INFO, "ChangedClasses: " + changedClasses.size());
             if (updateMethodsChecksums) {
-                ZLCHelperMethods.writeZLCFile(method2testClasses, methodsCheckSum, loader, getArtifactsDir(), null,
+                ZLCHelperMethods.writeZLCFile(method2testClasses, methodsCheckSum, null, loader, getArtifactsDir(), null,
                         false,
-                        zlcFormat);
+                        zlcFormat, false);
             }
         }
     }
@@ -205,9 +205,9 @@ public class MethodsMojo extends DiffMojo {
             logger.log(Level.INFO, "OldClasses: " + oldClasses.size());
             logger.log(Level.INFO, "ChangedClasses: " + changedClasses.size());
             if (updateMethodsChecksums) {
-                ZLCHelperMethods.writeZLCFile(method2testClasses, methodsCheckSum, loader, getArtifactsDir(), null,
+                ZLCHelperMethods.writeZLCFile(method2testClasses, methodsCheckSum, null, loader, getArtifactsDir(), null,
                         false,
-                        zlcFormat);
+                        zlcFormat, false);
             }
         } else {
             setChangedMethods();
@@ -222,9 +222,9 @@ public class MethodsMojo extends DiffMojo {
             logger.log(Level.INFO, "OldClasses: " + oldClasses.size());
             logger.log(Level.INFO, "ChangedClasses: " + changedClasses.size());
             if (updateMethodsChecksums) {
-                ZLCHelperMethods.writeZLCFile(method2testClasses, methodsCheckSum, loader, getArtifactsDir(), null,
+                ZLCHelperMethods.writeZLCFile(method2testClasses, methodsCheckSum, null, loader, getArtifactsDir(), null,
                         false,
-                        zlcFormat);
+                        zlcFormat, false);
             }
         }
     }
