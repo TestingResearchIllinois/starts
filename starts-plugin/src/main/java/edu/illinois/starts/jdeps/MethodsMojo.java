@@ -117,15 +117,11 @@ public class MethodsMojo extends DiffMojo {
             throw new RuntimeException(exception);
         }
 
-        if (computeImpactedMethods) {
-            runImpactedMethods();
-        } else {
-            runChangedMethods();
-        }
+        runMethods(computeImpactedMethods);
     }
 
-    protected void runChangedMethods() throws MojoExecutionException {
-
+    protected void runMethods(boolean impacted) throws MojoExecutionException {
+        // Checking if the file of depedencies exists
         if (!Files.exists(Paths.get(getArtifactsDir() + METHODS_TEST_DEPS_ZLC_FILE))) {
             changedMethods = new HashSet<>();
             newMethods = MethodLevelStaticDepsBuilder.getMethods();
@@ -135,31 +131,45 @@ public class MethodsMojo extends DiffMojo {
             newClasses = MethodLevelStaticDepsBuilder.getClasses();
             nonAffectedMethods = new HashSet<>();
 
-            logger.log(Level.INFO, "ChangedMethods: " + changedMethods.size());
-            logger.log(Level.INFO, "NewMethods: " + newMethods.size());
-            logger.log(Level.INFO, "ImpactedTestClasses: " + impactedTestClasses.size());
-            logger.log(Level.INFO, "NewClasses: " + newClasses.size());
-            logger.log(Level.INFO, "OldClasses: " + oldClasses.size());
-            logger.log(Level.INFO, "ChangedClasses: " + changedClasses.size());
-            if (updateMethodsChecksums) {
-                ZLCHelperMethods.writeZLCFile(method2testClasses, methodsCheckSum, null, loader, getArtifactsDir(), null,
-                        false,
-                        zlcFormat, false);
+            if (impacted) {
+                impactedMethods = newMethods;
             }
 
-        } else {
-            setChangedMethods();
-            logger.log(Level.INFO, "ChangedMethods: " + changedMethods.size());
-            logger.log(Level.INFO, "NewMethods: " + newMethods.size());
-            logger.log(Level.INFO, "ImpactedTestClasses: " + impactedTestClasses.size());
-            logger.log(Level.INFO, "NewClasses: " + newClasses.size());
-            logger.log(Level.INFO, "OldClasses: " + oldClasses.size());
-            logger.log(Level.INFO, "ChangedClasses: " + changedClasses.size());
             if (updateMethodsChecksums) {
-                ZLCHelperMethods.writeZLCFile(method2testClasses, methodsCheckSum, null, loader, getArtifactsDir(), null,
+                ZLCHelperMethods.writeZLCFile(method2testClasses, methodsCheckSum, null, loader, getArtifactsDir(),
+                        null,
                         false,
                         zlcFormat, false);
             }
+        } else {
+            setChangedMethods();
+
+            if (impacted) {
+                computeImpacedMethods();
+                computeImpacedTestClasses();
+            }
+
+            if (updateMethodsChecksums) {
+                ZLCHelperMethods.writeZLCFile(method2testClasses, methodsCheckSum, null, loader, getArtifactsDir(),
+                        null,
+                        false,
+                        zlcFormat, false);
+            }
+        }
+
+        logInfoStatements(impacted);
+    }
+
+    private void logInfoStatements(boolean impacted) {
+        logger.log(Level.INFO, "ChangedMethods: " + changedMethods.size());
+        logger.log(Level.INFO, "NewMethods: " + newMethods.size());
+        logger.log(Level.INFO, "ImpactedTestClasses: " + impactedTestClasses.size());
+        logger.log(Level.INFO, "NewClasses: " + newClasses.size());
+        logger.log(Level.INFO, "OldClasses: " + oldClasses.size());
+        logger.log(Level.INFO, "ChangedClasses: " + changedClasses.size());
+
+        if (impacted) {
+            logger.log(Level.INFO, "ImpactedMethods: " + impactedMethods.size());
         }
     }
 
@@ -183,50 +193,6 @@ public class MethodsMojo extends DiffMojo {
         nonAffectedMethods = MethodLevelStaticDepsBuilder.getMethods();
         nonAffectedMethods.removeAll(changedMethods);
         nonAffectedMethods.removeAll(newMethods);
-    }
-
-    protected void runImpactedMethods() throws MojoExecutionException {
-        // Checking if the file of depedencies exists
-        if (!Files.exists(Paths.get(getArtifactsDir() + METHODS_TEST_DEPS_ZLC_FILE))) {
-            changedMethods = new HashSet<>();
-            newMethods = MethodLevelStaticDepsBuilder.getMethods();
-            impactedMethods = newMethods;
-            impactedTestClasses = MethodLevelStaticDepsBuilder.getTests();
-            oldClasses = new HashSet<>();
-            changedClasses = new HashSet<>();
-            newClasses = MethodLevelStaticDepsBuilder.getClasses();
-            nonAffectedMethods = new HashSet<>();
-
-            logger.log(Level.INFO, "ChangedMethods: " + changedMethods.size());
-            logger.log(Level.INFO, "NewMethods: " + newMethods.size());
-            logger.log(Level.INFO, "ImpactedMethods: " + impactedMethods.size());
-            logger.log(Level.INFO, "ImpactedTestClasses: " + impactedTestClasses.size());
-            logger.log(Level.INFO, "NewClasses: " + newClasses.size());
-            logger.log(Level.INFO, "OldClasses: " + oldClasses.size());
-            logger.log(Level.INFO, "ChangedClasses: " + changedClasses.size());
-            if (updateMethodsChecksums) {
-                ZLCHelperMethods.writeZLCFile(method2testClasses, methodsCheckSum, null, loader, getArtifactsDir(), null,
-                        false,
-                        zlcFormat, false);
-            }
-        } else {
-            setChangedMethods();
-            computeImpacedMethods();
-            computeImpacedTestClasses();
-            logger.log(Level.INFO, "ChangedMethods: " + changedMethods.size());
-            logger.log(Level.INFO, "NewMethods: " + newMethods.size());
-            logger.log(Level.INFO, "ImpactedMethods: " + impactedMethods.size());
-            logger.log(Level.INFO, "ImpactedMethods: " + impactedMethods);
-            logger.log(Level.INFO, "ImpactedTestClasses: " + impactedTestClasses.size());
-            logger.log(Level.INFO, "NewClasses: " + newClasses.size());
-            logger.log(Level.INFO, "OldClasses: " + oldClasses.size());
-            logger.log(Level.INFO, "ChangedClasses: " + changedClasses.size());
-            if (updateMethodsChecksums) {
-                ZLCHelperMethods.writeZLCFile(method2testClasses, methodsCheckSum, null, loader, getArtifactsDir(), null,
-                        false,
-                        zlcFormat, false);
-            }
-        }
     }
 
     private void computeImpacedTestClasses() {
