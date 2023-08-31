@@ -178,7 +178,6 @@ public class ZLCHelperMethods implements StartsConstants {
     /*
      * Finds the changedMethods, oldAffectedTests, newMethods, oldClasses,
      * changedClasses in hybrid analysis
-     * 
      * This is a long method and needs refactoring
      */
     public static List<Set<String>> getChangedDataHybrid(ClassLoader loader, String artifactsDir, boolean cleanBytes,
