@@ -34,25 +34,25 @@ public class MethodLevelStaticDepsBuilder {
     // -Dexec.args="path to test project"
 
     // for every class, get the methods it implements
-    public static Map<String, Set<String>> class2ContainedMethodNames = new HashMap<>();
+    public static Map<String, Set<String>> classToContainedMethodNames = new HashMap<>();
 
     // for every method, get the methods it invokes
-    public static Map<String, Set<String>> methodName2MethodNames = new HashMap<>();
+    public static Map<String, Set<String>> methodNameToMethodNames = new HashMap<>();
 
     // Contains method to method dependency graph
     public static Map<String, Set<String>> methodDependencyGraph = new HashMap<>();
 
     // for every class, find its parents.
-    public static Map<String, Set<String>> hierarchy_parents = new HashMap<>();
+    public static Map<String, Set<String>> hierarchyParents = new HashMap<>();
 
     // for every class, find its children.
-    public static Map<String, Set<String>> hierarchy_children = new HashMap<>();
+    public static Map<String, Set<String>> hierarchyChildren = new HashMap<>();
 
-    public static Map<String, Set<String>> testClasses2methods = new HashMap<>();
+    public static Map<String, Set<String>> testClassesToMethods = new HashMap<>();
 
-    public static Map<String, Set<String>> method2testClasses = new HashMap<>();
+    public static Map<String, Set<String>> methodToTestClasses = new HashMap<>();
 
-    public static Map<String, Set<String>> methods2testmethods = new HashMap<>();
+    public static Map<String, Set<String>> methodToTestMethods = new HashMap<>();
 
     public static Map<String, String> classesChecksums = new HashMap<>();
 
@@ -69,13 +69,13 @@ public class MethodLevelStaticDepsBuilder {
                 .map(f -> f.normalize().toAbsolutePath().toString())
                 .collect(Collectors.toList()));
 
-        // Finding class2ContainedMethodNames, methodName2MethodNames,
+        // Finding classToContainedMethodNames, methodNameToMethodNames,
         // hierarchy_parents, hierarchy_children
         findMethodsinvoked(classPaths);
 
         // Suppose that test classes have Test in their class name
         Set<String> testClasses = new HashSet<>();
-        for (String method : methodName2MethodNames.keySet()) {
+        for (String method : methodNameToMethodNames.keySet()) {
             String className = method.split("#|\\$")[0];
             if (className.contains("Test")) {
                 testClasses.add(className);
@@ -83,9 +83,9 @@ public class MethodLevelStaticDepsBuilder {
         }
 
         // Finding Test Classes to methods
-        testClasses2methods = getDepsSingleThread(testClasses);
+        testClassesToMethods = getDepsSingleThread(testClasses);
 
-        // Adding reflexive closure to methodName2MethodNames
+        // Adding reflexive closure to methodNameToMethodNames
         /*
          * A -> B, A
          */
@@ -93,11 +93,11 @@ public class MethodLevelStaticDepsBuilder {
         /*
          * B -> A, B
          */
-        addReflexiveClosure(methodName2MethodNames);
+        addReflexiveClosure(methodNameToMethodNames);
 
-        // Inverting methodName2MethodNames to have the dependency graph for each method
-        // methodName2MethodNames = invertMap(methodName2MethodNames);
-        methodDependencyGraph = invertMap(methodName2MethodNames);
+        // Inverting methodNameToMethodNames to have the dependency graph for each method
+        // methodNameToMethodNames = invertMap(methodNameToMethodNames);
+        methodDependencyGraph = invertMap(methodNameToMethodNames);
 
         /*
          * A_method -> a_variable
@@ -114,12 +114,12 @@ public class MethodLevelStaticDepsBuilder {
     }
 
     public static void findMethodsinvoked(Set<String> classPaths) {
-        // Finding class2ContainedMethodNames, hierarchy_parents, hierarchy_children,
+        // Finding classToContainedMethodNames, hierarchy_parents, hierarchy_children,
         for (String classPath : classPaths) {
             try {
                 ClassReader classReader = new ClassReader(new FileInputStream(new File(classPath)));
                 ClassToMethodsCollectorCV classToMethodsVisitor = new ClassToMethodsCollectorCV(
-                        class2ContainedMethodNames, hierarchy_parents, hierarchy_children);
+                        classToContainedMethodNames, hierarchyParents, hierarchyChildren);
                 classReader.accept(classToMethodsVisitor, ClassReader.SKIP_DEBUG);
             } catch (IOException exception) {
                 LOGGER.log(Level.INFO, "[ERROR] cannot parse file: " + classPath);
@@ -127,12 +127,12 @@ public class MethodLevelStaticDepsBuilder {
             }
         }
 
-        // Finding methodName2MethodNames map
+        // Finding methodNameToMethodNames map
         for (String classPath : classPaths) {
             try {
                 ClassReader classReader = new ClassReader(new FileInputStream(new File(classPath)));
-                MethodCallCollectorCV methodClassVisitor = new MethodCallCollectorCV(methodName2MethodNames,
-                        hierarchy_parents, hierarchy_children, class2ContainedMethodNames);
+                MethodCallCollectorCV methodClassVisitor = new MethodCallCollectorCV(methodNameToMethodNames,
+                        hierarchyParents, hierarchyChildren, classToContainedMethodNames);
                 classReader.accept(methodClassVisitor, ClassReader.SKIP_DEBUG);
             } catch (IOException exception) {
                 LOGGER.log(Level.INFO, "[ERROR] cannot parse file: " + classPath);
@@ -142,13 +142,13 @@ public class MethodLevelStaticDepsBuilder {
 
         // deal with test class in a special way, all the @test method in hierarchy
         // should be considered
-        for (String superClass : hierarchy_children.keySet()) {
+        for (String superClass : hierarchyChildren.keySet()) {
             if (superClass.contains("Test")) {
-                for (String subClass : hierarchy_children.getOrDefault(superClass, new HashSet<>())) {
-                    for (String methodSig : class2ContainedMethodNames.getOrDefault(superClass, new HashSet<>())) {
+                for (String subClass : hierarchyChildren.getOrDefault(superClass, new HashSet<>())) {
+                    for (String methodSig : classToContainedMethodNames.getOrDefault(superClass, new HashSet<>())) {
                         String subClassKey = subClass + "#" + methodSig;
                         String superClassKey = superClass + "#" + methodSig;
-                        methodName2MethodNames.computeIfAbsent(subClassKey, k -> new TreeSet<>()).add(superClassKey);
+                        methodNameToMethodNames.computeIfAbsent(subClassKey, k -> new TreeSet<>()).add(superClassKey);
                     }
                 }
             }
@@ -159,9 +159,9 @@ public class MethodLevelStaticDepsBuilder {
         return methodsCheckSum;
     }
 
-    public static Map<String, Set<String>> computeMethod2testClasses() {
-        method2testClasses = invertMap(testClasses2methods);
-        return method2testClasses;
+    public static Map<String, Set<String>> computeMethodToTestClasses() {
+        methodToTestClasses = invertMap(testClassesToMethods);
+        return methodToTestClasses;
     }
 
     public static Map<String, String> getMethodsChecksumsForClasses(Set<String> classes, ClassLoader loader) {
@@ -201,14 +201,14 @@ public class MethodLevelStaticDepsBuilder {
 
     public static Set<String> getClasses() {
         Set<String> classes = new HashSet<>();
-        for (String className : class2ContainedMethodNames.keySet()) {
+        for (String className : classToContainedMethodNames.keySet()) {
             classes.add(className);
         }
         return classes;
     }
 
     public static Map<String, String> computeClassesChecksums(ClassLoader loader, boolean cleanBytes) {
-        for (String className : class2ContainedMethodNames.keySet()) {
+        for (String className : classToContainedMethodNames.keySet()) {
             String klas = ChecksumUtil.toClassName(className);
             URL url = loader.getResource(klas);
             ChecksumUtil checksumUtil = new ChecksumUtil(cleanBytes);
@@ -219,7 +219,7 @@ public class MethodLevelStaticDepsBuilder {
     }
 
     public static Map<String, String> computeMethodsChecksum(ClassLoader loader) {
-        for (String className : class2ContainedMethodNames.keySet()) {
+        for (String className : classToContainedMethodNames.keySet()) {
             String klas = ChecksumUtil.toClassName(className);
             URL url = loader.getResource(klas);
             String path = url.getPath();
@@ -251,7 +251,7 @@ public class MethodLevelStaticDepsBuilder {
         return methodsCheckSum;
     }
 
-    public static void computeMethod2TestMethods() {
+    public static void computeMethodToTestMethods() {
         for (String method : methodDependencyGraph.keySet()) {
             if (!method.contains("Test")) {
                 Set<String> deps = getMethodDeps(method);
@@ -263,7 +263,7 @@ public class MethodLevelStaticDepsBuilder {
                     }
                 }
                 deps.removeAll(toRemove);
-                methods2testmethods.put(method, deps);
+                methodToTestMethods.put(method, deps);
             }
         }
     }
@@ -319,7 +319,7 @@ public class MethodLevelStaticDepsBuilder {
     // simple DFS
     public static void getDepsDFS(String methodName, Set<String> visitedMethods) {
         if (methodDependencyGraph.containsKey(methodName)) {
-            for (String method : methodName2MethodNames.get(methodName)) {
+            for (String method : methodNameToMethodNames.get(methodName)) {
                 if (!visitedMethods.contains(method)) {
                     visitedMethods.add(method);
                     getDepsDFS(method, visitedMethods);
@@ -352,7 +352,7 @@ public class MethodLevelStaticDepsBuilder {
 
     public static Set<String> getDeps(String testClass) {
         Set<String> visited = new HashSet<>();
-        for (String method : methodName2MethodNames.keySet()) {
+        for (String method : methodNameToMethodNames.keySet()) {
             if (method.startsWith(testClass + "#")) {
                 visited.add(method);
                 getDepsDFS(method, visited);
@@ -362,22 +362,22 @@ public class MethodLevelStaticDepsBuilder {
     }
 
     public static Map<String, Set<String>> getDepsSingleThread(Set<String> testClasses) {
-        Map<String, Set<String>> test2methods = new HashMap<>();
+        Map<String, Set<String>> testToMethods = new HashMap<>();
         for (String testClass : testClasses) {
-            test2methods.put(testClass, getDeps(testClass));
+            testToMethods.put(testClass, getDeps(testClass));
         }
-        return test2methods;
+        return testToMethods;
     }
 
     public static Map<String, Set<String>> getDepsMultiThread(Set<String> testClasses) {
-        Map<String, Set<String>> test2methods = new ConcurrentSkipListMap<>();
+        Map<String, Set<String>> testToMethods = new ConcurrentSkipListMap<>();
         ExecutorService service = null;
         try {
             service = Executors.newFixedThreadPool(16);
             for (final String testClass : testClasses) {
                 service.submit(() -> {
                     Set<String> invokedMethods = getDeps(testClass);
-                    test2methods.put(testClass, invokedMethods);
+                    testToMethods.put(testClass, invokedMethods);
                     // numMethodDepNodes.addAll(invokedMethods);
                 });
             }
@@ -386,7 +386,7 @@ public class MethodLevelStaticDepsBuilder {
         } catch (Exception exception) {
             throw new RuntimeException(exception);
         }
-        return test2methods;
+        return testToMethods;
     }
 
     public static Set<String> getMethodsFromHierarchies(String currentMethod, Map<String, Set<String>> hierarchies) {
@@ -428,7 +428,7 @@ public class MethodLevelStaticDepsBuilder {
 
     public static Set<String> getTests() {
         Set<String> tests = new HashSet<>();
-        for (String test : testClasses2methods.keySet()) {
+        for (String test : testClassesToMethods.keySet()) {
             tests.add(test);
         }
         return tests;

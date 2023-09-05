@@ -43,7 +43,7 @@ public class HybridMojo extends DiffMojo {
     private Set<String> nonAffectedMethods;
     private Map<String, String> methodsCheckSum;
     private Map<String, String> classesChecksum;
-    private Map<String, Set<String>> method2testClasses;
+    private Map<String, Set<String>> methodToTestClasses;
     private ClassLoader loader;
 
     @Parameter(property = "computeImpactedMethods", defaultValue = TRUE)
@@ -93,6 +93,16 @@ public class HybridMojo extends DiffMojo {
         return Collections.unmodifiableSet(nonAffectedMethods);
     }
 
+    /**
+     * This method first builds the method-level static dependencies by calling
+     * MethodLevelStaticDepsBuilder.buildMethodsGraph().
+     * Then, it computes and retrieves the classes' checksums and the mapping
+     * between methods and test classes by calling
+     * MethodLevelStaticDepsBuilder.computeMethodsChecksum(ClassLoader) and
+     * MethodLevelStaticDepsBuilder.computeMethod2testClasses() respectively.
+     * Finally, it computes the changed (and impacted) methods through changed
+     * classes by calling runMethods(boolean).
+     */
     public void execute() throws MojoExecutionException {
         Logger.getGlobal().setLoggingLevel(Level.parse(loggingLevel));
         logger = Logger.getGlobal();
@@ -102,7 +112,7 @@ public class HybridMojo extends DiffMojo {
         // Build method level static dependencies
         try {
             MethodLevelStaticDepsBuilder.buildMethodsGraph();
-            method2testClasses = MethodLevelStaticDepsBuilder.computeMethod2testClasses();
+            methodToTestClasses = MethodLevelStaticDepsBuilder.computeMethodToTestClasses();
             classesChecksum = MethodLevelStaticDepsBuilder.computeClassesChecksums(loader, cleanBytes);
         } catch (Exception exception) {
             throw new RuntimeException(exception);
@@ -111,6 +121,23 @@ public class HybridMojo extends DiffMojo {
         runMethods(computeImpactedMethods);
     }
 
+    /**
+     * This method handles the main logic of the mojo for hybrid analysis.
+     * It checks if the file of dependencies exists and sets the changed
+     * methods accordingly. (First run doesn't have the file of dependencies)
+     * If the file does not exist, it sets the changed methods, new methods,
+     * impacted test classes, old classes, changed classes, new classes and
+     * non-affected methods.
+     * If the file exists, it sets the changed methods and computes the impacted
+     * methods and impacted test classes if impacted is true.
+     * It also updates the methods checksums in the dependency file if
+     * updateMethodsChecksums is true.
+     *
+     * @param impacted a boolean value indicating whether to compute impacted
+     *                 methods and impacted test classes
+     * @throws MojoExecutionException if an exception occurs while setting changed
+     *                                methods
+     */
     protected void runMethods(boolean impacted) throws MojoExecutionException {
         // Checking if the file of dependencies exists
         if (!Files.exists(Paths.get(getArtifactsDir() + METHODS_TEST_DEPS_ZLC_FILE))
@@ -131,10 +158,10 @@ public class HybridMojo extends DiffMojo {
 
             logInfo(impacted);
 
-            // (class) ->  checksums
-            // (class method signature checksum)  -> test classes
+            // (class) -> checksums
+            // (class method signature checksum) -> test classes
             if (updateMethodsChecksums) {
-                ZLCHelperMethods.writeZLCFile(method2testClasses, methodsCheckSum, classesChecksum, loader,
+                ZLCHelperMethods.writeZLCFile(methodToTestClasses, methodsCheckSum, classesChecksum, loader,
                         getArtifactsDir(), null, false,
                         zlcFormat, true);
             }
@@ -142,19 +169,27 @@ public class HybridMojo extends DiffMojo {
             setChangedAndNonaffectedMethods();
 
             if (impacted) {
-                computeImpacedMethods();
+                computeImpactedMethods();
             }
 
             logInfo(impacted);
 
             if (updateMethodsChecksums) {
-                ZLCHelperMethods.writeZLCFile(method2testClasses, methodsCheckSum, classesChecksum, loader,
+                ZLCHelperMethods.writeZLCFile(methodToTestClasses, methodsCheckSum, classesChecksum, loader,
                         getArtifactsDir(), null, false,
                         zlcFormat, true);
             }
         }
     }
 
+    /**
+     * This method logs information statements about changed methods, new methods,
+     * impacted test classes, new classes, old classes and changed classes.
+     * If impacted is true, it also logs information about impacted methods.
+     *
+     * @param impacted a boolean value indicating whether to log information about
+     *                 impacted methods
+     */
     private void logInfo(boolean impacted) {
         if (impacted) {
             logger.log(Level.INFO, "ImpactedMethods: " + impactedMethods.size());
@@ -167,6 +202,12 @@ public class HybridMojo extends DiffMojo {
         logger.log(Level.INFO, "OldClasses: " + oldClasses.size());
     }
 
+    /**
+     * Sets the changed and non-affected methods by retrieving changed data using
+     * the ZLCHelperMethods class and updating the relevant fields.
+     * This method also updates the impacted test classes by adding test classes
+     * associated with new methods.
+     */
     protected void setChangedAndNonaffectedMethods() throws MojoExecutionException {
         List<Set<String>> data = ZLCHelperMethods.getChangedDataHybrid(loader, getArtifactsDir(), cleanBytes,
                 classesChecksum, METHODS_TEST_DEPS_ZLC_FILE, CLASSES_ZLC_FILE);
@@ -174,7 +215,7 @@ public class HybridMojo extends DiffMojo {
         newMethods = data == null ? new HashSet<String>() : data.get(1);
         impactedTestClasses = data == null ? new HashSet<String>() : data.get(2);
         for (String newMethod : newMethods) {
-            impactedTestClasses.addAll(method2testClasses.getOrDefault(newMethod, new HashSet<>()));
+            impactedTestClasses.addAll(methodToTestClasses.getOrDefault(newMethod, new HashSet<>()));
         }
 
         changedClasses = data == null ? new HashSet<String>() : data.get(3);
@@ -187,15 +228,30 @@ public class HybridMojo extends DiffMojo {
         nonAffectedMethods.removeAll(newMethods);
     }
 
-    private void computeImpacedMethods() {
+    /**
+     * Computes the impacted methods by finding impacted methods for changed and new
+     * methods (called affected methods), and updating the impacted test classes by
+     * adding test classes found from impacted methods.
+     */
+    private void computeImpactedMethods() {
         impactedMethods = new HashSet<>();
         impactedMethods.addAll(findImpactedMethods(changedMethods));
         impactedMethods.addAll(findImpactedMethods(newMethods));
         for (String impactedMethod : impactedMethods) {
-            impactedTestClasses.addAll(method2testClasses.getOrDefault(impactedMethod, new HashSet<String>()));
+            impactedTestClasses.addAll(methodToTestClasses.getOrDefault(impactedMethod, new HashSet<String>()));
         }
     }
 
+    /**
+     * This method finds all impacted methods associated with a set of affected
+     * methods (new methods and changed methods).
+     * It adds all method dependencies of each affected method to the set of
+     * impacted methods.
+     * This is the method that finds the transitive closure of the affected methods.
+     *
+     * @param affectedMethods a set of affected methods
+     * @return a set of impacted methods found from the affected methods
+     */
     private Set<String> findImpactedMethods(Set<String> affectedMethods) {
         Set<String> methods = new HashSet<>(affectedMethods);
         for (String method : affectedMethods) {
