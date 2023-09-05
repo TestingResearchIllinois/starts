@@ -47,12 +47,16 @@ public class MethodsMojo extends DiffMojo {
     private ClassLoader loader;
 
     /**
-     * Set this to "true" to compute impaced methods as well. False indicated only
-     * changed methods will be compute.
+     * Set this to "true" to compute impacted methods as well. False indicates only
+     * changed methods will be computed.
      */
     @Parameter(property = "computeImpactedMethods", defaultValue = TRUE)
     private boolean computeImpactedMethods;
 
+    /**
+     * Set this to "true" to save the new checksums of changed methods in the zlc
+     * file.
+     */
     @Parameter(property = "updateMethodsChecksums", defaultValue = TRUE)
     private boolean updateMethodsChecksums;
 
@@ -145,7 +149,7 @@ public class MethodsMojo extends DiffMojo {
             setChangedMethods();
 
             if (impacted) {
-                computeImpacedMethods();
+                computeImpactedMethods();
                 computeImpacedTestClasses();
             }
 
@@ -175,7 +179,8 @@ public class MethodsMojo extends DiffMojo {
 
     protected void setChangedMethods() throws MojoExecutionException {
         List<Set<String>> data = ZLCHelperMethods.getChangedDataMethods(getArtifactsDir(), cleanBytes, methodsCheckSum,
-                METHODS_TEST_DEPS_ZLC_FILE);
+                METHODS_TEST_DEPS_ZLC_FILE); // changedMethod, newMethods, impactedTestClasses(only for changed method),
+                                             // oldClasses, changedClasses
         changedMethods = data == null ? new HashSet<String>() : data.get(0);
         newMethods = data == null ? new HashSet<String>() : data.get(1);
 
@@ -202,13 +207,14 @@ public class MethodsMojo extends DiffMojo {
         }
     }
 
-    private void computeImpacedMethods() {
+    private void computeImpactedMethods() {
         impactedMethods = new HashSet<>();
         impactedMethods.addAll(findImpactedMethods(changedMethods));
         impactedMethods.addAll(findImpactedMethods(newMethods));
-        for (String impactedMethod : impactedMethods) {
-            impactedTestClasses.addAll(method2testClasses.getOrDefault(impactedMethod, new HashSet<String>()));
-        }
+        // for (String impactedMethod : impactedMethods) {
+        // impactedTestClasses.addAll(method2testClasses.getOrDefault(impactedMethod,
+        // new HashSet<String>()));
+        // }
     }
 
     private Set<String> findImpactedMethods(Set<String> affectedMethods) {

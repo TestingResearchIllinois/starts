@@ -4,9 +4,10 @@
 
 package edu.illinois.starts.jdeps;
 
+import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -15,6 +16,7 @@ import java.util.logging.Level;
 
 import edu.illinois.starts.helpers.ZLCHelperMethods;
 import edu.illinois.starts.smethods.MethodLevelStaticDepsBuilder;
+import edu.illinois.starts.util.ChecksumUtil;
 import edu.illinois.starts.util.Logger;
 
 import org.apache.maven.plugin.MojoExecutionException;
@@ -38,6 +40,7 @@ public class HybridMojo extends DiffMojo {
     private Set<String> changedClasses;
     private Set<String> impactedTestClasses;
     private Set<String> nonAffectedTestClasses;
+    private Set<String> nonAffectedMethods;
     private Map<String, String> methodsCheckSum;
     private Map<String, String> classesChecksum;
     private Map<String, Set<String>> method2testClasses;
@@ -55,6 +58,39 @@ public class HybridMojo extends DiffMojo {
 
     public void setUpdateMethodsChecksums(boolean updateChecksums) {
         this.updateMethodsChecksums = updateChecksums;
+    }
+
+    public Set<String> getAffectedMethods() {
+        Set<String> affectedMethods = new HashSet<>();
+        affectedMethods.addAll(changedMethods);
+        affectedMethods.addAll(newMethods);
+        return Collections.unmodifiableSet(affectedMethods);
+    }
+
+    public Set<String> getImpactedMethods() {
+        return Collections.unmodifiableSet(impactedMethods);
+    }
+
+    public Set<String> getNewClasses() {
+        return Collections.unmodifiableSet(newClasses);
+    }
+
+    public Set<String> getOldClasses() {
+        return Collections.unmodifiableSet(oldClasses);
+    }
+
+    public Set<String> getChangedClasses() throws MojoExecutionException {
+        Set<String> changedC = new HashSet<>();
+        for (String c : changedClasses) {
+            URL url = loader.getResource(ChecksumUtil.toClassName(c));
+            String extForm = url.toExternalForm();
+            changedC.add(extForm);
+        }
+        return Collections.unmodifiableSet(changedC);
+    }
+
+    public Set<String> getNonAffectedMethods() {
+        return Collections.unmodifiableSet(nonAffectedMethods);
     }
 
     public void execute() throws MojoExecutionException {
@@ -87,6 +123,7 @@ public class HybridMojo extends DiffMojo {
             newClasses = MethodLevelStaticDepsBuilder.getClasses();
             changedClasses = new HashSet<>();
             oldClasses = new HashSet<>();
+            nonAffectedMethods = new HashSet<>();
 
             if (impacted) {
                 impactedMethods = newMethods;
@@ -94,6 +131,8 @@ public class HybridMojo extends DiffMojo {
 
             logInfo(impacted);
 
+            // (class) ->  checksums
+            // (class method signature checksum)  -> test classes
             if (updateMethodsChecksums) {
                 ZLCHelperMethods.writeZLCFile(method2testClasses, methodsCheckSum, classesChecksum, loader,
                         getArtifactsDir(), null, false,
@@ -142,6 +181,10 @@ public class HybridMojo extends DiffMojo {
         newClasses = data == null ? new HashSet<String>() : data.get(4);
         oldClasses = data == null ? new HashSet<String>() : data.get(5);
         methodsCheckSum = MethodLevelStaticDepsBuilder.getMethodsCheckSum();
+
+        nonAffectedMethods = MethodLevelStaticDepsBuilder.getMethods();
+        nonAffectedMethods.removeAll(changedMethods);
+        nonAffectedMethods.removeAll(newMethods);
     }
 
     private void computeImpacedMethods() {

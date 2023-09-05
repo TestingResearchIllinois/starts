@@ -44,8 +44,17 @@ public class ZLCHelperMethods implements StartsConstants {
     private static final Logger LOGGER = Logger.getGlobal();
     private static final String NOEXISTING_ZLCFILE_FIRST_RUN = "@NoExistingZLCFile. First Run?";
 
-    // This method creates a file that stores the method-level dependency graph.
-    // Additionally stores class-level checksums used in hybrid analysis.
+    /**
+     * This method is a high-level method that handles the computation and creation
+     * of a file that (1) stores the method-level dependency graph.
+     * (2) Additionally stores class-level checksums used in hybrid analysis.
+     *
+     * @param methodsToTests   mapping from methods to test classes
+     * @param checksumsMap     mapping from methods to their checksums
+     * @param classesChecksums mapping from classes to their checksums (used in
+     *                         hybrid analysis only)
+     */
+
     public static void writeZLCFile(Map<String, Set<String>> methodsToTests, Map<String, String> checksumsMap,
             Map<String, String> classesChecksums, ClassLoader loader,
             String artifactsDir, Set<String> unreached, boolean useThirdParty,
@@ -53,23 +62,26 @@ public class ZLCHelperMethods implements StartsConstants {
         long start = System.currentTimeMillis();
         LOGGER.log(Level.FINE, "ZLC format: " + format.toString());
         ZLCFileContent zlc = createZLCFileData(methodsToTests, checksumsMap, loader, useThirdParty, format, true);
-        // ZLCFileContent zlc = createZLCFileData(method2tests, methodsChecksums,
-        // loader, useThirdParty, format);
         Writer.writeToFile(zlc, METHODS_TEST_DEPS_ZLC_FILE, artifactsDir);
 
         if (isHybrid) {
-            // Writer.writeToFile(zlc, METHODS_TEST_DEPS_ZLC_FILE, artifactsDir);
-
-            // compute the class-level checksums, used for hybrid analysis only.
+            // Compute the class-level checksums, used for hybrid analysis only.
             zlc = createZLCFileData(null, classesChecksums, loader, useThirdParty, format, false);
-
             Writer.writeToFile(zlc, CLASSES_ZLC_FILE, artifactsDir);
         }
         long end = System.currentTimeMillis();
         LOGGER.log(Level.FINE, "[PROFILE] updateForNextRun(updateZLCFile): " + Writer.millsToSeconds(end - start));
     }
 
-    // This method computes the method-level checksums or class-level checksums (for hybrid) based on isMethod flag.
+    /**
+     * This method computes the method-level checksums or class-level checksums (for
+     * hybrid) based on isMethod flag.
+     *
+     * @param methodsToTests mapping from methods to test classes
+     * @param checksumsMap   mapping from methods (or classes) to their checksums
+     * @param isMethod       flag to indicate whether to compute method-level or
+     *                       class-level checksums
+     */
     public static ZLCFileContent createZLCFileData(
             Map<String, Set<String>> methodToTests,
             Map<String, String> checksumMap,
@@ -109,10 +121,20 @@ public class ZLCHelperMethods implements StartsConstants {
         return new ZLCFileContent(itemList, zlcData, format);
     }
 
-    /*
-     * Finds the changedMethods, oldAffectedTests, newMethods, oldClasses,
-     * changedClasses
+    /**
+     * This helper method is used in method-level analysis returns a list of sets
+     * containing information about changed methods, new methods, affected tests,
+     * old classes, and changed classes.
+     * This method is called from MethodMojo.java from the setChangedMethods()
+     * method.
+     *
+     * @param methodsChecksums A map containing the method names and their
+     *                         checksums.
+     * @return A list of sets containing information about changed methods, new
+     *         methods, affected tests, old classes, and changed classes. Returns
+     *         null if the zlc file does not exist.
      */
+
     public static List<Set<String>> getChangedDataMethods(String artifactsDir, boolean cleanBytes,
             Map<String, String> methodsChecksums, String filePath) {
         long start = System.currentTimeMillis();
@@ -153,7 +175,9 @@ public class ZLCHelperMethods implements StartsConstants {
                 String newChecksum = methodsChecksums.get(methodPath);
                 oldClasses.add(className);
                 newMethods.remove(methodPath);
-                if (oldCheckSum.equals(newChecksum)) {
+                if (newChecksum == null) {
+                    continue;
+                } else if (oldCheckSum.equals(newChecksum)) {
                     continue;
                 } else {
                     changedMethods.add(methodPath);
@@ -175,10 +199,18 @@ public class ZLCHelperMethods implements StartsConstants {
         return result;
     }
 
-    /*
-     * Finds the changedMethods, oldAffectedTests, newMethods, oldClasses,
-     * changedClasses in hybrid analysis
-     * This is a long method and needs refactoring
+    /**
+     * This helper method is used in hybrid analysis and returns a list of sets
+     * containing information about changed methods, new methods, affected tests,
+     * old classes, and changed classes.
+     * This method is called from HybridMojo.java from the setChangedMethods()
+     * method.
+     *
+     * @param classesChecksums A map containing the class names and their
+     *                         checksums.
+     * @return A list of sets containing information about changed methods, new
+     *         methods, affected tests, old classes, and changed classes. Returns
+     *         null if the zlc file does not exist.
      */
     public static List<Set<String>> getChangedDataHybrid(ClassLoader loader, String artifactsDir, boolean cleanBytes,
             Map<String, String> classesChecksums, String methodFilePath, String classesFilePath) {
@@ -227,6 +259,9 @@ public class ZLCHelperMethods implements StartsConstants {
             LOGGER.log(Level.FINEST, NOEXISTING_ZLCFILE_FIRST_RUN);
             return null;
         }
+
+        // changed classes (comparing old and new checksums of classes)
+        // methods checksums for changed classes
 
         Map<String, String> methodsChecksums = MethodLevelStaticDepsBuilder
                 .getMethodsChecksumsForClasses(changedClasses, loader);
@@ -279,11 +314,21 @@ public class ZLCHelperMethods implements StartsConstants {
             }
         }
 
-        // Updateing methods checksums
+        Set<String> methodsOldChangedClasses = new HashSet<>();
+
+        for (String c : changedClasses) {
+            for (String m : oldMethodsChecksums.keySet()) {
+                if (m.startsWith(c)) {
+                    methodsOldChangedClasses.add(m);
+                }
+            }
+        }
+
+        // Updating methods checksums for non changed classes
         for (String methodPath : oldMethodsChecksums.keySet()) {
             String newChecksum = methodsChecksums.get(methodPath);
             String oldChecksum = oldMethodsChecksums.get(methodPath);
-            if (newChecksum == null) {
+            if (newChecksum == null && !methodsOldChangedClasses.contains(methodPath)) {
                 methodsChecksums.put(methodPath, oldChecksum);
             }
         }
@@ -296,7 +341,14 @@ public class ZLCHelperMethods implements StartsConstants {
         return result;
     }
 
-    // Convert class URL to only class name
+    /**
+     * This method converts a given full path to a class path by removing the prefix
+     * up to and including "classes" or "test-classes" and replacing the ".class"
+     * extension with an empty string.
+     *
+     * @param fullPath The full path to be converted.
+     * @return The converted class path string.
+     */
     public static String convertPath(String fullPath) {
         String[] parts = fullPath.split("/");
         int index = 0;
@@ -316,10 +368,25 @@ public class ZLCHelperMethods implements StartsConstants {
         return result.replace(".class", "");
     }
 
+    /**
+     * This method converts a comma-separated string of tests into a set of strings.
+     *
+     * @param tests A comma-separated string of tests.
+     * @return A set of strings representing the tests.
+     */
     private static Set<String> fromCSV(String tests) {
         return new HashSet<>(Arrays.asList(tests.split(COMMA)));
     }
 
+    /**
+     * This method prints the content of a given MethodNode object using a Textifier
+     * printer and a TraceMethodVisitor. The method includes the access code,
+     * signature, name, and description of the MethodNode object in the returned
+     * string.
+     *
+     * @param node The MethodNode object whose content is to be printed.
+     * @return A string representing the content of the MethodNode object.
+     */
     public static String printMethodContent(MethodNode node) {
         Printer printer = new Textifier(Opcodes.ASM5) {
             @Override
