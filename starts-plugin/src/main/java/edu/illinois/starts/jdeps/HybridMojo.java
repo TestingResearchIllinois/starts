@@ -145,8 +145,8 @@ public class HybridMojo extends DiffMojo {
             MethodLevelStaticDepsBuilder.computeMethodsChecksum(loader);
             methodsCheckSum = MethodLevelStaticDepsBuilder.getMethodsCheckSum();
             changedMethods = new HashSet<>();
-            newMethods = MethodLevelStaticDepsBuilder.getMethods();
-            impactedTestClasses = MethodLevelStaticDepsBuilder.getTests();
+            newMethods = MethodLevelStaticDepsBuilder.computeMethods();
+            impactedTestClasses = MethodLevelStaticDepsBuilder.computeTestClasses();
             newClasses = MethodLevelStaticDepsBuilder.getClasses();
             changedClasses = new HashSet<>();
             oldClasses = new HashSet<>();
@@ -223,7 +223,7 @@ public class HybridMojo extends DiffMojo {
         oldClasses = data == null ? new HashSet<String>() : data.get(5);
         methodsCheckSum = MethodLevelStaticDepsBuilder.getMethodsCheckSum();
 
-        nonAffectedMethods = MethodLevelStaticDepsBuilder.getMethods();
+        nonAffectedMethods = MethodLevelStaticDepsBuilder.computeMethods();
         nonAffectedMethods.removeAll(changedMethods);
         nonAffectedMethods.removeAll(newMethods);
     }

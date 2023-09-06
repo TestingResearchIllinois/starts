@@ -151,8 +151,8 @@ public class MethodsMojo extends DiffMojo {
         // Checking if the file of depedencies exists
         if (!Files.exists(Paths.get(getArtifactsDir() + METHODS_TEST_DEPS_ZLC_FILE))) {
             changedMethods = new HashSet<>();
-            newMethods = MethodLevelStaticDepsBuilder.getMethods();
-            impactedTestClasses = MethodLevelStaticDepsBuilder.getTests();
+            newMethods = MethodLevelStaticDepsBuilder.computeMethods();
+            impactedTestClasses = MethodLevelStaticDepsBuilder.computeTestClasses();
             oldClasses = new HashSet<>();
             changedClasses = new HashSet<>();
             newClasses = MethodLevelStaticDepsBuilder.getClasses();
@@ -230,7 +230,7 @@ public class MethodsMojo extends DiffMojo {
         newClasses.removeAll(oldClasses);
         // nonAffectedTestClasses = MethodLevelStaticDepsBuilder.getTests();
         // nonAffectedTestClasses.removeAll(affectedTestClasses);
-        nonAffectedMethods = MethodLevelStaticDepsBuilder.getMethods();
+        nonAffectedMethods = MethodLevelStaticDepsBuilder.computeMethods();
         nonAffectedMethods.removeAll(changedMethods);
         nonAffectedMethods.removeAll(newMethods);
     }
