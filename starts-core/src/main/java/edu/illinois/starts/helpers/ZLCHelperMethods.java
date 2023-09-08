@@ -267,7 +267,7 @@ public class ZLCHelperMethods implements StartsConstants {
                 .getMethodsChecksumsForClasses(changedClasses, loader);
 
         Set<String> changedMethods = new HashSet<>();
-        Set<String> newMethods = new HashSet<>();
+        Set<String> newMethods = new HashSet<>(methodsChecksums.keySet());
         Set<String> affectedTestClasses = new HashSet<>();
         Map<String, String> oldMethodsChecksums = new HashMap<>();
         Map<String, Set<String>> oldMethodsDeps = new HashMap<>();
@@ -294,44 +294,34 @@ public class ZLCHelperMethods implements StartsConstants {
                 String methodPath = className + "#" + methodName;
                 oldMethodsDeps.put(methodPath, deps);
                 oldMethodsChecksums.put(methodPath, oldCheckSum);
+                newMethods.remove(methodPath);
             }
         } catch (IOException ioe) {
             ioe.printStackTrace();
         }
 
+        // Finding Changed Methods
         for (String methodPath : methodsChecksums.keySet()) {
             String newChecksum = methodsChecksums.get(methodPath);
             String oldChecksum = oldMethodsChecksums.get(methodPath);
 
-            // If the old checksum is null, it means that this method is a new method.
-            if (oldChecksum == null) {
-                newMethods.add(methodPath);
-                continue;
-            }
-            if (!oldChecksum.equals(newChecksum)) {
+            if (oldChecksum != null && !oldChecksum.equals(newChecksum)) {
                 changedMethods.add(methodPath);
                 affectedTestClasses.addAll(oldMethodsDeps.getOrDefault(methodPath, new HashSet<>()));
             }
         }
 
-        Set<String> methodsOldChangedClasses = new HashSet<>();
-
-        for (String c : changedClasses) {
-            for (String m : oldMethodsChecksums.keySet()) {
-                if (m.startsWith(c)) {
-                    methodsOldChangedClasses.add(m);
+        // Updating methods checksums for non changed classes
+        Set<String> changedClassesMethodsOldChecksums = new HashSet<>();
+        for (String changedClass : changedClasses) {
+            for (String methodPath : oldMethodsChecksums.keySet()) {
+                if (methodPath.startsWith(changedClass + "#")) {
+                    changedClassesMethodsOldChecksums.add(methodPath);
                 }
             }
         }
-
-        // Updating methods checksums for non changed classes
-        for (String methodPath : oldMethodsChecksums.keySet()) {
-            String newChecksum = methodsChecksums.get(methodPath);
-            String oldChecksum = oldMethodsChecksums.get(methodPath);
-            if (newChecksum == null && !methodsOldChangedClasses.contains(methodPath)) {
-                methodsChecksums.put(methodPath, oldChecksum);
-            }
-        }
+        oldMethodsChecksums.keySet().removeAll(changedClassesMethodsOldChecksums);
+        methodsChecksums.putAll(oldMethodsChecksums);
 
         long end = System.currentTimeMillis();
         List<Set<String>> result = new ArrayList<>();
