@@ -63,8 +63,9 @@ public class MethodLevelStaticDepsBuilder {
     private static final Logger LOGGER = Logger.getGlobal();
 
     /**
-     * This function builds the method dependency graph for all the methods in the project.
-     * @throws Exception
+     * This function builds the method dependency graph for all the methods in the
+     * project.
+     *
      */
     public static void buildMethodsGraph() throws Exception {
 
@@ -75,7 +76,8 @@ public class MethodLevelStaticDepsBuilder {
                 .map(f -> f.normalize().toAbsolutePath().toString())
                 .collect(Collectors.toList()));
 
-        // Finding classToContainedMethodNames, methodNameToMethodNames, hierarchy_parents, hierarchy_children
+        // Finding classToContainedMethodNames, methodNameToMethodNames,
+        // hierarchy_parents, hierarchy_children
         findMethodsinvoked(classPaths);
 
         // Suppose that test classes have Test in their class name
@@ -90,20 +92,23 @@ public class MethodLevelStaticDepsBuilder {
         // Finding Test Classes to methods
         testClassesToMethods = getDepsSingleThread(testClasses);
 
-        /* Adding reflexive closure to methodNameToMethodNames
+        /*
+         * Adding reflexive closure to methodNameToMethodNames
          * A -> B
          * It will be:
          * A -> A, B
          */
         addReflexiveClosure(methodNameToMethodNames);
 
-        // Inverting methodNameToMethodNames to have the dependency graph for each method
+        // Inverting methodNameToMethodNames to have the dependency graph for each
+        // method
         // methodNameToMethodNames = invertMap(methodNameToMethodNames);
         methodDependencyGraph = invertMap(methodNameToMethodNames);
 
-        /* The original dependency graph is like this:
+        /*
+         * The original dependency graph is like this:
          * (A, B, C) are classes
-         * (a) is a  variable
+         * (a) is a variable
          * A -> A, B, C
          * a -> A
          * After this function call the dependency graph will be like this:
@@ -115,8 +120,8 @@ public class MethodLevelStaticDepsBuilder {
     }
 
     /**
-     * This function builds the classToContainedMethodNames, methodNameToMethodNames, hierarchy_parents, hierarchy_children maps
-     * @throws Exception
+     * This function builds the classToContainedMethodNames, methodNameToMethodNames.
+     * methodNameToMethodNames, hierarchy_parents, hierarchy_children maps
      */
     public static void findMethodsinvoked(Set<String> classPaths) {
         // Finding classToContainedMethodNames, hierarchy_parents, hierarchy_children,
@@ -145,7 +150,8 @@ public class MethodLevelStaticDepsBuilder {
             }
         }
 
-        // deal with test class in a special way, all the @test method in hierarchy should be considered
+        // deal with test class in a special way, all the @test method in hierarchy
+        // should be considered
         for (String superClass : hierarchyChildren.keySet()) {
             if (superClass.contains("Test")) {
                 for (String subClass : hierarchyChildren.getOrDefault(superClass, new HashSet<>())) {
@@ -159,11 +165,10 @@ public class MethodLevelStaticDepsBuilder {
         }
     }
 
-
     /**
      * This function returns methodsCheckSum map.
-     * @return methodsCheckSum
-     * @throws Exception
+     *
+     * @return methodsCheckSum method to checksum mapping
      */
     public static Map<String, String> getMethodsCheckSum() {
         return methodsCheckSum;
@@ -171,8 +176,8 @@ public class MethodLevelStaticDepsBuilder {
 
     /**
      * This function Computes and returns the methodToTestClasses map.
-     * @return methodToTestClasses
-     * @throws Exception
+     *
+     * @return methodToTestClasses method to test classes mapping
      */
     public static Map<String, Set<String>> computeMethodToTestClasses() {
         methodToTestClasses = invertMap(testClassesToMethods);
@@ -180,14 +185,14 @@ public class MethodLevelStaticDepsBuilder {
     }
 
     /**
-     * This function computes methods checksums for the given classes and returns a map containing them.
-     * @param classes
-     * @param loader
-     * @return methodsCheckSum
-     * @throws Exception
+     * This function computes methods checksums for the given classes and returns a
+     * map containing them.
+     *
+     * @return methodsCheckSum method to checksum mapping
      */
     public static Map<String, String> getMethodsChecksumsForClasses(Set<String> classes, ClassLoader loader) {
-        // Looping over all the classes, and computing the checksum for each method in each class
+        // Looping over all the classes, and computing the checksum for each method in
+        // each class
         for (String className : classes) {
             // Reading the class file and parsing it
             String klas = ChecksumUtil.toClassName(className);
@@ -206,7 +211,8 @@ public class MethodLevelStaticDepsBuilder {
             String methodChecksum = null;
             reader.accept(node, ClassReader.SKIP_DEBUG);
             List<MethodNode> methods = node.methods;
-            // Looping over all the methods in the class, and computing the checksum for each method
+            // Looping over all the methods in the class, and computing the checksum for
+            // each method
             for (MethodNode method : methods) {
                 String methodContent = ZLCHelperMethods.printMethodContent(method);
                 try {
@@ -225,8 +231,8 @@ public class MethodLevelStaticDepsBuilder {
 
     /**
      * This function computes all classes in a project.
-     * @return classes
-     * @throws Exception
+     *
+     * @return classes set of classes in the project
      */
     public static Set<String> getClasses() {
         Set<String> classes = new HashSet<>();
@@ -238,10 +244,8 @@ public class MethodLevelStaticDepsBuilder {
 
     /**
      * This function computes checksums for all classes in a project.
-     * @param loader
-     * @param cleanBytes
-     * @return classesChecksums
-     * @throws Exception
+     *
+     * @return classesChecksums mapping of classes to their checksums
      */
     public static Map<String, String> computeClassesChecksums(ClassLoader loader, boolean cleanBytes) {
         // Loopig over all the classes, and computing the checksum for each class
@@ -255,15 +259,12 @@ public class MethodLevelStaticDepsBuilder {
         return classesChecksums;
     }
 
-    
     /**
      * This function computes checksums for all methods in a project.
-     * @param loader
-     * @return methodsCheckSum
-     * @throws Exception
      */
     public static Map<String, String> computeMethodsChecksum(ClassLoader loader) {
-        // Looping over all the classes, and computing the checksum for each method in each class
+        // Looping over all the classes, and computing the checksum for each method in
+        // each class
         for (String className : classToContainedMethodNames.keySet()) {
             String klas = ChecksumUtil.toClassName(className);
             URL url = loader.getResource(klas);
@@ -280,7 +281,8 @@ public class MethodLevelStaticDepsBuilder {
             String methodChecksum = null;
             reader.accept(node, ClassReader.SKIP_DEBUG);
             List<MethodNode> methods = node.methods;
-            // Looping over all the methods in the class, and computing the checksum for each method
+            // Looping over all the methods in the class, and computing the checksum for
+            // each method
             for (MethodNode method : methods) {
                 String methodContent = ZLCHelperMethods.printMethodContent(method);
                 try {
@@ -300,11 +302,10 @@ public class MethodLevelStaticDepsBuilder {
     /**
      * This function computes the methodToTestMethods map.
      * For each method it computes all test methods that cover it.
-     * @return methodToTestMethods
-     * @throws Exception
      */
     public static Map<String, Set<String>> computeMethodToTestMethods() {
-        // Looping over all the methods, and computing the test methods that cover each method.
+        // Looping over all the methods, and computing the test methods that cover each
+        // method.
         for (String method : methodDependencyGraph.keySet()) {
             if (!method.contains("Test")) {
                 Set<String> deps = getMethodDeps(method);
@@ -324,8 +325,8 @@ public class MethodLevelStaticDepsBuilder {
 
     /**
      * This function computes all test methods in a project.
-     * @return testMethods
-     * @throws Exception
+     *
+     * @return testMethods set of methods in test classes
      */
     public static Set<String> getTestMethods() {
         Set<String> testMethods = new HashSet<>();
@@ -339,13 +340,12 @@ public class MethodLevelStaticDepsBuilder {
 
     /**
      * This function add variable dependencies to the dependency graph.
-     * @return methods
-     * @throws Exception
      */
     private static void addVariableDepsToDependencyGraph() {
-        /* The original dependency graph is like this:
+        /*
+         * The original dependency graph is like this:
          * (A, B, C) are classes
-         * (a) is a  variable
+         * (a) is a variable
          * A -> A, B, C
          * a -> A
          * After this function call the dependency graph will be like this:
@@ -479,11 +479,10 @@ public class MethodLevelStaticDepsBuilder {
 
     /**
      * This function inverts the given map.
-     * @param mapToInvert
-     * @return invertedMap
      */
     public static Map<String, Set<String>> invertMap(Map<String, Set<String>> mapToInvert) {
-        // Think of a map as a graph represented as an adjacency list. This funcition inverts the graph by inverting all edges. 
+        // Think of a map as a graph represented as an adjacency list. This funcition
+        // inverts the graph by inverting all edges.
         Map<String, Set<String>> map = mapToInvert;
         Map<String, Set<String>> invertedMap = new HashMap<>();
         for (Map.Entry<String, Set<String>> entry : map.entrySet()) {
@@ -501,7 +500,8 @@ public class MethodLevelStaticDepsBuilder {
 
     /**
      * This function adds reflexive closure to the given map.
-     * @param mapToAddReflexiveClosure
+     *
+     * @param mapToAddReflexiveClosure the passed mapping
      */
     public static void addReflexiveClosure(Map<String, Set<String>> mapToAddReflexiveClosure) {
         for (String method : mapToAddReflexiveClosure.keySet()) {
@@ -511,6 +511,7 @@ public class MethodLevelStaticDepsBuilder {
 
     /**
      * This function computes and returns the testClasses.
+     *
      * @return testClasses
      */
     public static Set<String> computeTestClasses() {
@@ -523,6 +524,7 @@ public class MethodLevelStaticDepsBuilder {
 
     /**
      * This function computes and returns the methods.
+     *
      * @return methods
      */
     public static Set<String> computeMethods() {
