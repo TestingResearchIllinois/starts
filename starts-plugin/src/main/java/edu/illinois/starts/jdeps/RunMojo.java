@@ -139,7 +139,7 @@ public class RunMojo extends DiffMojo implements StartsConstants {
         changedClasses  = data == null ? new HashSet<String>() : data.getValue();
     }
 
-    private boolean isSameClassPath(List<String> sfPathString) throws MojoExecutionException {
+    protected boolean isSameClassPath(List<String> sfPathString) throws MojoExecutionException {
         if (sfPathString.isEmpty()) {
             return true;
         }
@@ -163,7 +163,7 @@ public class RunMojo extends DiffMojo implements StartsConstants {
         return false;
     }
 
-    private boolean hasSameJarChecksum(List<String> cleanSfClassPath) throws MojoExecutionException {
+    protected boolean hasSameJarChecksum(List<String> cleanSfClassPath) throws MojoExecutionException {
         if (cleanSfClassPath.isEmpty()) {
             return true;
         }
@@ -195,7 +195,7 @@ public class RunMojo extends DiffMojo implements StartsConstants {
         return noException;
     }
 
-    private List<String> getCleanClassPath(String cp) {
+    protected List<String> getCleanClassPath(String cp) {
         List<String> cpPaths = new ArrayList<>();
         String[] paths = cp.split(File.pathSeparator);
         String classes = File.separator + TARGET +  File.separator + CLASSES;
