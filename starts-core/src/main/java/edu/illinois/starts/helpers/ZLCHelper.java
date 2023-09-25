@@ -111,7 +111,7 @@ public class ZLCHelper implements StartsConstants {
 
         // for each dep, find it's url, checksum and tests that depend on it
         for (String dep : deps) {
-            String klas = ChecksumUtil.toClassName(dep);
+            String klas = ChecksumUtil.toClassOrJavaName(dep, false);
             if (Types.isIgnorableInternalName(klas)) {
                 continue;
             }

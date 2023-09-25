@@ -34,7 +34,8 @@ public class MethodLevelStaticDepsBuilder {
     // for every class, get the methods it implements
     public static Map<String, Set<String>> classToContainedMethodNames = new HashMap<>();
 
-    // for every method, get the methods it invokes
+    // for every method, get the methods it invokes (direct invocation not
+    // transitive)
     public static Map<String, Set<String>> methodNameToMethodNames = new HashMap<>();
 
     // Contains method to method dependency graph
@@ -81,6 +82,7 @@ public class MethodLevelStaticDepsBuilder {
         findMethodsinvoked(classPaths);
 
         // Suppose that test classes have Test in their class name
+        // and are in src/test
         Set<String> testClasses = new HashSet<>();
         for (String method : methodNameToMethodNames.keySet()) {
             String className = method.split("#|\\$")[0];
@@ -120,7 +122,8 @@ public class MethodLevelStaticDepsBuilder {
     }
 
     /**
-     * This function builds the classToContainedMethodNames, methodNameToMethodNames.
+     * This function builds the classToContainedMethodNames,
+     * methodNameToMethodNames.
      * methodNameToMethodNames, hierarchy_parents, hierarchy_children maps
      */
     public static void findMethodsinvoked(Set<String> classPaths) {
@@ -195,7 +198,7 @@ public class MethodLevelStaticDepsBuilder {
         // each class
         for (String className : classes) {
             // Reading the class file and parsing it
-            String klas = ChecksumUtil.toClassName(className);
+            String klas = ChecksumUtil.toClassOrJavaName(className, false);
             URL url = loader.getResource(klas);
 
             String path = url.getPath();
@@ -250,7 +253,7 @@ public class MethodLevelStaticDepsBuilder {
     public static Map<String, String> computeClassesChecksums(ClassLoader loader, boolean cleanBytes) {
         // Loopig over all the classes, and computing the checksum for each class
         for (String className : classToContainedMethodNames.keySet()) {
-            String klas = ChecksumUtil.toClassName(className);
+            String klas = ChecksumUtil.toClassOrJavaName(className, false);
             URL url = loader.getResource(klas);
             ChecksumUtil checksumUtil = new ChecksumUtil(cleanBytes);
             String checkSum = checksumUtil.computeSingleCheckSum(url);
@@ -266,7 +269,7 @@ public class MethodLevelStaticDepsBuilder {
         // Looping over all the classes, and computing the checksum for each method in
         // each class
         for (String className : classToContainedMethodNames.keySet()) {
-            String klas = ChecksumUtil.toClassName(className);
+            String klas = ChecksumUtil.toClassOrJavaName(className, false);
             URL url = loader.getResource(klas);
             String path = url.getPath();
             ClassNode node = new ClassNode(Opcodes.ASM5);

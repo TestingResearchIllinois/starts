@@ -46,12 +46,34 @@ public class MethodCallCollectorCV extends ClassVisitor implements StartsConstan
         this.class2ContainedMethodNames = class2ContainedMethodNames;
     }
 
+    /**
+     * Visits the version and basic information of a Java class.
+     *
+     * @param version    The version of the Java class file format being visited.
+     * @param access     The access flags of the Java class being visited.
+     * @param name       The internal name of the Java class.
+     * @param signature  The signature of this Java class
+     * @param superName  The internal name of the super Java class.
+     * @param interfaces The internal names of the implemented interfaces.
+     */
     @Override
     public void visit(int version, int access, String name, String signature, String superName, String[] interfaces) {
         super.visit(version, access, name, signature, superName, interfaces);
         methodClassName = name;
     }
 
+    /**
+     * Visits a method of a Java class. This method is called when the visit of the
+     * method's code is just about to start.
+     *
+     * @param access     The method's access flags (see
+     *                   {@link org.objectweb.asm.Opcodes}).
+     * @param outerName  The method's name.
+     * @param outerDesc  The method's descriptor.
+     * @param signature  The method's signature.
+     * @param exceptions The internal names of the method's exception classes.
+     * @return An object to visit the byte code of the method's code, or null.
+     */
     @Override
     public MethodVisitor visitMethod(int access, final String outerName, final String outerDesc, String signature,
             String[] exceptions) {
@@ -118,6 +140,21 @@ public class MethodCallCollectorCV extends ClassVisitor implements StartsConstan
 
         };
     }
+
+    /**
+     * This method finds the first parent of a given class that contains a given
+     * method signature. It does this by recursively traversing the hierarchy of the
+     * class and its parents, and checking if each parent contains the method
+     * signature. If a parent is found that contains the method signature, it is
+     * returned. Otherwise, the search continues with the parent's parents. If no
+     * parent is found that contains the method signature, an empty string is
+     * returned.
+     *
+     * @param currentClass The name of the class to start searching from.
+     * @param methodSig    The signature of the method to search for.
+     * @return The name of the first parent class that contains the given method
+     *         signature, or an empty string if no such parent exists.
+     */
 
     public String findFirstParent(String currentClass, String methodSig) {
         for (String parent : hierarchyParents.getOrDefault(currentClass, new HashSet<>())) {
