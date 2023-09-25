@@ -51,11 +51,11 @@ public class ChecksumUtil implements StartsConstants {
         ChecksumUtil checksumUtil = new ChecksumUtil(true);
         for (String test : affected) {
             checksums.put(test, new HashSet<RegData>());
-            URL url = loader.getResource(toClassName(test));
+            URL url = loader.getResource(toClassOrJavaName(test, false));
             checksums.get(test).add(checksumUtil.computeChecksumRegData(url));
             long start = System.currentTimeMillis();
             for (String dep : testDeps.get(test)) {
-                String className = toClassName(dep);
+                String className = toClassOrJavaName(dep, false);
                 if (!Types.isIgnorableInternalName(className)) {
                     url = loader.getResource(className);
                     if (url != null) {
@@ -92,12 +92,9 @@ public class ChecksumUtil implements StartsConstants {
                 || klas.contains("!/org/apache/maven") || klas.contains(JAVAHOME);
     }
 
-    public static String toClassName(String fqn) {
-        return fqn.replace(DOT, File.separator) + CLASS_EXTENSION;
-    }
-
-    public static String toJavaName(String fqn) {
-        return fqn.replace(DOT, File.separator) + JAVA_EXTENSION;
+    public static String toClassOrJavaName(String fqn, boolean isJava) {
+        // return fqn.replace(File.separator, DOT) + (isJava ? JAVA_EXTENSION : CLASS_EXTENSION);
+        return fqn.replace(DOT, File.separator) + (isJava ? JAVA_EXTENSION : CLASS_EXTENSION);
     }
 
     public static void saveCheckSums(Map<String, Set<RegData>> newCheckSums, String artifactsDir) {

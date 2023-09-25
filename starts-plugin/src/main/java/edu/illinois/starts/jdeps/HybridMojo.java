@@ -82,7 +82,7 @@ public class HybridMojo extends DiffMojo {
     public Set<String> getChangedClasses() throws MojoExecutionException {
         Set<String> changedC = new HashSet<>();
         for (String c : changedClasses) {
-            URL url = loader.getResource(ChecksumUtil.toClassName(c));
+            URL url = loader.getResource(ChecksumUtil.toClassOrJavaName(c, false));
             String extForm = url.toExternalForm();
             changedC.add(extForm);
         }
@@ -162,8 +162,7 @@ public class HybridMojo extends DiffMojo {
             // (class method signature checksum) -> test classes
             if (updateMethodsChecksums) {
                 ZLCHelperMethods.writeZLCFile(methodToTestClasses, methodsCheckSum, classesChecksum, loader,
-                        getArtifactsDir(), null, false,
-                        zlcFormat, true);
+                        getArtifactsDir(), false, zlcFormat, true);
             }
         } else {
             setChangedAndNonaffectedMethods();
@@ -176,8 +175,7 @@ public class HybridMojo extends DiffMojo {
 
             if (updateMethodsChecksums) {
                 ZLCHelperMethods.writeZLCFile(methodToTestClasses, methodsCheckSum, classesChecksum, loader,
-                        getArtifactsDir(), null, false,
-                        zlcFormat, true);
+                        getArtifactsDir(), false, zlcFormat, true);
             }
         }
     }

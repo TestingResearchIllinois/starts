@@ -91,7 +91,7 @@ public class MethodsMojo extends DiffMojo {
         Set<String> changedC = new HashSet<>();
         for (String c : changedClasses) {
 
-            URL url = loader.getResource(ChecksumUtil.toClassName(c));
+            URL url = loader.getResource(ChecksumUtil.toClassOrJavaName(c, false));
             String extForm = url.toExternalForm();
             changedC.add(extForm);
         }
@@ -164,9 +164,7 @@ public class MethodsMojo extends DiffMojo {
 
             if (updateMethodsChecksums) {
                 ZLCHelperMethods.writeZLCFile(methodToTestClasses, methodsCheckSum, null, loader, getArtifactsDir(),
-                        null,
-                        false,
-                        zlcFormat, false);
+                        false, zlcFormat, false);
             }
         } else {
             setChangedMethods();
@@ -178,9 +176,7 @@ public class MethodsMojo extends DiffMojo {
 
             if (updateMethodsChecksums) {
                 ZLCHelperMethods.writeZLCFile(methodToTestClasses, methodsCheckSum, null, loader, getArtifactsDir(),
-                        null,
-                        false,
-                        zlcFormat, false);
+                        false, zlcFormat, false);
             }
         }
 

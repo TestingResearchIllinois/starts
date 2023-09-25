@@ -53,11 +53,17 @@ public class ZLCHelperMethods implements StartsConstants {
      * @param checksumsMap     mapping from methods to their checksums
      * @param classesChecksums mapping from classes to their checksums (used in
      *                         hybrid analysis only)
+     * @param loader           the class loader
+     * @param artifactsDir     the directory where the zlc file is to be created
+     * @param useThirdParty    flag to indicate whether to use third party libraries
+     *                         jar
+     * @param format           format of the zlc file. copied from ZLCHelper.java.
+     *                         see param format in ZLCHelper.java
      */
 
     public static void writeZLCFile(Map<String, Set<String>> methodsToTests, Map<String, String> checksumsMap,
             Map<String, String> classesChecksums, ClassLoader loader,
-            String artifactsDir, Set<String> unreached, boolean useThirdParty,
+            String artifactsDir, boolean useThirdParty,
             ZLCFormat format, boolean isHybrid) {
         long start = System.currentTimeMillis();
         LOGGER.log(Level.FINE, "ZLC format: " + format.toString());
@@ -100,7 +106,7 @@ public class ZLCHelperMethods implements StartsConstants {
             String itemChecksum = entry.getValue();
             Set<String> deps = isMethod ? methodToTests.getOrDefault(itemPath, new HashSet<>()) : new HashSet<>();
 
-            String klas = ChecksumUtil.toClassName(isMethod ? itemPath.split("#")[0] : itemPath);
+            String klas = ChecksumUtil.toClassOrJavaName(isMethod ? itemPath.split("#")[0] : itemPath, false);
             URL url = loader.getResource(klas);
             String extForm = url.toExternalForm();
             if (ChecksumUtil.isWellKnownUrl(extForm) || (!useJars && extForm.startsWith("jar:"))) {
@@ -153,14 +159,13 @@ public class ZLCHelperMethods implements StartsConstants {
 
         try {
             List<String> zlcLines = Files.readAllLines(zlc.toPath(), Charset.defaultCharset());
-            String space = WHITE_SPACE;
             zlcLines.remove(0);
 
-            // on PLAIN_TEXT, testsCount+1 will starts from 0
+            // on PLAIN_TEXT format, testsCount+1 will start from 0
             for (int i = 0; i < zlcLines.size(); i++) {
 
                 String line = zlcLines.get(i);
-                String[] parts = line.split(space);
+                String[] parts = line.split(WHITE_SPACE);
                 // classURL#methodname
                 String stringURL = parts[0];
                 String classURL = stringURL.split("#")[0];
@@ -227,14 +232,13 @@ public class ZLCHelperMethods implements StartsConstants {
 
         try {
             List<String> zlcLines = Files.readAllLines(zlc.toPath(), Charset.defaultCharset());
-            String space = WHITE_SPACE;
             zlcLines.remove(0);
 
-            // on PLAIN_TEXT, testsCount+1 will starts from 0
+            // on PLAIN_TEXT format, testsCount+1 will start from 0
             for (int i = 0; i < zlcLines.size(); i++) {
 
                 String line = zlcLines.get(i);
-                String[] parts = line.split(space);
+                String[] parts = line.split(WHITE_SPACE);
                 String classURL = parts[0];
                 String oldCheckSum = parts[1];
 
@@ -273,14 +277,13 @@ public class ZLCHelperMethods implements StartsConstants {
         Map<String, Set<String>> oldMethodsDeps = new HashMap<>();
         try {
             List<String> zlcLines = Files.readAllLines(zlc.toPath(), Charset.defaultCharset());
-            String space = WHITE_SPACE;
             zlcLines.remove(0);
 
-            // on PLAIN_TEXT, testsCount+1 will starts from 0
+            // on PLAIN_TEXT format, testsCount+1 will start from 0
             for (int i = 0; i < zlcLines.size(); i++) {
 
                 String line = zlcLines.get(i);
-                String[] parts = line.split(space);
+                String[] parts = line.split(WHITE_SPACE);
                 // classURL#methodname
                 String stringURL = parts[0];
                 String classURL = stringURL.split("#")[0];
@@ -311,7 +314,7 @@ public class ZLCHelperMethods implements StartsConstants {
             }
         }
 
-        // Updating methods checksums for non changed classes
+        // Updating methods checksums for non changed but impacted classes
         Set<String> changedClassesMethodsOldChecksums = new HashSet<>();
         for (String changedClass : changedClasses) {
             for (String methodPath : oldMethodsChecksums.keySet()) {

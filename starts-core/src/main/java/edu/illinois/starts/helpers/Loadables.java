@@ -124,7 +124,7 @@ public class Loadables implements StartsConstants {
             // 2. every class in the CUT has non-empty jdeps dependency; they , at least, depend on java.lang.Object
             // 3. isWellKnownUrl will ignore classes from junit, hamcrest, maven, etc; we don't want to track those
             // 4. isIgnorableInternalName will ignore classes from standard library, mockito, jacoco
-            String className = ChecksumUtil.toClassName(loc);
+            String className = ChecksumUtil.toClassOrJavaName(loc, false);
             if (!deps.get(loc).isEmpty()
                     || !ChecksumUtil.isWellKnownUrl(className)
                     || !Types.isIgnorableInternalName(className)) {
