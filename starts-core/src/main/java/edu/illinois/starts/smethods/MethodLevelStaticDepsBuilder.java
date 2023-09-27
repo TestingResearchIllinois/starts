@@ -12,6 +12,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.Stack;
 import java.util.TreeSet;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.ExecutorService;
@@ -536,5 +537,26 @@ public class MethodLevelStaticDepsBuilder {
             methodSigs.add(keyString);
         }
         return methodSigs;
+    }
+
+    public static Set<String> findTransitiveClosure(String changedMethod) throws Exception {
+        Set<String> impactedMethods = new HashSet<>();
+        Stack<String> stack = new Stack<>();
+        stack.push(changedMethod);
+
+        while (!stack.isEmpty()) {
+            String method = stack.pop();
+            if (methodDependencyGraph.containsKey(method)) {
+                Set<String> methodDeps = methodDependencyGraph.getOrDefault(method, new HashSet<>());
+                for (String invokedMethod : methodDeps) {
+                    impactedMethods.add(invokedMethod);
+                    stack.push(invokedMethod);
+                }
+            } else {
+                throw new Exception("Method not found in the dependency graph");
+            }
+        }
+
+        return impactedMethods;
     }
 }

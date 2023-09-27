@@ -5,7 +5,11 @@
 package edu.illinois.starts.helpers;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.net.MalformedURLException;
@@ -67,6 +71,8 @@ public class ZLCHelperMethods implements StartsConstants {
             ZLCFormat format, boolean isHybrid) {
         long start = System.currentTimeMillis();
         LOGGER.log(Level.FINE, "ZLC format: " + format.toString());
+
+        // Create ZLC for method-level depentency
         ZLCFileContent zlc = createZLCFileData(methodsToTests, checksumsMap, loader, useThirdParty, format, true);
         Writer.writeToFile(zlc, METHODS_TEST_DEPS_ZLC_FILE, artifactsDir);
 
@@ -134,22 +140,19 @@ public class ZLCHelperMethods implements StartsConstants {
      * This method is called from MethodMojo.java from the setChangedMethods()
      * method.
      *
-     * @param methodsChecksums A map containing the method names and their
-     *                         checksums.
-     * @return A list of sets containing information about changed methods, new
-     *         methods, affected tests, old classes, and changed classes. Returns
-     *         null if the zlc file does not exist.
+     * @param artifactsDir        The directory where the serialized file is saved.
+     * @param methodsChecksums    A map containing the method names and their
+     *                            checksums.
+     * @param methodToTestClasses A map from method names to their test classes/
+     * @return A list of sets containing all the information described above.
      */
 
-    public static List<Set<String>> getChangedDataMethods(String artifactsDir, boolean cleanBytes,
-            Map<String, String> methodsChecksums, String filePath) {
+    public static List<Set<String>> getChangedDataMethods(String artifactsDir, Map<String, String> methodsChecksums,
+            Map<String, Set<String>> methodToTestClasses) {
         long start = System.currentTimeMillis();
 
-        File zlc = new File(artifactsDir, filePath);
-        if (!zlc.exists()) {
-            LOGGER.log(Level.FINEST, NOEXISTING_ZLCFILE_FIRST_RUN);
-            return null;
-        }
+        Map<String, String> oldMethodChecksums = new HashMap<>();
+        oldMethodChecksums = deserializeMapping(artifactsDir, METHODS_CHECKSUMS_SERIALIZED_FILE);
 
         Set<String> changedMethods = new HashSet<>();
         Set<String> affectedTests = new HashSet<>();
@@ -157,41 +160,23 @@ public class ZLCHelperMethods implements StartsConstants {
         Set<String> changedClasses = new HashSet<>();
         Set<String> newMethods = new HashSet<>(methodsChecksums.keySet());
 
-        try {
-            List<String> zlcLines = Files.readAllLines(zlc.toPath(), Charset.defaultCharset());
-            zlcLines.remove(0);
+        for (String method : oldMethodChecksums.keySet()) {
+            String oldChecksum = oldMethodChecksums.get(method);
+            String newChecksum = methodsChecksums.get(method);
+            Set<String> deps = methodToTestClasses.getOrDefault(method, new HashSet<>());
+            String className = method.split("#")[0];
 
-            // on PLAIN_TEXT format, testsCount+1 will start from 0
-            for (int i = 0; i < zlcLines.size(); i++) {
-
-                String line = zlcLines.get(i);
-                String[] parts = line.split(WHITE_SPACE);
-                // classURL#methodname
-                String stringURL = parts[0];
-                String classURL = stringURL.split("#")[0];
-                String methodName = stringURL.split("#")[1];
-                String oldCheckSum = parts[1];
-                Set<String> deps;
-                deps = parts.length == 3 ? fromCSV(parts[2]) : new HashSet<>(); // Fields should be returned
-
-                // convert classURL to class name
-                String className = convertPath(classURL);
-                String methodPath = className + "#" + methodName;
-                String newChecksum = methodsChecksums.get(methodPath);
-                oldClasses.add(className);
-                newMethods.remove(methodPath);
-                if (newChecksum == null) {
-                    continue;
-                } else if (oldCheckSum.equals(newChecksum)) {
-                    continue;
-                } else {
-                    changedMethods.add(methodPath);
-                    affectedTests.addAll(deps);
-                    changedClasses.add(className);
-                }
+            oldClasses.add(className);
+            newMethods.remove(method);
+            if (newChecksum == null) {
+                continue;
+            } else if (oldChecksum.equals(newChecksum)) {
+                continue;
+            } else {
+                changedMethods.add(method);
+                affectedTests.addAll(deps);
+                changedClasses.add(className);
             }
-        } catch (IOException ioe) {
-            ioe.printStackTrace();
         }
 
         long end = System.currentTimeMillis();
@@ -395,5 +380,55 @@ public class ZLCHelperMethods implements StartsConstants {
         String methodContent = node.access + "\n" + node.signature + "\n" + node.name + "\n" + node.desc + "\n"
                 + sw.toString();
         return methodContent;
+    }
+
+    /**
+     * This method serializes the method-to-testclasses mapping and saves it to the
+     * specified directory.
+     *
+     * @param methodToTestClasses The mapping of methods to test classes.
+     * @param artifactsDir        The directory where the serialized file will be
+     *                            saved.
+     * @throws IOException If an I/O error occurs.
+     */
+    public static void serializeMapping(Map<String, String> map, String artifactsDir, String fileName)
+            throws IOException {
+        try {
+            FileOutputStream fos = new FileOutputStream(artifactsDir + fileName);
+            ObjectOutputStream oos = new ObjectOutputStream(fos);
+            oos.writeObject(map);
+            oos.close();
+            fos.close();
+            // System.out.println("Serialized HashMap data is saved in map.ser");
+        } catch (IOException ioe) {
+            ioe.printStackTrace();
+        }
+    }
+
+    /**
+     * This method deserializes the method-to-testclasses mapping from the specified
+     * directory.
+     *
+     * @param artifactsDir The directory where the serialized file is saved.
+     * @return The deserialized mapping of methods to test classes.
+     * @throws IOException            If an I/O error occurs.
+     * @throws ClassNotFoundException If the class of a serialized object cannot be
+     *                                found.
+     */
+    @SuppressWarnings("unchecked")
+    private static Map<String, String> deserializeMapping(String artifactsDir, String filename) {
+        Map<String, String> map = new HashMap<>();
+        try {
+            FileInputStream fis = new FileInputStream(artifactsDir + filename);
+            ObjectInputStream ois = new ObjectInputStream(fis);
+            map = (HashMap<String, String>) ois.readObject();
+            ois.close();
+            fis.close();
+        } catch (IOException ioe) {
+            ioe.printStackTrace();
+        } catch (ClassNotFoundException classException) {
+            classException.printStackTrace();
+        }
+        return map;
     }
 }
