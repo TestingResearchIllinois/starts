@@ -227,8 +227,8 @@ public class MethodsMojo extends DiffMojo {
      */
     protected void computeChangedMethods() throws MojoExecutionException {
 
-        List<Set<String>> dataList = ZLCHelperMethods.getChangedDataMethods(getArtifactsDir(), methodsCheckSum,
-                methodToTestClasses);
+        List<Set<String>> dataList = ZLCHelperMethods.getChangedDataMethods(methodsCheckSum,
+                methodToTestClasses, getArtifactsDir(), METHODS_CHECKSUMS_SERIALIZED_FILE);
 
         changedMethods = dataList == null ? new HashSet<String>() : dataList.get(0);
         newMethods = dataList == null ? new HashSet<String>() : dataList.get(1);

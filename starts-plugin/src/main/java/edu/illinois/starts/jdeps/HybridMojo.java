@@ -4,6 +4,7 @@
 
 package edu.illinois.starts.jdeps;
 
+import java.io.IOException;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -39,7 +40,6 @@ public class HybridMojo extends DiffMojo {
     private Set<String> oldClasses;
     private Set<String> changedClasses;
     private Set<String> impactedTestClasses;
-    private Set<String> nonAffectedTestClasses;
     private Set<String> nonAffectedMethods;
     private Map<String, String> methodsCheckSum;
     private Map<String, String> classesChecksum;
@@ -139,9 +139,11 @@ public class HybridMojo extends DiffMojo {
      *                                methods
      */
     protected void runMethods(boolean impacted) throws MojoExecutionException {
-        // Checking if the file of dependencies exists
-        if (!Files.exists(Paths.get(getArtifactsDir() + METHODS_TEST_DEPS_ZLC_FILE))
-                && !Files.exists(Paths.get(getArtifactsDir() + CLASSES_ZLC_FILE))) {
+        // Checking if the file of dependencies exists (first run)
+        if (!Files.exists(Paths.get(getArtifactsDir() + METHODS_CHECKSUMS_SERIALIZED_FILE))
+                && !Files.exists(Paths.get(getArtifactsDir() + CLASSES_CHECKSUM_SERIALIZED_FILE))) {
+            // In the first run we compute all method checksums and save them.
+            // In later runs we just compute new method checksums for changed classes
             MethodLevelStaticDepsBuilder.computeMethodsChecksum(loader);
             methodsCheckSum = MethodLevelStaticDepsBuilder.getMethodsCheckSum();
             changedMethods = new HashSet<>();
@@ -156,13 +158,18 @@ public class HybridMojo extends DiffMojo {
                 impactedMethods = newMethods;
             }
 
-            logInfo(impacted);
-
-            // (class) -> checksums
-            // (class method signature checksum) -> test classes
             if (updateMethodsChecksums) {
-                ZLCHelperMethods.writeZLCFile(methodToTestClasses, methodsCheckSum, classesChecksum, loader,
-                        getArtifactsDir(), false, zlcFormat, true);
+                try {
+                    // Save class-to-checksums mapping
+                    ZLCHelperMethods.serializeMapping(classesChecksum, getArtifactsDir(),
+                            CLASSES_CHECKSUM_SERIALIZED_FILE);
+                    // The method-to-checksum mapping has been updated in
+                    // ZLCHelperMethods.getChangedDataHybrid()
+                    ZLCHelperMethods.serializeMapping(methodsCheckSum, getArtifactsDir(),
+                            METHODS_CHECKSUMS_SERIALIZED_FILE);
+                } catch (IOException exception) {
+                    exception.printStackTrace();
+                }
             }
         } else {
             setChangedAndNonaffectedMethods();
@@ -171,13 +178,22 @@ public class HybridMojo extends DiffMojo {
                 computeImpactedMethods();
             }
 
-            logInfo(impacted);
-
             if (updateMethodsChecksums) {
-                ZLCHelperMethods.writeZLCFile(methodToTestClasses, methodsCheckSum, classesChecksum, loader,
-                        getArtifactsDir(), false, zlcFormat, true);
+                try {
+                    // Save class-to-checksums mapping
+                    ZLCHelperMethods.serializeMapping(classesChecksum, getArtifactsDir(),
+                            CLASSES_CHECKSUM_SERIALIZED_FILE);
+                    // The method-to-checksum mapping has been updated in
+                    // ZLCHelperMethods.getChangedDataHybrid()
+                } catch (IOException exception) {
+                    exception.printStackTrace();
+                }
             }
+
         }
+
+        logInfo(impacted);
+
     }
 
     /**
@@ -198,6 +214,11 @@ public class HybridMojo extends DiffMojo {
         logger.log(Level.INFO, "ChangedClasses: " + changedClasses.size());
         logger.log(Level.INFO, "NewClasses: " + newClasses.size());
         logger.log(Level.INFO, "OldClasses: " + oldClasses.size());
+
+        // DEBUG PRINTS
+        logger.log(Level.INFO, "ChangedClasses: " + changedClasses);
+        logger.log(Level.INFO, "ImpactedMethods: " + impactedMethods);
+        logger.log(Level.INFO, "AffectedTestClasses: " + impactedTestClasses);
     }
 
     /**
@@ -207,11 +228,13 @@ public class HybridMojo extends DiffMojo {
      * associated with new methods.
      */
     protected void setChangedAndNonaffectedMethods() throws MojoExecutionException {
-        List<Set<String>> data = ZLCHelperMethods.getChangedDataHybrid(loader, getArtifactsDir(), cleanBytes,
-                classesChecksum, METHODS_TEST_DEPS_ZLC_FILE, CLASSES_ZLC_FILE);
+        List<Set<String>> data = ZLCHelperMethods.getChangedDataHybrid(classesChecksum, methodToTestClasses, loader,
+                getArtifactsDir(), CLASSES_CHECKSUM_SERIALIZED_FILE,
+                METHODS_CHECKSUMS_SERIALIZED_FILE, updateMethodsChecksums);
         changedMethods = data == null ? new HashSet<String>() : data.get(0);
         newMethods = data == null ? new HashSet<String>() : data.get(1);
         impactedTestClasses = data == null ? new HashSet<String>() : data.get(2);
+
         for (String newMethod : newMethods) {
             impactedTestClasses.addAll(methodToTestClasses.getOrDefault(newMethod, new HashSet<>()));
         }
