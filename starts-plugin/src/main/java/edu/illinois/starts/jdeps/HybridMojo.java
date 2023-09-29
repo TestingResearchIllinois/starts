@@ -39,7 +39,7 @@ public class HybridMojo extends DiffMojo {
     private Set<String> newClasses;
     private Set<String> oldClasses;
     private Set<String> changedClasses;
-    private Set<String> impactedTestClasses;
+    private Set<String> affectedTestClasses;
     private Set<String> nonAffectedMethods;
     private Map<String, String> methodsCheckSum;
     private Map<String, String> classesChecksum;
@@ -151,7 +151,7 @@ public class HybridMojo extends DiffMojo {
             methodsCheckSum = MethodLevelStaticDepsBuilder.getMethodsCheckSum();
             changedMethods = new HashSet<>();
             newMethods = MethodLevelStaticDepsBuilder.computeMethods();
-            impactedTestClasses = MethodLevelStaticDepsBuilder.computeTestClasses();
+            affectedTestClasses = MethodLevelStaticDepsBuilder.computeTestClasses();
             newClasses = MethodLevelStaticDepsBuilder.getClasses();
             changedClasses = new HashSet<>();
             oldClasses = new HashSet<>();
@@ -208,21 +208,23 @@ public class HybridMojo extends DiffMojo {
      *                 impacted methods
      */
     private void logInfo(boolean impacted) {
+        logger.log(Level.INFO, "ChangedMethods: " + changedMethods.size());
+        logger.log(Level.INFO, "NewMethods: " + newMethods.size());
+
         if (impacted) {
             logger.log(Level.INFO, "ImpactedMethods: " + impactedMethods.size());
         }
-        logger.log(Level.INFO, "ChangedMethods: " + changedMethods.size());
-        logger.log(Level.INFO, "NewMethods: " + newMethods.size());
-        logger.log(Level.INFO, "ImpactedTestClasses: " + impactedTestClasses.size());
-        logger.log(Level.INFO, "ChangedClasses: " + changedClasses.size());
+
         logger.log(Level.INFO, "NewClasses: " + newClasses.size());
         logger.log(Level.INFO, "OldClasses: " + oldClasses.size());
+        logger.log(Level.INFO, "ChangedClasses: " + changedClasses.size());
+        logger.log(Level.INFO, "AffectedTestClasses: " + affectedTestClasses.size());
 
         // DEBUG PRINTS
         if (debug) {
             logger.log(Level.INFO, "ChangedClasses: " + changedClasses);
             logger.log(Level.INFO, "ImpactedMethods: " + impactedMethods);
-            logger.log(Level.INFO, "AffectedTestClasses: " + impactedTestClasses);
+            logger.log(Level.INFO, "AffectedTestClasses: " + affectedTestClasses);
         }
     }
 
@@ -238,10 +240,10 @@ public class HybridMojo extends DiffMojo {
                 METHODS_CHECKSUMS_SERIALIZED_FILE, updateMethodsChecksums);
         changedMethods = data == null ? new HashSet<String>() : data.get(0);
         newMethods = data == null ? new HashSet<String>() : data.get(1);
-        impactedTestClasses = data == null ? new HashSet<String>() : data.get(2);
+        affectedTestClasses = data == null ? new HashSet<String>() : data.get(2);
 
         for (String newMethod : newMethods) {
-            impactedTestClasses.addAll(methodToTestClasses.getOrDefault(newMethod, new HashSet<>()));
+            affectedTestClasses.addAll(methodToTestClasses.getOrDefault(newMethod, new HashSet<>()));
         }
 
         changedClasses = data == null ? new HashSet<String>() : data.get(3);
@@ -264,7 +266,7 @@ public class HybridMojo extends DiffMojo {
         impactedMethods.addAll(findImpactedMethods(changedMethods));
         impactedMethods.addAll(findImpactedMethods(newMethods));
         for (String impactedMethod : impactedMethods) {
-            impactedTestClasses.addAll(methodToTestClasses.getOrDefault(impactedMethod, new HashSet<String>()));
+            affectedTestClasses.addAll(methodToTestClasses.getOrDefault(impactedMethod, new HashSet<String>()));
         }
     }
 
