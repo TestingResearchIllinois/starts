@@ -59,6 +59,9 @@ public class MethodsMojo extends DiffMojo {
     @Parameter(property = "updateMethodsChecksums", defaultValue = TRUE)
     private boolean updateMethodsChecksums;
 
+    @Parameter(property = "debug", defaultValue = FALSE)
+    private boolean debug;
+
     public void setUpdateMethodsChecksums(boolean updateChecksums) {
         this.updateMethodsChecksums = updateChecksums;
     }
@@ -215,9 +218,11 @@ public class MethodsMojo extends DiffMojo {
         logger.log(Level.INFO, "AffectedTestClasses: " + affectedTestClasses.size());
 
         // DEBUG PRINTS
-        logger.log(Level.INFO, "ChangedMethods: " + changedMethods);
-        logger.log(Level.INFO, "ImpactedMethods: " + impactedMethods);
-        logger.log(Level.INFO, "AffectedTestClasses: " + affectedTestClasses);
+        if (debug) {
+            logger.log(Level.INFO, "ChangedMethods: " + changedMethods);
+            logger.log(Level.INFO, "ImpactedMethods: " + impactedMethods);
+            logger.log(Level.INFO, "AffectedTestClasses: " + affectedTestClasses);
+        }
     }
 
     /**

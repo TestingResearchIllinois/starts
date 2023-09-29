@@ -52,6 +52,9 @@ public class HybridMojo extends DiffMojo {
     @Parameter(property = "updateMethodsChecksums", defaultValue = TRUE)
     private boolean updateMethodsChecksums;
 
+    @Parameter(property = "debug", defaultValue = FALSE)
+    private boolean debug;
+
     public void setComputeImpactedMethods(boolean computeImpactedMethods) {
         this.computeImpactedMethods = computeImpactedMethods;
     }
@@ -216,9 +219,11 @@ public class HybridMojo extends DiffMojo {
         logger.log(Level.INFO, "OldClasses: " + oldClasses.size());
 
         // DEBUG PRINTS
-        logger.log(Level.INFO, "ChangedClasses: " + changedClasses);
-        logger.log(Level.INFO, "ImpactedMethods: " + impactedMethods);
-        logger.log(Level.INFO, "AffectedTestClasses: " + impactedTestClasses);
+        if (debug) {
+            logger.log(Level.INFO, "ChangedClasses: " + changedClasses);
+            logger.log(Level.INFO, "ImpactedMethods: " + impactedMethods);
+            logger.log(Level.INFO, "AffectedTestClasses: " + impactedTestClasses);
+        }
     }
 
     /**
