@@ -34,7 +34,8 @@ import org.apache.maven.surefire.booter.Classpath;
 public class ImpactedMojo extends DiffMojo implements StartsConstants {
 
     /**
-     * Set this to "true" to update test dependencies on disk. The default value of "false"
+     * Set this to "true" to update test dependencies on disk. The default value of
+     * "false"
      * is useful for "dry runs" where one may want to see the diff without updating
      * the test dependencies.
      */
@@ -50,19 +51,22 @@ public class ImpactedMojo extends DiffMojo implements StartsConstants {
     private boolean writePath;
 
     /**
-     * Set to "true" to print newly-added classes: classes in the program that were not in the previous version.
+     * Set to "true" to print newly-added classes: classes in the program that were
+     * not in the previous version.
      */
     @Parameter(property = "trackNewClasses", defaultValue = FALSE)
     private boolean trackNewClasses;
 
     /**
-     * Set to "true" to print non-impacted classes: classes in the program that were not impacted by changes.
+     * Set to "true" to print non-impacted classes: classes in the program that were
+     * not impacted by changes.
      */
     @Parameter(property = "trackNonImpacted", defaultValue = FALSE)
     private boolean trackNonImpacted;
 
     /**
-     * Should we also track classes used by those in the transitive closure of changed classes?
+     * Should we also track classes used by those in the transitive closure of
+     * changed classes?
      * Set to true if "yes", false if "no.
      */
     @Parameter(property = "closureOption", defaultValue = "TRANSITIVE")
@@ -149,6 +153,8 @@ public class ImpactedMojo extends DiffMojo implements StartsConstants {
         if (trackNonImpacted) {
             Writer.writeToFile(nonAffected, "non-impacted-classes", getArtifactsDir());
         }
+        logger.log(Level.INFO, "ChangedClasses: " + changed.size());
+        logger.log(Level.INFO, "ImpactedMethods: " + impacted.size());
     }
 
     private void updateForNextRun(List<String> allClasses) throws MojoExecutionException {
@@ -157,7 +163,7 @@ public class ImpactedMojo extends DiffMojo implements StartsConstants {
         String sfPathString = Writer.pathToString(sfClassPath.getClassPath());
         ClassLoader loader = createClassLoader(sfClassPath);
         Result result = prepareForNextRun(sfPathString, sfClassPath, allClasses, new HashSet<String>(), false,
-                                          closureOption);
+                closureOption);
         ZLCHelper zlcHelper = new ZLCHelper();
         zlcHelper.updateZLCFile(result.getTestDeps(), loader, getArtifactsDir(), new HashSet<String>(), useThirdParty,
                 zlcFormat);
