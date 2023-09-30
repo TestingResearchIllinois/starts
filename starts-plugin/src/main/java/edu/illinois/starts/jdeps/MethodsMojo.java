@@ -59,6 +59,9 @@ public class MethodsMojo extends DiffMojo {
     @Parameter(property = "updateMethodsChecksums", defaultValue = TRUE)
     private boolean updateMethodsChecksums;
 
+    @Parameter(property = "includeVariables", defaultValue = FALSE)
+    private boolean includeVariables;
+
     @Parameter(property = "debug", defaultValue = FALSE)
     private boolean debug;
 
@@ -122,7 +125,7 @@ public class MethodsMojo extends DiffMojo {
 
         // Build method level static dependencies
         try {
-            MethodLevelStaticDepsBuilder.buildMethodsGraph();
+            MethodLevelStaticDepsBuilder.buildMethodsGraph(includeVariables);
             methodToTestClasses = MethodLevelStaticDepsBuilder.computeMethodToTestClasses();
             methodsCheckSum = MethodLevelStaticDepsBuilder.computeMethodsChecksum(loader);
         } catch (Exception exception) {

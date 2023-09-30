@@ -69,7 +69,7 @@ public class MethodLevelStaticDepsBuilder {
      * project.
      *
      */
-    public static void buildMethodsGraph() throws Exception {
+    public static void buildMethodsGraph(boolean includeVariables) throws Exception {
 
         // find all the classes' files
         HashSet<String> classPaths = new HashSet<>(Files.walk(Paths.get("."))
@@ -108,18 +108,22 @@ public class MethodLevelStaticDepsBuilder {
         // methodNameToMethodNames = invertMap(methodNameToMethodNames);
         methodDependencyGraph = invertMap(methodNameToMethodNames);
 
-        /*
-         * The original dependency graph is like this:
-         * (A, B, C) are classes
-         * (a) is a variable
-         * A -> A, B, C
-         * a -> A
-         * After this function call the dependency graph will be like this:
-         * A -> A, B, C, a
-         * a -> A
-         */
-        addVariableDepsToDependencyGraph();
-
+        if (includeVariables) {
+            /*
+             * The original dependency graph is like this:
+             * (A, B, C) are classes
+             * (a) is a variable
+             * A -> A, B, C
+             * a -> A
+             * After this function call the dependency graph will be like this:
+             * A -> A, B, C, a
+             * a -> A
+             */
+            addVariableDepsToDependencyGraph();
+        } else {
+            // Remove any variables from keys or values i.e. pure method-level deps
+            filterVariables();
+        }
     }
 
     /**
@@ -558,5 +562,18 @@ public class MethodLevelStaticDepsBuilder {
         }
 
         return impactedMethods;
+    }
+
+    public static void filterVariables() {
+        // Filter out keys that are variables.
+        methodDependencyGraph.keySet().removeIf(method -> !method.matches(".*\\(.*\\)"));
+
+        // Filter values of methodName2MethodNames
+        methodDependencyGraph.values()
+                .forEach(methodList -> methodList.removeIf(method -> !method.matches(".*\\(.*\\)")));
+
+        // Filter from test2methods
+        testClassesToMethods.values()
+                .forEach(methodList -> methodList.removeIf(method -> !method.matches(".*\\(.*\\)")));
     }
 }

@@ -154,7 +154,7 @@ public class ImpactedMojo extends DiffMojo implements StartsConstants {
             Writer.writeToFile(nonAffected, "non-impacted-classes", getArtifactsDir());
         }
         logger.log(Level.INFO, "ChangedClasses: " + changed.size());
-        logger.log(Level.INFO, "ImpactedMethods: " + impacted.size());
+        logger.log(Level.INFO, "ImpactedClasses: " + impacted.size());
     }
 
     private void updateForNextRun(List<String> allClasses) throws MojoExecutionException {
