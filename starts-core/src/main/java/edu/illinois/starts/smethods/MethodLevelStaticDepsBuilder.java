@@ -12,6 +12,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.Stack;
 import java.util.TreeSet;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.ExecutorService;
@@ -68,7 +69,7 @@ public class MethodLevelStaticDepsBuilder {
      * project.
      *
      */
-    public static void buildMethodsGraph() throws Exception {
+    public static void buildMethodsGraph(boolean includeVariables) throws Exception {
 
         // find all the classes' files
         HashSet<String> classPaths = new HashSet<>(Files.walk(Paths.get("."))
@@ -107,18 +108,22 @@ public class MethodLevelStaticDepsBuilder {
         // methodNameToMethodNames = invertMap(methodNameToMethodNames);
         methodDependencyGraph = invertMap(methodNameToMethodNames);
 
-        /*
-         * The original dependency graph is like this:
-         * (A, B, C) are classes
-         * (a) is a variable
-         * A -> A, B, C
-         * a -> A
-         * After this function call the dependency graph will be like this:
-         * A -> A, B, C, a
-         * a -> A
-         */
-        addVariableDepsToDependencyGraph();
-
+        if (includeVariables) {
+            /*
+             * The original dependency graph is like this:
+             * (A, B, C) are classes
+             * (a) is a variable
+             * A -> A, B, C
+             * a -> A
+             * After this function call the dependency graph will be like this:
+             * A -> A, B, C, a
+             * a -> A
+             */
+            addVariableDepsToDependencyGraph();
+        } else {
+            // Remove any variables from keys or values i.e. pure method-level deps
+            filterVariables();
+        }
     }
 
     /**
@@ -536,5 +541,51 @@ public class MethodLevelStaticDepsBuilder {
             methodSigs.add(keyString);
         }
         return methodSigs;
+    }
+
+    /**
+     * This function removes any variables from dependency graphs.
+     *
+     * @return testMethods
+     */
+    public static void filterVariables() {
+        // Filter out keys that are variables.
+        methodDependencyGraph.keySet().removeIf(method -> !method.matches(".*\\(.*\\)"));
+
+        // Filter values of methodName2MethodNames
+        methodDependencyGraph.values()
+                .forEach(methodList -> methodList.removeIf(method -> !method.matches(".*\\(.*\\)")));
+
+        // Filter from test2methods
+        testClassesToMethods.values()
+                .forEach(methodList -> methodList.removeIf(method -> !method.matches(".*\\(.*\\)")));
+    }
+
+    /**
+     * Experimental method to see if we can have a transitive closure of methods
+     * here. Currently not used anywhere.
+     *
+     * @param changedMethod the method path that changed
+     * @return methods
+     */
+    public static Set<String> findTransitiveClosure(String changedMethod) throws Exception {
+        Set<String> impactedMethods = new HashSet<>();
+        Stack<String> stack = new Stack<>();
+        stack.push(changedMethod);
+
+        while (!stack.isEmpty()) {
+            String method = stack.pop();
+            if (methodDependencyGraph.containsKey(method)) {
+                Set<String> methodDeps = methodDependencyGraph.getOrDefault(method, new HashSet<>());
+                for (String invokedMethod : methodDeps) {
+                    impactedMethods.add(invokedMethod);
+                    stack.push(invokedMethod);
+                }
+            } else {
+                throw new Exception("Method not found in the dependency graph");
+            }
+        }
+
+        return impactedMethods;
     }
 }
