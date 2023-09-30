@@ -543,6 +543,31 @@ public class MethodLevelStaticDepsBuilder {
         return methodSigs;
     }
 
+    /**
+     * This function removes any variables from dependency graphs.
+     *
+     * @return testMethods
+     */
+    public static void filterVariables() {
+        // Filter out keys that are variables.
+        methodDependencyGraph.keySet().removeIf(method -> !method.matches(".*\\(.*\\)"));
+
+        // Filter values of methodName2MethodNames
+        methodDependencyGraph.values()
+                .forEach(methodList -> methodList.removeIf(method -> !method.matches(".*\\(.*\\)")));
+
+        // Filter from test2methods
+        testClassesToMethods.values()
+                .forEach(methodList -> methodList.removeIf(method -> !method.matches(".*\\(.*\\)")));
+    }
+
+    /**
+     * Experimental method to see if we can have a transitive closure of methods
+     * here. Currently not used anywhere.
+     *
+     * @param changedMethod the method path that changed
+     * @return methods
+     */
     public static Set<String> findTransitiveClosure(String changedMethod) throws Exception {
         Set<String> impactedMethods = new HashSet<>();
         Stack<String> stack = new Stack<>();
@@ -562,18 +587,5 @@ public class MethodLevelStaticDepsBuilder {
         }
 
         return impactedMethods;
-    }
-
-    public static void filterVariables() {
-        // Filter out keys that are variables.
-        methodDependencyGraph.keySet().removeIf(method -> !method.matches(".*\\(.*\\)"));
-
-        // Filter values of methodName2MethodNames
-        methodDependencyGraph.values()
-                .forEach(methodList -> methodList.removeIf(method -> !method.matches(".*\\(.*\\)")));
-
-        // Filter from test2methods
-        testClassesToMethods.values()
-                .forEach(methodList -> methodList.removeIf(method -> !method.matches(".*\\(.*\\)")));
     }
 }
