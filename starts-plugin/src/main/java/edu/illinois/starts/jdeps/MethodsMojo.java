@@ -59,11 +59,22 @@ public class MethodsMojo extends DiffMojo {
     @Parameter(property = "updateMethodsChecksums", defaultValue = TRUE)
     private boolean updateMethodsChecksums;
 
+    /**
+     * Set this to "true" to include variables in the method-level static
+     * dependencies.
+     */
     @Parameter(property = "includeVariables", defaultValue = FALSE)
     private boolean includeVariables;
 
+    /**
+     * Set this to "true" to print debug statements.
+     */
     @Parameter(property = "debug", defaultValue = FALSE)
     private boolean debug;
+
+    public void setDebug(boolean debug) {
+        this.debug = debug;
+    }
 
     public void setUpdateMethodsChecksums(boolean updateChecksums) {
         this.updateMethodsChecksums = updateChecksums;
@@ -71,6 +82,10 @@ public class MethodsMojo extends DiffMojo {
 
     public void setComputeImpactedMethods(boolean computeImpactedMethods) {
         this.computeImpactedMethods = computeImpactedMethods;
+    }
+
+    public void setIncludeVariables(boolean includeVariables) {
+        this.includeVariables = includeVariables;
     }
 
     public Set<String> getAffectedMethods() {

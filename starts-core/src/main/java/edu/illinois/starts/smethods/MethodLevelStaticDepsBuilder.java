@@ -124,6 +124,7 @@ public class MethodLevelStaticDepsBuilder {
             // Remove any variables from keys or values i.e. pure method-level deps
             filterVariables();
         }
+
     }
 
     /**
