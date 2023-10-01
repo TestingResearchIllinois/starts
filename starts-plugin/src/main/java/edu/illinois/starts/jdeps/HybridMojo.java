@@ -78,8 +78,20 @@ public class HybridMojo extends DiffMojo {
         return Collections.unmodifiableSet(affectedMethods);
     }
 
+    public Set<String> getAffectedClasses() {
+        Set<String> affectedClasses = new HashSet<>();
+        affectedClasses.addAll(changedClassesWithChangedHeaders);
+        affectedClasses.addAll(newClasses);
+        return Collections.unmodifiableSet(affectedClasses);
+    }
+
     public Set<String> getImpactedMethods() {
         return Collections.unmodifiableSet(impactedMethods);
+    }
+
+
+    public Set<String> getImpactedClasses() {
+        return Collections.unmodifiableSet(impactedClasses);
     }
 
     public Set<String> getNewClasses() {
@@ -107,6 +119,22 @@ public class HybridMojo extends DiffMojo {
             String extForm = url.toExternalForm();
             changedC.add(extForm);
         }
+        return Collections.unmodifiableSet(changedC);
+    }
+
+    public Set<String> getChangedClasses() throws MojoExecutionException {
+        Set<String> changedC = new HashSet<>();
+        for (String c : changedClassesWithoutChangedHeaders) {
+            URL url = loader.getResource(ChecksumUtil.toClassOrJavaName(c, false));
+            String extForm = url.toExternalForm();
+            changedC.add(extForm);
+        }
+        for (String c : changedClassesWithChangedHeaders) {
+            URL url = loader.getResource(ChecksumUtil.toClassOrJavaName(c, false));
+            String extForm = url.toExternalForm();
+            changedC.add(extForm);
+        }
+
         return Collections.unmodifiableSet(changedC);
     }
 
@@ -338,7 +366,6 @@ public class HybridMojo extends DiffMojo {
             affectedTestClasses.addAll(classToTestClassGraph.getOrDefault(impactedClass, new HashSet<String>()));
         }
     }
-
 
     private Set<String> findImpactedClasses(Set<String> affectedClasses) {
         Set<String> classes = new HashSet<>(affectedClasses);
