@@ -93,93 +93,164 @@ public class ZLCHelperMethods implements StartsConstants {
     }
 
     /**
-     * This helper method is used in hybrid analysis and returns a list of sets
-     * containing information about changed methods, new methods, affected tests,
-     * old classes, and changed classes.
-     * This method is called from HybridMojo.java from the setChangedMethods()
-     * method.
-     *
-     * @param newClassesChecksums A map containing the class names and their
-     *                            checksums.
-     * @return A list of sets containing information about changed methods, new
-     *         methods, affected tests, old classes, and changed classes. Returns
-     *         null if the zlc file does not exist.
+     * This helper method is used in hybrid class-level analysis returns a list of
+     * sets
+     * containing information about added classes, deleted classes, changed classes
+     * with changed headers, changed classes without changed headers, and old
+     * classes.
      */
-    public static List<Set<String>> getChangedDataHybrid(Map<String, String> newClassesChecksums,
-            Map<String, Set<String>> methodToTestClasses, ClassLoader loader,
-            String artifactsDir, String classesFilePath, String methodFilePath, boolean updateChecksums) {
+    public static List<Set<String>> getChangedDataHybridClassLevel(Map<String, List<String>> newClassesChecksums,
+            String artifactsDir, String classesFilePath) {
         long start = System.currentTimeMillis();
 
-        Map<String, String> oldClassChecksums = deserializeMapping(artifactsDir, classesFilePath);
+        // Reading the old classes checksums
+        Map<String, List<String>> oldClassChecksums = deserializeMapping(artifactsDir, classesFilePath);
 
-        Set<String> changedClasses = new HashSet<>();
-        Set<String> oldClasses = new HashSet<>();
+        List<Set<String>> classesChanges = diffClasses(oldClassChecksums, newClassesChecksums);
+        Set<String> addedClasses = classesChanges.get(0);
+        Set<String> deletedClasses = classesChanges.get(1);
+        Set<String> changedClassesWithChangedHeaders = classesChanges.get(2);
+        Set<String> changedClassesWithoutChangedHeaders = classesChanges.get(3);
+        Set<String> oldClasses = new HashSet<>(oldClassChecksums.keySet());
+        oldClasses.removeAll(deletedClasses);
 
-        for (String className : oldClassChecksums.keySet()) {
-            String oldCheckSum = oldClassChecksums.get(className);
-            String newChecksum = newClassesChecksums.get(className);
-            oldClasses.add(className);
-            if (oldCheckSum.equals(newChecksum)) {
-                continue;
-            } else {
-                changedClasses.add(className);
-            }
-        }
+        long end = System.currentTimeMillis();
+        List<Set<String>> result = new ArrayList<>();
+        Collections.addAll(result, addedClasses, deletedClasses, changedClassesWithChangedHeaders,
+                changedClassesWithoutChangedHeaders, oldClasses);
+        LOGGER.log(Level.FINEST, TIME_COMPUTING_NON_AFFECTED + (end - start) + MILLISECOND);
+        return result;
+    }
 
-        Set<String> newClasses = new HashSet<>(newClassesChecksums.keySet());
-        newClasses.removeAll(oldClasses);
+    /*
+     * This helper method is used in hybrid method-level analysis returns a list of
+     * sets
+     * containing information about changed methods and new methods in changed
+     * classes without changed headers.
+     * It also constructs a methods checksums map for next run.
+     */
+    public static List<Set<String>> getChangedDataHybridMethodLevel(Set<String> addedClasses, Set<String> deletedClasses,
+            Set<String> changedClassesWithChangedHeaders, Set<String> changedClassesWithoutChangedHeaders,
+            Map<String, String> methodChecksums,
+            ClassLoader loader,
+            String artifactsDir, String methodFilePath) {
 
         Map<String, String> oldMethodsChecksums = deserializeMapping(artifactsDir, methodFilePath);
+        methodChecksums.putAll(oldMethodsChecksums);
 
-        // Compute
-        Map<String, String> newMethodsChecksums = MethodLevelStaticDepsBuilder
-                .getMethodsChecksumsForClasses(changedClasses, loader);
+        Map<String, String> addedClassesMethodsChecksums = MethodLevelStaticDepsBuilder
+                .getMethodsChecksumsForClasses(addedClasses, loader);
 
+        Map<String, String> changedClassesWithChangedHeadersMethodsChecksums = MethodLevelStaticDepsBuilder
+                .getMethodsChecksumsForClasses(changedClassesWithChangedHeaders, loader);
+
+        Map<String, String> changedClassesWithoutChangedHeadersMethodsChecksums = MethodLevelStaticDepsBuilder
+                .getMethodsChecksumsForClasses(changedClassesWithoutChangedHeaders, loader);
+
+
+        List<Set<String>> changedAndNewMethodsForMethodAnalysis = findChangedAndNewMethods(oldMethodsChecksums,
+                changedClassesWithoutChangedHeadersMethodsChecksums);
+
+
+        // Constructing a methods checksums map for next run
+        Set<String> modifiedOldClasses = new HashSet<>();
+        modifiedOldClasses.addAll(deletedClasses);
+        modifiedOldClasses.addAll(changedClassesWithChangedHeaders);
+        modifiedOldClasses.addAll(changedClassesWithoutChangedHeaders);
+        // Updating methods checksums for non changed classes
+        Set<String> modifiedOldClassesMethodsOldChecksums = new HashSet<>();
+        for (String modifiedOldClass : modifiedOldClasses) {
+            for (String methodPath : oldMethodsChecksums.keySet()) {
+                if (methodPath.startsWith(modifiedOldClass + "#")) {
+                    modifiedOldClassesMethodsOldChecksums.add(methodPath);
+                }
+            }
+        }
+        methodChecksums.keySet().removeAll(modifiedOldClassesMethodsOldChecksums);
+        methodChecksums.putAll(changedClassesWithoutChangedHeadersMethodsChecksums);
+        methodChecksums.putAll(changedClassesWithChangedHeadersMethodsChecksums);
+        methodChecksums.putAll(addedClassesMethodsChecksums);
+
+        return changedAndNewMethodsForMethodAnalysis;
+    }
+
+    /*
+     * This method find changed and added methods in a set of classes
+     * Arguments:
+     * - oldMethodsChecksums: a map from method names to their checksums
+     * - newMethodsChecksums: a map from method names to their checksums
+     *
+     * Returns:
+     * - a set of changed methods
+     * - a set of new methods
+     */
+    public static List<Set<String>> findChangedAndNewMethods(Map<String, String> oldMethodsChecksums,
+            Map<String, String> newMethodsChecksums) {
         Set<String> changedMethods = new HashSet<>();
-        Set<String> newMethods = new HashSet<>(newMethodsChecksums.keySet());
-        newMethods.removeAll(oldMethodsChecksums.keySet());
-        Set<String> affectedTestClasses = new HashSet<>();
+        Set<String> newMethods = new HashSet<>();
+        List<Set<String>> result = new ArrayList<>();
 
-        // Finding Changed Methods. Since newMethodsChecksums contains only methods
-        // inside changed classes, we're good to go.
         for (String method : newMethodsChecksums.keySet()) {
             String newChecksum = newMethodsChecksums.get(method);
             String oldChecksum = oldMethodsChecksums.get(method);
 
-            Set<String> deps = methodToTestClasses.getOrDefault(method, new HashSet<>());
-            String className = method.split("#")[0];
-
-            if (oldChecksum == null || newChecksum == null) {
-                // Deleted or new method
-                continue;
+            if (oldChecksum == null) {
+                newMethods.add(method);
             } else if (oldChecksum.equals(newChecksum)) {
                 continue;
             } else {
-                // Update checksums in the mapping on the fly
-                if (updateChecksums) {
-                    oldMethodsChecksums.put(method, newChecksum);
-                }
                 changedMethods.add(method);
-                affectedTestClasses.addAll(deps);
-                changedClasses.add(className);
             }
         }
-
-        if (updateChecksums) {
-            try {
-                serializeMapping(oldMethodsChecksums, artifactsDir, methodFilePath);
-            } catch (IOException exception) {
-                // TODO Auto-generated catch block
-                exception.printStackTrace();
-            }
-        }
-
-        long end = System.currentTimeMillis();
-        List<Set<String>> result = new ArrayList<>();
-        Collections.addAll(result, changedMethods, newMethods, affectedTestClasses, changedClasses, newClasses,
-                oldClasses);
-        LOGGER.log(Level.FINEST, TIME_COMPUTING_NON_AFFECTED + (end - start) + MILLISECOND);
+        Collections.addAll(result, changedMethods, newMethods);
         return result;
+    }
+
+    /*
+     * This method reasons about the class level changes
+     * Arguments:
+     * - oldClassesChecksums: a map from class names to their checksums (file
+     * checksum, headers checksum)
+     * - newClassesChecksums: a map from class names to their checksums (file
+     * checksum, headers checksum)
+     *
+     * Returns:
+     * - a list of sets containing information about newClasses, Deleted Classess,
+     * changed classes with changed headers, changed classes without changed
+     * headers.
+     */
+    public static List<Set<String>> diffClasses(Map<String, List<String>> oldClassesChecksums,
+            Map<String, List<String>> newClassesChecksums) {
+        List<Set<String>> results = new ArrayList<>();
+
+        Set<String> deletedClasses = new HashSet<>(oldClassesChecksums.keySet());
+        deletedClasses.removeAll(newClassesChecksums.keySet());
+
+        Set<String> addedClasses = new HashSet<>(newClassesChecksums.keySet());
+        addedClasses.removeAll(oldClassesChecksums.keySet());
+
+        Set<String> changedClassesWithChangedHeaders = new HashSet<>();
+        Set<String> changedClassesWithoutChangedHeaders = new HashSet<>();
+
+        for (String className : newClassesChecksums.keySet()) {
+            List<String> oldClassCheckSums = oldClassesChecksums.getOrDefault(className, null);
+            if (oldClassCheckSums == null) {
+                continue;
+            }
+            List<String> newClassChecksums = newClassesChecksums.get(className);
+
+            if (oldClassCheckSums.get(1).equals(newClassChecksums.get(1))) {
+                if (!oldClassCheckSums.get(0).equals(newClassChecksums.get(0))) {
+                    changedClassesWithoutChangedHeaders.add(className);
+                }
+            } else {
+                changedClassesWithChangedHeaders.add(className);
+            }
+        }
+
+        Collections.addAll(results, addedClasses, deletedClasses, changedClassesWithChangedHeaders,
+                changedClassesWithoutChangedHeaders);
+        return results;
     }
 
     /**
@@ -217,7 +288,7 @@ public class ZLCHelperMethods implements StartsConstants {
      *                            saved.
      * @throws IOException If an I/O error occurs.
      */
-    public static void serializeMapping(Map<String, String> map, String artifactsDir, String fileName)
+    public static <T> void serializeMapping(Map<String, T> map, String artifactsDir, String fileName)
             throws IOException {
         try {
             FileOutputStream fos = new FileOutputStream(artifactsDir + fileName);
@@ -242,12 +313,12 @@ public class ZLCHelperMethods implements StartsConstants {
      *                                found.
      */
     @SuppressWarnings("unchecked")
-    private static Map<String, String> deserializeMapping(String artifactsDir, String filename) {
-        Map<String, String> map = new HashMap<>();
+    private static <T> Map<String, T> deserializeMapping(String artifactsDir, String filename) {
+        Map<String, T> map = new HashMap<>();
         try {
             FileInputStream fis = new FileInputStream(artifactsDir + filename);
             ObjectInputStream ois = new ObjectInputStream(fis);
-            map = (HashMap<String, String>) ois.readObject();
+            map = (HashMap<String, T>) ois.readObject();
             ois.close();
             fis.close();
         } catch (IOException ioe) {

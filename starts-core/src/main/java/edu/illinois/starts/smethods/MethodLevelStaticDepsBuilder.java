@@ -3,10 +3,13 @@ package edu.illinois.starts.smethods;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -29,6 +32,9 @@ import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.MethodNode;
+import org.objectweb.asm.util.Printer;
+import org.objectweb.asm.util.Textifier;
+import org.objectweb.asm.util.TraceClassVisitor;
 
 public class MethodLevelStaticDepsBuilder {
 
@@ -50,6 +56,10 @@ public class MethodLevelStaticDepsBuilder {
 
     public static Map<String, Set<String>> testClassesToMethods = new HashMap<>();
 
+    public static Map<String, Set<String>> testClassesToClasses = new HashMap<>();
+
+    public static Map<String, Set<String>> classesToTestClasses = new HashMap<>();
+
     // Map from method to test classes
     public static Map<String, Set<String>> methodToTestClasses = new HashMap<>();
 
@@ -57,10 +67,13 @@ public class MethodLevelStaticDepsBuilder {
     public static Map<String, Set<String>> methodToTestMethods = new HashMap<>();
 
     // Map from class to checksum
-    public static Map<String, String> classesChecksums = new HashMap<>();
+    public static Map<String, List<String>> classesChecksums = new HashMap<>();
 
     // Map from method to checksum
     private static Map<String, String> methodsCheckSum = new HashMap<>();
+
+    // Map for classes dependency graph
+    private static Map<String, Set<String>> classesDependencyGraph = new HashMap<>();
 
     private static final Logger LOGGER = Logger.getGlobal();
 
@@ -202,6 +215,8 @@ public class MethodLevelStaticDepsBuilder {
     public static Map<String, String> getMethodsChecksumsForClasses(Set<String> classes, ClassLoader loader) {
         // Looping over all the classes, and computing the checksum for each method in
         // each class
+        Map<String, String> computedMethodsChecksums = new HashMap<>();
+
         for (String className : classes) {
             // Reading the class file and parsing it
             String klas = ChecksumUtil.toClassOrJavaName(className, false);
@@ -225,17 +240,17 @@ public class MethodLevelStaticDepsBuilder {
             for (MethodNode method : methods) {
                 String methodContent = ZLCHelperMethods.printMethodContent(method);
                 try {
-                    methodChecksum = ChecksumUtil.computeMethodChecksum(methodContent);
+                    methodChecksum = ChecksumUtil.computeStringChecksum(methodContent);
                 } catch (IOException exception) {
                     throw new RuntimeException(exception);
                 }
 
-                methodsCheckSum.put(
+                computedMethodsChecksums.put(
                         className + "#" + method.name + method.desc.substring(0, method.desc.indexOf(")") + 1),
                         methodChecksum);
             }
         }
-        return methodsCheckSum;
+        return computedMethodsChecksums;
     }
 
     /**
@@ -256,16 +271,118 @@ public class MethodLevelStaticDepsBuilder {
      *
      * @return classesChecksums mapping of classes to their checksums
      */
-    public static Map<String, String> computeClassesChecksums(ClassLoader loader, boolean cleanBytes) {
+    public static Map<String, List<String>> computeClassesChecksums(ClassLoader loader, boolean cleanBytes) {
         // Loopig over all the classes, and computing the checksum for each class
         for (String className : classToContainedMethodNames.keySet()) {
+            // Computing the checksum for the class file
+            List<String> classPartsChecksums = new ArrayList<>();
             String klas = ChecksumUtil.toClassOrJavaName(className, false);
             URL url = loader.getResource(klas);
+            String path = url.getPath();
             ChecksumUtil checksumUtil = new ChecksumUtil(cleanBytes);
-            String checkSum = checksumUtil.computeSingleCheckSum(url);
-            classesChecksums.put(className, checkSum);
+            String classCheckSum = checksumUtil.computeSingleCheckSum(url);
+            classPartsChecksums.add(classCheckSum);
+
+            // Computing the checksum for the class headers
+            ClassNode node = new ClassNode(Opcodes.ASM5);
+            ClassReader reader = null;
+            try {
+                reader = new ClassReader(new FileInputStream(path));
+            } catch (IOException exception) {
+                LOGGER.log(Level.INFO, "[ERROR] reading class file: " + path);
+                continue;
+            }
+            reader.accept(node, ClassReader.SKIP_DEBUG);
+
+            String classHeaders = getClassHeaders(node);
+            String headersCheckSum = null;
+            try {
+                headersCheckSum = ChecksumUtil.computeStringChecksum(classHeaders);
+            } catch (IOException exception) {
+                throw new RuntimeException(exception);
+            }
+            classPartsChecksums.add(headersCheckSum);
+            classesChecksums.put(className, classPartsChecksums);
         }
         return classesChecksums;
+    }
+
+    // print class header info (e.g., access flags, inner classes, etc)
+    public static String getClassHeaders(ClassNode node) {
+        Printer printer = new Textifier(Opcodes.ASM5) {
+            @Override
+            public Textifier visitField(int access, String name, String desc,
+                    String signature, Object value) {
+                return new Textifier();
+            }
+
+            @Override
+            public Textifier visitMethod(int access, String name, String desc,
+                    String signature, String[] exceptions) {
+                return new Textifier();
+            }
+        };
+        StringWriter sw = new StringWriter();
+        TraceClassVisitor classPrinter = new TraceClassVisitor(null, printer,
+                new PrintWriter(sw));
+        node.accept(classPrinter);
+
+        return sw.toString();
+    }
+
+    /*
+     * This function computes the classes dependency graph.
+     * It is a map from class to a set of classes that it depends on through
+     * inheritance and uses
+     */
+    public static Map<String, Set<String>> constructClassesDependencyGraph() {
+        for (Map.Entry<String, Set<String>> entry : methodNameToMethodNames.entrySet()) {
+            String fromClass = entry.getKey().split("#")[0];
+            Set<String> toClasses = new HashSet<>();
+
+            for (String toMethod : entry.getValue()) {
+                String toClass = toMethod.split("#")[0];
+                toClasses.add(toClass);
+            }
+
+            if (classesDependencyGraph.containsKey(fromClass)) {
+                classesDependencyGraph.get(fromClass).addAll(toClasses);
+            } else {
+                classesDependencyGraph.put(fromClass, toClasses);
+            }
+        }
+
+        for (String className : hierarchyParents.keySet()) {
+            Set<String> parents = hierarchyParents.get(className);
+            classesDependencyGraph.getOrDefault(className, new HashSet<>()).addAll(parents);
+        }
+        addReflexiveClosure(classToContainedMethodNames);
+        classesDependencyGraph = invertMap(classesDependencyGraph);
+
+        return classesDependencyGraph;
+    }
+
+    /*
+     * This function computes the testClassesToClasses graph.
+     */
+    public static Map<String, Set<String>> constuctTestClassesToClassesGraph() {
+        for (String testClass : testClassesToMethods.keySet()) {
+            Set<String> classes = new HashSet<>();
+            for (String method : testClassesToMethods.get(testClass)) {
+                String className = method.split("#")[0];
+                classes.add(className);
+            }
+            testClassesToClasses.put(testClass, classes);
+        }
+        return testClassesToClasses;
+    }
+
+    /*
+     * This function computes the classesToTestClasses graph.
+     */
+    public static Map<String, Set<String>> constructClassesToTestClassesGraph() {
+        classesToTestClasses = invertMap(testClassesToClasses);
+        return classesToTestClasses;
     }
 
     /**
@@ -295,7 +412,7 @@ public class MethodLevelStaticDepsBuilder {
             for (MethodNode method : methods) {
                 String methodContent = ZLCHelperMethods.printMethodContent(method);
                 try {
-                    methodChecksum = ChecksumUtil.computeMethodChecksum(methodContent);
+                    methodChecksum = ChecksumUtil.computeStringChecksum(methodContent);
                 } catch (IOException exception) {
                     throw new RuntimeException(exception);
                 }
@@ -400,7 +517,7 @@ public class MethodLevelStaticDepsBuilder {
 
     // simple DFS
     public static void getDepsDFS(String methodName, Set<String> visitedMethods) {
-        if (methodDependencyGraph.containsKey(methodName)) {
+        if (methodNameToMethodNames.containsKey(methodName)) {
             for (String method : methodNameToMethodNames.get(methodName)) {
                 if (!visitedMethods.contains(method)) {
                     visitedMethods.add(method);
@@ -408,6 +525,28 @@ public class MethodLevelStaticDepsBuilder {
                 }
             }
         }
+    }
+
+    public static Set<String> getClassDeps(String classSignature) {
+
+        Set<String> visitedClasses = new HashSet<>();
+        // BFS
+        ArrayDeque<String> queue = new ArrayDeque<>();
+
+        // initialization
+        queue.add(classSignature);
+        visitedClasses.add(classSignature);
+
+        while (!queue.isEmpty()) {
+            String currentClass = queue.pollFirst();
+            for (String depClass : classesDependencyGraph.getOrDefault(currentClass, new HashSet<>())) {
+                if (!visitedClasses.contains(depClass)) {
+                    queue.add(depClass);
+                    visitedClasses.add(depClass);
+                }
+            }
+        }
+        return visitedClasses;
     }
 
     public static Set<String> getMethodDeps(String methodSignature) {

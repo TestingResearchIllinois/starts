@@ -151,7 +151,7 @@ public class ChecksumUtil implements StartsConstants {
         }
     }
 
-    public static String computeMethodChecksum(String content) throws IOException {
+    public static String computeStringChecksum(String content) throws IOException {
         return org.apache.commons.codec.digest.DigestUtils.md5Hex(content);
     }
 }

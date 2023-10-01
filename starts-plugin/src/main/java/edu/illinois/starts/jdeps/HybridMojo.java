@@ -38,13 +38,18 @@ public class HybridMojo extends DiffMojo {
     private Set<String> impactedMethods;
     private Set<String> newClasses;
     private Set<String> oldClasses;
-    private Set<String> changedClasses;
     private Set<String> affectedTestClasses;
     private Set<String> nonAffectedMethods;
     private Map<String, String> methodsCheckSum;
-    private Map<String, String> classesChecksum;
+    private Map<String, List<String>> classesChecksum;
     private Map<String, Set<String>> methodToTestClasses;
     private ClassLoader loader;
+    private Map<String, Set<String>> classDependencyGraph;
+    private Map<String, Set<String>> classToTestClassGraph;
+    private Set<String> deletedClasses;
+    private Set<String> changedClassesWithChangedHeaders;
+    private Set<String> changedClassesWithoutChangedHeaders;
+    private Set<String> impactedClasses;
 
     @Parameter(property = "computeImpactedMethods", defaultValue = TRUE)
     private boolean computeImpactedMethods;
@@ -55,7 +60,7 @@ public class HybridMojo extends DiffMojo {
     @Parameter(property = "includeVariables", defaultValue = FALSE)
     private boolean includeVariables;
 
-    @Parameter(property = "debug", defaultValue = FALSE)
+    @Parameter(property = "debug", defaultValue = TRUE)
     private boolean debug;
 
     public void setComputeImpactedMethods(boolean computeImpactedMethods) {
@@ -85,9 +90,19 @@ public class HybridMojo extends DiffMojo {
         return Collections.unmodifiableSet(oldClasses);
     }
 
-    public Set<String> getChangedClasses() throws MojoExecutionException {
+    public Set<String> getChangedClassesWithChangedHeaders() throws MojoExecutionException {
         Set<String> changedC = new HashSet<>();
-        for (String c : changedClasses) {
+        for (String c : changedClassesWithChangedHeaders) {
+            URL url = loader.getResource(ChecksumUtil.toClassOrJavaName(c, false));
+            String extForm = url.toExternalForm();
+            changedC.add(extForm);
+        }
+        return Collections.unmodifiableSet(changedC);
+    }
+
+    public Set<String> getChangedClassesWithoutChangedHeaders() throws MojoExecutionException {
+        Set<String> changedC = new HashSet<>();
+        for (String c : changedClassesWithoutChangedHeaders) {
             URL url = loader.getResource(ChecksumUtil.toClassOrJavaName(c, false));
             String extForm = url.toExternalForm();
             changedC.add(extForm);
@@ -124,7 +139,7 @@ public class HybridMojo extends DiffMojo {
             throw new RuntimeException(exception);
         }
 
-        runMethods(computeImpactedMethods);
+        runHybrid(computeImpactedMethods);
     }
 
     /**
@@ -144,7 +159,7 @@ public class HybridMojo extends DiffMojo {
      * @throws MojoExecutionException if an exception occurs while setting changed
      *                                methods
      */
-    protected void runMethods(boolean impacted) throws MojoExecutionException {
+    protected void runHybrid(boolean impacted) throws MojoExecutionException {
         // Checking if the file of dependencies exists (first run)
         if (!Files.exists(Paths.get(getArtifactsDir() + METHODS_CHECKSUMS_SERIALIZED_FILE))
                 && !Files.exists(Paths.get(getArtifactsDir() + CLASSES_CHECKSUM_SERIALIZED_FILE))) {
@@ -156,12 +171,15 @@ public class HybridMojo extends DiffMojo {
             newMethods = MethodLevelStaticDepsBuilder.computeMethods();
             affectedTestClasses = MethodLevelStaticDepsBuilder.computeTestClasses();
             newClasses = MethodLevelStaticDepsBuilder.getClasses();
-            changedClasses = new HashSet<>();
             oldClasses = new HashSet<>();
+            deletedClasses = new HashSet<>();
+            changedClassesWithChangedHeaders = new HashSet<>();
+            changedClassesWithoutChangedHeaders = new HashSet<>();
             nonAffectedMethods = new HashSet<>();
 
             if (impacted) {
                 impactedMethods = newMethods;
+                impactedClasses = newClasses;
             }
 
             if (updateMethodsChecksums) {
@@ -178,10 +196,18 @@ public class HybridMojo extends DiffMojo {
                 }
             }
         } else {
+
+            classDependencyGraph = MethodLevelStaticDepsBuilder.constructClassesDependencyGraph();
+            MethodLevelStaticDepsBuilder.constuctTestClassesToClassesGraph();
+            classToTestClassGraph = MethodLevelStaticDepsBuilder.constructClassesToTestClassesGraph();
+            methodToTestClasses = MethodLevelStaticDepsBuilder.computeMethodToTestClasses();
+            affectedTestClasses = new HashSet<>();
+
             setChangedAndNonaffectedMethods();
 
             if (impacted) {
                 computeImpactedMethods();
+                computeImpactedClasses();
             }
 
             if (updateMethodsChecksums) {
@@ -189,8 +215,9 @@ public class HybridMojo extends DiffMojo {
                     // Save class-to-checksums mapping
                     ZLCHelperMethods.serializeMapping(classesChecksum, getArtifactsDir(),
                             CLASSES_CHECKSUM_SERIALIZED_FILE);
-                    // The method-to-checksum mapping has been updated in
-                    // ZLCHelperMethods.getChangedDataHybrid()
+                    // Save method-to-checksum mapping
+                    ZLCHelperMethods.serializeMapping(methodsCheckSum, getArtifactsDir(),
+                            METHODS_CHECKSUMS_SERIALIZED_FILE);
                 } catch (IOException exception) {
                     exception.printStackTrace();
                 }
@@ -199,7 +226,6 @@ public class HybridMojo extends DiffMojo {
         }
 
         logInfo(impacted);
-
     }
 
     /**
@@ -220,14 +246,22 @@ public class HybridMojo extends DiffMojo {
 
         logger.log(Level.INFO, "NewClasses: " + newClasses.size());
         logger.log(Level.INFO, "OldClasses: " + oldClasses.size());
-        logger.log(Level.INFO, "ChangedClasses: " + changedClasses.size());
+        logger.log(Level.INFO, "DeletedClasses: " + deletedClasses.size());
+        logger.log(Level.INFO, "ChangedClassesWithChangedHeaders: " + changedClassesWithChangedHeaders.size());
+        logger.log(Level.INFO, "ChangedClassesWithoutChangedHeaders: " + changedClassesWithoutChangedHeaders.size());
         logger.log(Level.INFO, "AffectedTestClasses: " + affectedTestClasses.size());
+
+        if (impacted) {
+            logger.log(Level.INFO, "ImpactedClasses: " + impactedClasses.size());
+        }
 
         // DEBUG PRINTS
         if (debug) {
-            logger.log(Level.INFO, "ChangedClasses: " + changedClasses);
             logger.log(Level.INFO, "ImpactedMethods: " + impactedMethods);
+            logger.log(Level.INFO, "ImpactedClasses: " + impactedClasses);
             logger.log(Level.INFO, "AffectedTestClasses: " + affectedTestClasses);
+            logger.log(Level.INFO, "ClassDependencyGraph: " + classDependencyGraph);
+            logger.log(Level.INFO, "ClassToTestClassGraph: " + classToTestClassGraph);
         }
     }
 
@@ -238,25 +272,42 @@ public class HybridMojo extends DiffMojo {
      * associated with new methods.
      */
     protected void setChangedAndNonaffectedMethods() throws MojoExecutionException {
-        List<Set<String>> data = ZLCHelperMethods.getChangedDataHybrid(classesChecksum, methodToTestClasses, loader,
-                getArtifactsDir(), CLASSES_CHECKSUM_SERIALIZED_FILE,
-                METHODS_CHECKSUMS_SERIALIZED_FILE, updateMethodsChecksums);
-        changedMethods = data == null ? new HashSet<String>() : data.get(0);
-        newMethods = data == null ? new HashSet<String>() : data.get(1);
-        affectedTestClasses = data == null ? new HashSet<String>() : data.get(2);
+        List<Set<String>> classesData = ZLCHelperMethods.getChangedDataHybridClassLevel(classesChecksum,
+                getArtifactsDir(), CLASSES_CHECKSUM_SERIALIZED_FILE);
+
+        newClasses = classesData == null ? new HashSet<String>() : classesData.get(0);
+        deletedClasses = classesData == null ? new HashSet<String>() : classesData.get(1);
+        changedClassesWithChangedHeaders = classesData == null ? new HashSet<String>() : classesData.get(2);
+        changedClassesWithoutChangedHeaders = classesData == null ? new HashSet<String>() : classesData.get(3);
+        oldClasses = classesData == null ? new HashSet<String>() : classesData.get(4);
+
+        List<Set<String>> methodsData = ZLCHelperMethods.getChangedDataHybridMethodLevel(newClasses, deletedClasses,
+                changedClassesWithChangedHeaders,
+                changedClassesWithoutChangedHeaders, MethodLevelStaticDepsBuilder.getMethodsCheckSum(), loader,
+                getArtifactsDir(), METHODS_CHECKSUMS_SERIALIZED_FILE);
+
+        methodsCheckSum = MethodLevelStaticDepsBuilder.getMethodsCheckSum();
+
+        changedMethods = methodsData == null ? new HashSet<String>() : methodsData.get(0);
+        newMethods = methodsData == null ? new HashSet<String>() : methodsData.get(1);
 
         for (String newMethod : newMethods) {
             affectedTestClasses.addAll(methodToTestClasses.getOrDefault(newMethod, new HashSet<>()));
         }
 
-        changedClasses = data == null ? new HashSet<String>() : data.get(3);
-        newClasses = data == null ? new HashSet<String>() : data.get(4);
-        oldClasses = data == null ? new HashSet<String>() : data.get(5);
-        methodsCheckSum = MethodLevelStaticDepsBuilder.getMethodsCheckSum();
+        for (String changedMethod : changedMethods) {
+            affectedTestClasses.addAll(methodToTestClasses.getOrDefault(changedMethod, new HashSet<>()));
+        }
 
-        nonAffectedMethods = MethodLevelStaticDepsBuilder.computeMethods();
-        nonAffectedMethods.removeAll(changedMethods);
-        nonAffectedMethods.removeAll(newMethods);
+        for (String addedClass : newClasses) {
+            affectedTestClasses.addAll(classToTestClassGraph.getOrDefault(addedClass, new HashSet<>()));
+        }
+
+        for (String changedClassesWithChangedHeader : changedClassesWithChangedHeaders) {
+            affectedTestClasses
+                    .addAll(classToTestClassGraph.getOrDefault(changedClassesWithChangedHeader, new HashSet<>()));
+        }
+
     }
 
     /**
@@ -271,6 +322,30 @@ public class HybridMojo extends DiffMojo {
         for (String impactedMethod : impactedMethods) {
             affectedTestClasses.addAll(methodToTestClasses.getOrDefault(impactedMethod, new HashSet<String>()));
         }
+    }
+
+    /**
+     * Computes the impacted classes by finding impacted classes for new and
+     * changedClassesWithChangedHeaders
+     * methods (called affected methods), and updating the impacted test classes by
+     * adding test classes found from impacted methods.
+     */
+    private void computeImpactedClasses() {
+        impactedClasses = new HashSet<>();
+        impactedClasses.addAll(findImpactedClasses(newClasses));
+        impactedClasses.addAll(findImpactedClasses(changedClassesWithChangedHeaders));
+        for (String impactedClass : impactedClasses) {
+            affectedTestClasses.addAll(classToTestClassGraph.getOrDefault(impactedClass, new HashSet<String>()));
+        }
+    }
+
+
+    private Set<String> findImpactedClasses(Set<String> affectedClasses) {
+        Set<String> classes = new HashSet<>(affectedClasses);
+        for (String clazz : affectedClasses) {
+            classes.addAll(MethodLevelStaticDepsBuilder.getClassDeps(clazz));
+        }
+        return classes;
     }
 
     /**

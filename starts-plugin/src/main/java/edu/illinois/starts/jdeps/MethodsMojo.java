@@ -264,9 +264,9 @@ public class MethodsMojo extends DiffMojo {
         changedClasses = dataList == null ? new HashSet<String>() : dataList.get(4);
         newClasses = MethodLevelStaticDepsBuilder.getClasses();
         newClasses.removeAll(oldClasses);
-        nonAffectedMethods = MethodLevelStaticDepsBuilder.computeMethods();
-        nonAffectedMethods.removeAll(changedMethods);
-        nonAffectedMethods.removeAll(newMethods);
+        // nonAffectedMethods = MethodLevelStaticDepsBuilder.computeMethods();
+        // nonAffectedMethods.removeAll(changedMethods);
+        // nonAffectedMethods.removeAll(newMethods);
     }
 
     /**
