@@ -89,7 +89,6 @@ public class HybridMojo extends DiffMojo {
         return Collections.unmodifiableSet(impactedMethods);
     }
 
-
     public Set<String> getImpactedClasses() {
         return Collections.unmodifiableSet(impactedClasses);
     }
@@ -290,6 +289,8 @@ public class HybridMojo extends DiffMojo {
             logger.log(Level.INFO, "AffectedTestClasses: " + affectedTestClasses);
             logger.log(Level.INFO, "ClassDependencyGraph: " + classDependencyGraph);
             logger.log(Level.INFO, "ClassToTestClassGraph: " + classToTestClassGraph);
+            logger.log(Level.INFO, "ChangedClassesWithChangedHeaders: " + changedClassesWithChangedHeaders);
+            logger.log(Level.INFO, "ChangedClassesWithoutChangedHeaders: " + changedClassesWithoutChangedHeaders);
         }
     }
 
