@@ -124,7 +124,7 @@ public class Loadables implements StartsConstants {
             // 2. every class in the CUT has non-empty jdeps dependency; they , at least, depend on java.lang.Object
             // 3. isWellKnownUrl will ignore classes from junit, hamcrest, maven, etc; we don't want to track those
             // 4. isIgnorableInternalName will ignore classes from standard library, mockito, jacoco
-            String className = ChecksumUtil.toClassName(loc);
+            String className = ChecksumUtil.toClassOrJavaName(loc, false);
             if (!deps.get(loc).isEmpty()
                     || !ChecksumUtil.isWellKnownUrl(className)
                     || !Types.isIgnorableInternalName(className)) {
@@ -215,19 +215,19 @@ public class Loadables implements StartsConstants {
             HashSet<String> nodeSet = new HashSet<>(Arrays.asList(analyzedClass));
             Set<String> transitiveClosure = new HashSet<>();
             switch (closureOption) {
-                case TRANSITIVE:
-                    transitiveClosure = YasglHelper.computeReachabilityFromChangedClasses(nodeSet, tcGraph);
+                case PS1:
+                    transitiveClosure = YasglHelper.reverseReachabilityFromChangedClasses(nodeSet, tcGraph);
                     transitiveClosure.add(analyzedClass);
+                    transitiveClosure.addAll(YasglHelper.computeReachabilityFromChangedClasses(transitiveClosure, tcGraph));
                     break;
-                case TRANSITIVE_AND_INVERSE_TRANSITIVE:
+                case PS2:
                     transitiveClosure = YasglHelper.computeReachabilityFromChangedClasses(nodeSet, tcGraph);
                     transitiveClosure.add(analyzedClass);
                     transitiveClosure.addAll(YasglHelper.reverseReachabilityFromChangedClasses(nodeSet, tcGraph));
                     break;
-                case TRANSITIVE_OF_INVERSE_TRANSITIVE:
-                    transitiveClosure = YasglHelper.reverseReachabilityFromChangedClasses(nodeSet, tcGraph);
+                case PS3:
+                    transitiveClosure = YasglHelper.computeReachabilityFromChangedClasses(nodeSet, tcGraph);
                     transitiveClosure.add(analyzedClass);
-                    transitiveClosure.addAll(YasglHelper.computeReachabilityFromChangedClasses(transitiveClosure, tcGraph));
                     break;
                 default:
                     transitiveClosure = YasglHelper.computeReachabilityFromChangedClasses(nodeSet, tcGraph);

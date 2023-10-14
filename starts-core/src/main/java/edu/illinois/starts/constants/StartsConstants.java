@@ -6,6 +6,8 @@ package edu.illinois.starts.constants;
 
 import java.io.File;
 
+import org.objectweb.asm.Opcodes;
+
 /**
  * Some constants used throughout the STARTS codebase.
  */
@@ -60,5 +62,16 @@ public interface StartsConstants {
 
     String JAR_EXTENSION = ".jar";
     String CLASS_EXTENSION = ".class";
+    String JAVA_EXTENSION = ".java";
 
+    String TARGET = "target";
+    String METHODS_TEST_DEPS_ZLC_FILE = "methods-deps.zlc";
+    String METHODS_CHECKSUMS_SERIALIZED_FILE = "methods-checksums.ser";
+    String CLASSES_ZLC_FILE = "classes-checksums.zlc";
+    String CLASSES_CHECKSUM_SERIALIZED_FILE = "classes-checksums.ser";
+
+    // Used in smethods
+    String SMETHODS_ROOT_DIR_NAME = ".smethods";
+    int ASM_VERSION = Opcodes.ASM9;
+    String PROJECT_PACKAGE = "edu/illinois/starts/smethods/";
 }
