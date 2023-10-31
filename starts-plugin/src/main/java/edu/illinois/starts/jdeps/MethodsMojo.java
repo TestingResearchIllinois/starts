@@ -72,6 +72,12 @@ public class MethodsMojo extends DiffMojo {
     @Parameter(property = "debug", defaultValue = FALSE)
     private boolean debug;
 
+    /**
+     * Set this to "true" to compute affected test classes as well.
+     */
+    @Parameter(property = "computeAffectedTests", defaultValue = FALSE)
+    private boolean computeAffectedTests;
+
     public void setDebug(boolean debug) {
         this.debug = debug;
     }
@@ -173,11 +179,14 @@ public class MethodsMojo extends DiffMojo {
         if (!Files.exists(Paths.get(getArtifactsDir() + METHODS_CHECKSUMS_SERIALIZED_FILE))) {
             changedMethods = new HashSet<>();
             newMethods = MethodLevelStaticDepsBuilder.computeMethods();
-            affectedTestClasses = MethodLevelStaticDepsBuilder.computeTestClasses();
             oldClasses = new HashSet<>();
             changedClasses = new HashSet<>();
             newClasses = MethodLevelStaticDepsBuilder.getClasses();
             nonAffectedMethods = new HashSet<>();
+
+            if (computeAffectedTests) {
+                affectedTestClasses = MethodLevelStaticDepsBuilder.computeTestClasses();
+            }
 
             if (impacted) {
                 impactedMethods = newMethods;
@@ -197,6 +206,9 @@ public class MethodsMojo extends DiffMojo {
 
             if (impacted) {
                 computeImpactedMethods();
+
+            }
+            if (computeAffectedTests) {
                 computeAffectedTestClasses();
             }
 
@@ -232,13 +244,18 @@ public class MethodsMojo extends DiffMojo {
         logger.log(Level.INFO, "NewClasses: " + newClasses.size());
         logger.log(Level.INFO, "OldClasses: " + oldClasses.size());
         logger.log(Level.INFO, "ChangedClasses: " + changedClasses.size());
-        logger.log(Level.INFO, "AffectedTestClasses: " + affectedTestClasses.size());
+
+        if (computeAffectedTests) {
+            logger.log(Level.INFO, "AffectedTestClasses: " + affectedTestClasses.size());
+        }
 
         // DEBUG PRINTS
         if (debug) {
             logger.log(Level.INFO, "ChangedMethods: " + changedMethods);
             logger.log(Level.INFO, "ImpactedMethods: " + impactedMethods);
-            logger.log(Level.INFO, "AffectedTestClasses: " + affectedTestClasses);
+            if (computeAffectedTests) {
+                logger.log(Level.INFO, "AffectedTestClasses: " + affectedTestClasses);
+            }
         }
     }
 
