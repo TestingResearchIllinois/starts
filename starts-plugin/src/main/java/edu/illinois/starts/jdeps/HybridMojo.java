@@ -77,6 +77,10 @@ public class HybridMojo extends DiffMojo {
         this.updateMethodsChecksums = updateChecksums;
     }
 
+    public void setComputeAffectedTests(boolean computeAffectedTests) {
+        this.computeAffectedTests = computeAffectedTests;
+    }
+
     public Set<String> getAffectedMethods() {
         Set<String> affectedMethods = new HashSet<>();
         affectedMethods.addAll(changedMethods);
