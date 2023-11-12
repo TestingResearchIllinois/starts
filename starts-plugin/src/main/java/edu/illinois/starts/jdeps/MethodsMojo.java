@@ -78,6 +78,12 @@ public class MethodsMojo extends DiffMojo {
     @Parameter(property = "computeAffectedTests", defaultValue = FALSE)
     private boolean computeAffectedTests;
 
+    /*
+     * Set this to "true" to include non-affected methods as well.
+     */
+    @Parameter(property = "includeNonAffected", required = false, defaultValue = "true")
+    private boolean includeNonAffected;
+
     public void setDebug(boolean debug) {
         this.debug = debug;
     }
@@ -253,12 +259,19 @@ public class MethodsMojo extends DiffMojo {
             logger.log(Level.INFO, "AffectedTestClasses: " + affectedTestClasses.size());
         }
 
+        if (includeNonAffected) {
+            logger.log(Level.INFO, "NonAffectedMethods: " + nonAffectedMethods.size());
+        }
+
         // DEBUG PRINTS
         if (debug) {
             logger.log(Level.INFO, "ChangedMethods: " + changedMethods);
             logger.log(Level.INFO, "ImpactedMethods: " + impactedMethods);
             if (computeAffectedTests) {
                 logger.log(Level.INFO, "AffectedTestClasses: " + affectedTestClasses);
+            }
+            if (includeNonAffected) {
+                logger.log(Level.INFO, "NonAffectedMethods: " + nonAffectedMethods);
             }
         }
     }
@@ -285,9 +298,12 @@ public class MethodsMojo extends DiffMojo {
         changedClasses = dataList == null ? new HashSet<String>() : dataList.get(4);
         newClasses = MethodLevelStaticDepsBuilder.getClasses();
         newClasses.removeAll(oldClasses);
-        // nonAffectedMethods = MethodLevelStaticDepsBuilder.computeMethods();
-        // nonAffectedMethods.removeAll(changedMethods);
-        // nonAffectedMethods.removeAll(newMethods);
+
+        if (includeNonAffected) {
+            nonAffectedMethods = MethodLevelStaticDepsBuilder.computeMethods();
+            nonAffectedMethods.removeAll(changedMethods);
+            nonAffectedMethods.removeAll(newMethods);
+        }
     }
 
     /**
