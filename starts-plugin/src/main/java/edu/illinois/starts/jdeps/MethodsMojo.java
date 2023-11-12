@@ -5,6 +5,7 @@
 package edu.illinois.starts.jdeps;
 
 import java.io.IOException;
+import java.lang.reflect.Method;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -40,7 +41,8 @@ public class MethodsMojo extends DiffMojo {
     private Set<String> oldClasses;
     private Set<String> changedClasses;
     private Set<String> affectedTestClasses;
-    private Set<String> nonAffectedMethods; // This may not be needed at all
+    private Set<String> nonAffectedMethods;
+    private Set<String> nonAffectedClasses;
     private Map<String, String> methodsCheckSum;
     private Map<String, Set<String>> methodToTestClasses;
     private ClassLoader loader;
@@ -78,6 +80,12 @@ public class MethodsMojo extends DiffMojo {
     @Parameter(property = "computeAffectedTests", defaultValue = FALSE)
     private boolean computeAffectedTests;
 
+    /*
+     * Set this to "true" to include non-affected classes as well.
+     */
+    @Parameter(property = "includeNonAffectedClasses", required = false, defaultValue = "true")
+    private boolean includeNonAffectedClasses;
+
     public void setDebug(boolean debug) {
         this.debug = debug;
     }
@@ -96,6 +104,10 @@ public class MethodsMojo extends DiffMojo {
 
     public void setComputeAffectedTests(boolean computeAffectedTests) {
         this.computeAffectedTests = computeAffectedTests;
+    }
+
+    public void setIncludeNonAffectedClasses(boolean includeNonAffectedClasses) {
+        this.includeNonAffectedClasses = includeNonAffectedClasses;
     }
 
     public Set<String> getAffectedMethods() {
@@ -130,6 +142,10 @@ public class MethodsMojo extends DiffMojo {
 
     public Set<String> getNonAffectedMethods() {
         return Collections.unmodifiableSet(nonAffectedMethods);
+    }
+
+    public Set<String> getNonAffectedClasses() {
+        return Collections.unmodifiableSet(nonAffectedClasses);
     }
 
     /**
@@ -187,6 +203,7 @@ public class MethodsMojo extends DiffMojo {
             changedClasses = new HashSet<>();
             newClasses = MethodLevelStaticDepsBuilder.getClasses();
             nonAffectedMethods = new HashSet<>();
+            nonAffectedClasses = new HashSet<>();
 
             if (computeAffectedTests) {
                 affectedTestClasses = MethodLevelStaticDepsBuilder.computeTestClasses();
@@ -253,12 +270,19 @@ public class MethodsMojo extends DiffMojo {
             logger.log(Level.INFO, "AffectedTestClasses: " + affectedTestClasses.size());
         }
 
+        if (includeNonAffectedClasses) {
+            logger.log(Level.INFO, "NonAffectedClasses: " + nonAffectedClasses.size());
+        }
+
         // DEBUG PRINTS
         if (debug) {
             logger.log(Level.INFO, "ChangedMethods: " + changedMethods);
             logger.log(Level.INFO, "ImpactedMethods: " + impactedMethods);
             if (computeAffectedTests) {
                 logger.log(Level.INFO, "AffectedTestClasses: " + affectedTestClasses);
+            }
+            if (includeNonAffectedClasses) {
+                logger.log(Level.INFO, "NonAffectedClasses: " + nonAffectedClasses);
             }
         }
     }
@@ -285,9 +309,12 @@ public class MethodsMojo extends DiffMojo {
         changedClasses = dataList == null ? new HashSet<String>() : dataList.get(4);
         newClasses = MethodLevelStaticDepsBuilder.getClasses();
         newClasses.removeAll(oldClasses);
-        // nonAffectedMethods = MethodLevelStaticDepsBuilder.computeMethods();
-        // nonAffectedMethods.removeAll(changedMethods);
-        // nonAffectedMethods.removeAll(newMethods);
+
+        if (includeNonAffectedClasses) {
+            nonAffectedClasses = MethodLevelStaticDepsBuilder.getClasses();
+            nonAffectedClasses.removeAll(changedClasses);
+            nonAffectedClasses.removeAll(newClasses);
+        }
     }
 
     /**
