@@ -173,7 +173,7 @@ public class MethodsMojo extends DiffMojo {
             try {
                 methodsCheckSum = MethodLevelStaticDepsBuilder.computeAllMethodsChecksums();
                 methodsDependencyGraph = MethodLevelStaticDepsBuilder.buildMethodsDependencyGraph(
-                        includeVariables, computeAffectedTests);
+                        includeVariables);
             } catch (Exception exception) {
                 throw new RuntimeException(exception);
             }
@@ -222,13 +222,14 @@ public class MethodsMojo extends DiffMojo {
 
             methodsDependencyGraph = MethodLevelStaticDepsBuilder
                     .buildMethodsDependencyGraphUsingOldGraphAndChangedClasses(oldMethodsDependencyGraph,
-                            changedClasses, newClasses, includeVariables, computeAffectedTests);
+                            changedClasses, newClasses, includeVariables);
 
             if (computeImpactedMethods) {
                 computeImpactedMethods();
 
             }
             if (computeAffectedTests) {
+                methodToTestClasses = MethodLevelStaticDepsBuilder.computeMethodToTestClasses(includeVariables);
                 computeAffectedTestClasses();
             }
 

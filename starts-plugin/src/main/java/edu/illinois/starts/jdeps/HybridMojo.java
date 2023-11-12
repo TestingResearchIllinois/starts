@@ -199,8 +199,7 @@ public class HybridMojo extends DiffMojo {
                 MethodLevelStaticDepsBuilder.buildMethodsGraph(includeVariables);
                 classesChecksum = MethodLevelStaticDepsBuilder.computeClassesChecksums(loader, cleanBytes);
                 methodsCheckSum = MethodLevelStaticDepsBuilder.computeAllMethodsChecksums();
-                methodsDependencyGraph = MethodLevelStaticDepsBuilder.buildMethodsDependencyGraph(includeVariables,
-                        computeAffectedTests);
+                methodsDependencyGraph = MethodLevelStaticDepsBuilder.buildMethodsDependencyGraph(includeVariables);
                 classesDependencyGraph = MethodLevelStaticDepsBuilder.constructClassesDependencyGraph();
 
             } catch (Exception exception) {
@@ -265,13 +264,13 @@ public class HybridMojo extends DiffMojo {
 
             methodsDependencyGraph = MethodLevelStaticDepsBuilder
                     .buildMethodsDependencyGraphUsingOldGraphAndChangedClasses(oldMethodsDependencyGraph,
-                            changedClasses, newClasses, includeVariables, computeAffectedTests);
+                            changedClasses, newClasses, includeVariables);
 
             // Updating Hierarchy Parents and Children Maps because they are used in
             // building class dependency graph
             Map<String, Set<String>> hierarchyParents = ZLCHelperMethods.deserializeMapping(getArtifactsDir(),
                     HIERARCHY_PARENTS_SERIALIZED_FILE);
-            MethodLevelStaticDepsBuilder.updateHierarchyParents(hierarchyParents);
+            MethodLevelStaticDepsBuilder.constructHierarchyParentsFromOld(hierarchyParents);
 
             // Building Class Dependency Graph
             classesDependencyGraph = MethodLevelStaticDepsBuilder.constructClassesDependencyGraph();

@@ -39,8 +39,8 @@ public class ZLCHelperMethods implements StartsConstants {
 
     /**
      * This helper method is used in method-level analysis returns a list of sets
-     * containing information about changed methods, new methods, affected tests,
-     * old classes, and changed classes.
+     * containing information about changed methods, new methods, old classes, and
+     * changed classes.
      * This method is called from MethodMojo.java from the setChangedMethods()
      * method.
      *

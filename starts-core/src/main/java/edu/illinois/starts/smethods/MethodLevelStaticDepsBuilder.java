@@ -103,6 +103,19 @@ public class MethodLevelStaticDepsBuilder {
     }
 
     /*
+     * This function returns all the classes' Names in the project.
+     */
+    public static HashSet<String> getAllClassesNames() {
+        HashSet<String> classPaths = getAllClassesPaths();
+        HashSet<String> classes = new HashSet<>();
+        for (String classPath : classPaths) {
+            String className = getClassNameFromClassPath(classPath);
+            classes.add(className);
+        }
+        return classes;
+    }
+
+    /*
      * This function returns a map from class name to class path.
      * e.g., com/example/A ->
      * /home/mopuser/earv-research/starts-example/target/classes/com/example/A.class
@@ -117,19 +130,6 @@ public class MethodLevelStaticDepsBuilder {
             classNameToPathMap.put(className, classPath);
         }
         return classNameToPathMap;
-    }
-
-    /*
-     * This function returns all the classes' Names in the project.
-     */
-    public static HashSet<String> getAllClassesNames() {
-        HashSet<String> classPaths = getAllClassesPaths();
-        HashSet<String> classes = new HashSet<>();
-        for (String classPath : classPaths) {
-            String className = getClassNameFromClassPath(classPath);
-            classes.add(className);
-        }
-        return classes;
     }
 
     /*
@@ -212,25 +212,10 @@ public class MethodLevelStaticDepsBuilder {
      * project.
      */
     public static Map<String, Set<String>> buildMethodsDependencyGraph(
-            boolean includeVariables,
-            boolean includeTestMethods) {
+            boolean includeVariables) {
 
         Set<String> classPathsSet = getAllClassesPaths();
         findMethodsinvoked(classPathsSet);
-        if (includeTestMethods) {
-            // Suppose that test classes have Test in their class name
-            // and are in src/test
-            Set<String> testClasses = new HashSet<>();
-            for (String method : methodNameToMethodNames.keySet()) {
-                String className = method.split("#|\\$")[0];
-                if (className.contains("Test")) {
-                    testClasses.add(className);
-                }
-            }
-
-            // Finding Test Classes to methods
-            testClassesToMethods = getDepsSingleThread(testClasses);
-        }
 
         /*
          * Adding reflexive closure to methodNameToMethodNames
@@ -270,7 +255,7 @@ public class MethodLevelStaticDepsBuilder {
      */
     public static Map<String, Set<String>> buildMethodsDependencyGraphUsingOldGraphAndChangedClasses(
             Map<String, Set<String>> oldMethodsDependencyGraph, Set<String> changedClasses, Set<String> newClasses,
-            boolean includeVariables, boolean includeTestMethods) {
+            boolean includeVariables) {
         Set<String> newAndChangedClasses = new HashSet<>(changedClasses);
         newAndChangedClasses.addAll(newClasses);
         Set<String> classesPathSet = getClassPathsForSetOfClassNames(newAndChangedClasses);
@@ -423,6 +408,10 @@ public class MethodLevelStaticDepsBuilder {
         return methodsCheckSum;
     }
 
+    /*
+     * This function computes a map from test classes to methods.
+     * It must be called after the method dependecy graph is build
+     */
     public static Map<String, Set<String>> computeTestClassesToMethod(boolean includeVariables) {
         if (testClassesToMethods == null) {
             // Suppose that test classes have Test in their class name
@@ -447,6 +436,7 @@ public class MethodLevelStaticDepsBuilder {
 
     /**
      * This function Computes and returns the methodToTestClasses map.
+     * 
      * @return methodToTestClasses method to test classes mapping
      */
     public static Map<String, Set<String>> computeMethodToTestClasses(boolean includeVariables) {
@@ -621,13 +611,21 @@ public class MethodLevelStaticDepsBuilder {
         return hierarchyChildren;
     }
 
-    public static void updateHierarchyParents(Map<String, Set<String>> oldHierarchyParents) {
+    /*
+     * This function take the oldHierarchyParents as input and uses it with the
+     * partial hierarchyParents graph to create the updated hierarchyParents
+     */
+    public static void constructHierarchyParentsFromOld(Map<String, Set<String>> oldHierarchyParents) {
         hierarchyParents
                 .forEach((key, value) -> oldHierarchyParents.merge(key, value, (oldValue, newValue) -> newValue));
         hierarchyParents = oldHierarchyParents;
     }
 
-    public static void updateHierarchyChildren(Map<String, Set<String>> oldHierarchyChildren) {
+    /*
+     * This function take the oldHierarchyChildren as input and uses it with the
+     * partial hierarchyChildren graph to create the updated hierarchyChildren
+     */
+    public static void constructHierarchyChildrenFromOld(Map<String, Set<String>> oldHierarchyChildren) {
         hierarchyChildren
                 .forEach((key, value) -> oldHierarchyChildren.merge(key, value, (oldValue, newValue) -> newValue));
         hierarchyChildren = oldHierarchyChildren;
