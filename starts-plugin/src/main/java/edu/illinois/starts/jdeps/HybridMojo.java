@@ -167,19 +167,7 @@ public class HybridMojo extends DiffMojo {
         Classpath sfClassPath = getSureFireClassPath();
         loader = createClassLoader(sfClassPath);
 
-        // Build method level static dependencies
-        try {
-            MethodLevelStaticDepsBuilder.buildMethodsGraph(includeVariables);
-
-            classesChecksum = MethodLevelStaticDepsBuilder.computeClassesChecksums(loader, cleanBytes);
-            if (computeAffectedTests) {
-                methodToTestClasses = MethodLevelStaticDepsBuilder.computeMethodToTestClasses(includeVariables);
-            }
-        } catch (Exception exception) {
-            throw new RuntimeException(exception);
-        }
-
-        runHybrid(computeImpactedMethods);
+        runHybrid();
     }
 
     /**
@@ -194,12 +182,23 @@ public class HybridMojo extends DiffMojo {
      * It also updates the methods checksums in the dependency file if
      * updateMethodsChecksums is true.
      *
-     * @param impacted a boolean value indicating whether to compute impacted
-     *                 methods and impacted test classes
      * @throws MojoExecutionException if an exception occurs while setting changed
      *                                methods
      */
-    protected void runHybrid(boolean impacted) throws MojoExecutionException {
+    protected void runHybrid() throws MojoExecutionException {
+
+        // Build method level static dependencies
+        try {
+            MethodLevelStaticDepsBuilder.buildMethodsGraph(includeVariables);
+
+            classesChecksum = MethodLevelStaticDepsBuilder.computeClassesChecksums(loader, cleanBytes);
+            if (computeAffectedTests) {
+                methodToTestClasses = MethodLevelStaticDepsBuilder.computeMethodToTestClasses(includeVariables);
+            }
+        } catch (Exception exception) {
+            throw new RuntimeException(exception);
+        }
+
         // Checking if the file of dependencies exists (first run)
         if (!Files.exists(Paths.get(getArtifactsDir() + METHODS_CHECKSUMS_SERIALIZED_FILE))
                 && !Files.exists(Paths.get(getArtifactsDir() + CLASSES_CHECKSUM_SERIALIZED_FILE))) {
@@ -220,7 +219,7 @@ public class HybridMojo extends DiffMojo {
                 affectedTestClasses = MethodLevelStaticDepsBuilder.computeTestClasses(includeVariables);
             }
 
-            if (impacted) {
+            if (computeImpactedMethods) {
                 impactedMethods = newMethods;
                 impactedClasses = newClasses;
             }
@@ -250,7 +249,7 @@ public class HybridMojo extends DiffMojo {
 
             setChangedAndNonaffectedMethods();
 
-            if (impacted) {
+            if (computeImpactedMethods) {
                 computeImpactedMethods();
                 computeImpactedClasses();
             }
@@ -270,7 +269,7 @@ public class HybridMojo extends DiffMojo {
 
         }
 
-        logInfo(impacted);
+        logInfo(computeImpactedMethods);
     }
 
     /**
