@@ -173,7 +173,7 @@ public class HybridMojo extends DiffMojo {
 
             classesChecksum = MethodLevelStaticDepsBuilder.computeClassesChecksums(loader, cleanBytes);
             if (computeAffectedTests) {
-                methodToTestClasses = MethodLevelStaticDepsBuilder.computeMethodToTestClasses();
+                methodToTestClasses = MethodLevelStaticDepsBuilder.computeMethodToTestClasses(includeVariables);
             }
         } catch (Exception exception) {
             throw new RuntimeException(exception);
@@ -217,7 +217,7 @@ public class HybridMojo extends DiffMojo {
             nonAffectedMethods = new HashSet<>();
 
             if (computeAffectedTests) {
-                affectedTestClasses = MethodLevelStaticDepsBuilder.computeTestClasses();
+                affectedTestClasses = MethodLevelStaticDepsBuilder.computeTestClasses(includeVariables);
             }
 
             if (impacted) {
@@ -244,7 +244,7 @@ public class HybridMojo extends DiffMojo {
             MethodLevelStaticDepsBuilder.constuctTestClassesToClassesGraph();
             if (computeAffectedTests) {
                 classToTestClassGraph = MethodLevelStaticDepsBuilder.constructClassesToTestClassesGraph();
-                methodToTestClasses = MethodLevelStaticDepsBuilder.computeMethodToTestClasses();
+                methodToTestClasses = MethodLevelStaticDepsBuilder.computeMethodToTestClasses(includeVariables);
                 affectedTestClasses = new HashSet<>();
             }
 

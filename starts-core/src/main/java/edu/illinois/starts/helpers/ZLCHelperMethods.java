@@ -47,18 +47,15 @@ public class ZLCHelperMethods implements StartsConstants {
      * @param artifactsDir        The directory where the serialized file is saved.
      * @param newMethodsChecksums A map containing the method names and their
      *                            checksums.
-     * @param methodToTestClasses A map from method names to their test classes/
      * @return A list of sets containing all the information described above.
      */
 
-    public static List<Set<String>> getChangedDataMethods(Map<String, String> newMethodsChecksums,
-            Map<String, Set<String>> methodToTestClasses, String artifactsDir, String filepath) {
+    public static List<Set<String>> getChangedDataMethods(Map<String, String> newMethodsChecksums, String artifactsDir,
+            String filepath) {
         long start = System.currentTimeMillis();
 
         Map<String, String> oldMethodChecksums = deserializeMapping(artifactsDir, filepath);
-
         Set<String> changedMethods = new HashSet<>();
-        Set<String> affectedTests = new HashSet<>();
         Set<String> oldClasses = new HashSet<>();
         Set<String> changedClasses = new HashSet<>();
         Set<String> newMethods = new HashSet<>(newMethodsChecksums.keySet());
@@ -66,7 +63,6 @@ public class ZLCHelperMethods implements StartsConstants {
         for (String method : oldMethodChecksums.keySet()) {
             String oldChecksum = oldMethodChecksums.get(method);
             String newChecksum = newMethodsChecksums.get(method);
-            Set<String> deps = methodToTestClasses.getOrDefault(method, new HashSet<>());
             String className = method.split("#")[0];
 
             oldClasses.add(className);
@@ -77,7 +73,6 @@ public class ZLCHelperMethods implements StartsConstants {
                 continue;
             } else {
                 changedMethods.add(method);
-                affectedTests.addAll(deps);
                 changedClasses.add(className);
             }
         }
@@ -87,7 +82,7 @@ public class ZLCHelperMethods implements StartsConstants {
         for (String method : newMethods) {
             changedClasses.add(method.split("#")[0]);
         }
-        Collections.addAll(result, changedMethods, newMethods, affectedTests, oldClasses, changedClasses);
+        Collections.addAll(result, changedMethods, newMethods, oldClasses, changedClasses);
         LOGGER.log(Level.FINEST, TIME_COMPUTING_NON_AFFECTED + (end - start) + MILLISECOND);
         return result;
     }
@@ -129,7 +124,8 @@ public class ZLCHelperMethods implements StartsConstants {
      * classes without changed headers.
      * It also constructs a methods checksums map for next run.
      */
-    public static List<Set<String>> getChangedDataHybridMethodLevel(Set<String> addedClasses, Set<String> deletedClasses,
+    public static List<Set<String>> getChangedDataHybridMethodLevel(Set<String> addedClasses,
+            Set<String> deletedClasses,
             Set<String> changedClassesWithChangedHeaders, Set<String> changedClassesWithoutChangedHeaders,
             Map<String, String> methodChecksums,
             ClassLoader loader,
@@ -147,10 +143,8 @@ public class ZLCHelperMethods implements StartsConstants {
         Map<String, String> changedClassesWithoutChangedHeadersMethodsChecksums = MethodLevelStaticDepsBuilder
                 .getMethodsChecksumsForClasses(changedClassesWithoutChangedHeaders, loader);
 
-
         List<Set<String>> changedAndNewMethodsForMethodAnalysis = findChangedAndNewMethods(oldMethodsChecksums,
                 changedClassesWithoutChangedHeadersMethodsChecksums);
-
 
         // Constructing a methods checksums map for next run
         Set<String> modifiedOldClasses = new HashSet<>();
@@ -313,7 +307,7 @@ public class ZLCHelperMethods implements StartsConstants {
      *                                found.
      */
     @SuppressWarnings("unchecked")
-    private static <T> Map<String, T> deserializeMapping(String artifactsDir, String filename) {
+    public static <T> Map<String, T> deserializeMapping(String artifactsDir, String filename) {
         Map<String, T> map = new HashMap<>();
         try {
             FileInputStream fis = new FileInputStream(artifactsDir + filename);

@@ -54,7 +54,7 @@ public class MethodLevelStaticDepsBuilder {
     // for every class, find its children.
     public static Map<String, Set<String>> hierarchyChildren = new HashMap<>();
 
-    public static Map<String, Set<String>> testClassesToMethods = new HashMap<>();
+    public static Map<String, Set<String>> testClassesToMethods = null;
 
     public static Map<String, Set<String>> testClassesToClasses = new HashMap<>();
 
@@ -80,6 +80,8 @@ public class MethodLevelStaticDepsBuilder {
     private static HashSet<String> class_paths = null;
 
     private static Map<String, String> classNameToPathMap = null;
+
+    private static Map<String, Set<String>> OldMethodNameToMethodName = null;
 
     /*
      * This function returns all the classes' paths in the project.
@@ -209,9 +211,11 @@ public class MethodLevelStaticDepsBuilder {
      * This function builds the method dependency graph for all the methods in the
      * project.
      */
-    public static Map<String, Set<String>> buildMethodsDependencyGraph(HashSet<String> classPathsSet,
+    public static Map<String, Set<String>> buildMethodsDependencyGraph(
             boolean includeVariables,
             boolean includeTestMethods) {
+
+        Set<String> classPathsSet = getAllClassesPaths();
         findMethodsinvoked(classPathsSet);
         if (includeTestMethods) {
             // Suppose that test classes have Test in their class name
@@ -228,7 +232,6 @@ public class MethodLevelStaticDepsBuilder {
             testClassesToMethods = getDepsSingleThread(testClasses);
         }
 
-        addReflexiveClosure(methodNameToMethodNames);
         /*
          * Adding reflexive closure to methodNameToMethodNames
          * A -> B
@@ -239,7 +242,6 @@ public class MethodLevelStaticDepsBuilder {
 
         // Inverting methodNameToMethodNames to have the dependency graph for each
         // method
-        // methodNameToMethodNames = invertMap(methodNameToMethodNames);
         methodDependencyGraph = invertMap(methodNameToMethodNames);
 
         if (includeVariables) {
@@ -256,10 +258,50 @@ public class MethodLevelStaticDepsBuilder {
             addVariableDepsToDependencyGraph();
         } else {
             // Remove any variables from keys or values i.e. pure method-level deps
-            filterVariables();
+            filterVariables(methodDependencyGraph);
         }
 
-        return null;
+        return methodDependencyGraph;
+    }
+
+    /*
+     * The method builds Method Level Dependency graph using old method level
+     * dependency graph and set of changed classes
+     */
+    public static Map<String, Set<String>> buildMethodsDependencyGraphUsingOldGraphAndChangedClasses(
+            Map<String, Set<String>> oldMethodsDependencyGraph, Set<String> changedClasses, Set<String> newClasses,
+            boolean includeVariables, boolean includeTestMethods) {
+        Set<String> newAndChangedClasses = new HashSet<>(changedClasses);
+        newAndChangedClasses.addAll(newClasses);
+        Set<String> classesPathSet = getClassPathsForSetOfClassNames(newAndChangedClasses);
+        findMethodsinvoked(classesPathSet);
+        OldMethodNameToMethodName = invertMap(oldMethodsDependencyGraph);
+
+        methodNameToMethodNames
+                .forEach((key, value) -> OldMethodNameToMethodName.merge(key, value, (oldValue, newValue) -> newValue));
+        methodNameToMethodNames = OldMethodNameToMethodName;
+
+        addReflexiveClosure(methodNameToMethodNames);
+        methodDependencyGraph = invertMap(methodNameToMethodNames);
+
+        if (includeVariables) {
+            /*
+             * The original dependency graph is like this:
+             * (A, B, C) are classes
+             * (a) is a variable
+             * A -> A, B, C
+             * a -> A
+             * After this function call the dependency graph will be like this:
+             * A -> A, B, C, a
+             * a -> A
+             */
+            addVariableDepsToDependencyGraph();
+        } else {
+            // Remove any variables from keys or values i.e. pure method-level deps
+            filterVariables(methodDependencyGraph);
+        }
+
+        return methodDependencyGraph;
     }
 
     /**
@@ -320,7 +362,7 @@ public class MethodLevelStaticDepsBuilder {
             addVariableDepsToDependencyGraph();
         } else {
             // Remove any variables from keys or values i.e. pure method-level deps
-            filterVariables();
+            filterVariables(methodDependencyGraph);
         }
 
     }
@@ -381,12 +423,37 @@ public class MethodLevelStaticDepsBuilder {
         return methodsCheckSum;
     }
 
+    public static Map<String, Set<String>> computeTestClassesToMethod(boolean includeVariables) {
+        if (testClassesToMethods == null) {
+            // Suppose that test classes have Test in their class name
+            // and are in src/test
+            Set<String> testClasses = new HashSet<>();
+            for (String method : methodNameToMethodNames.keySet()) {
+                String className = method.split("#|\\$")[0];
+                if (className.contains("Test")) {
+                    testClasses.add(className);
+                }
+            }
+            // Finding Test Classes to methods
+            testClassesToMethods = getDepsSingleThread(testClasses);
+        }
+
+        if (!includeVariables) {
+            filterVariables(testClassesToMethods);
+        }
+
+        return testClassesToMethods;
+    }
+
     /**
      * This function Computes and returns the methodToTestClasses map.
-     *
+     * 
      * @return methodToTestClasses method to test classes mapping
      */
-    public static Map<String, Set<String>> computeMethodToTestClasses() {
+    public static Map<String, Set<String>> computeMethodToTestClasses(boolean includeVariables) {
+        if (testClassesToMethods == null) {
+            testClassesToMethods = computeTestClassesToMethod(includeVariables);
+        }
         methodToTestClasses = invertMap(testClassesToMethods);
         return methodToTestClasses;
     }
@@ -847,8 +914,11 @@ public class MethodLevelStaticDepsBuilder {
      *
      * @return testClasses
      */
-    public static Set<String> computeTestClasses() {
+    public static Set<String> computeTestClasses(boolean includeVariables) {
         Set<String> testClasses = new HashSet<>();
+        if (testClassesToMethods == null) {
+            computeTestClassesToMethod(includeVariables);
+        }
         for (String testClass : testClassesToMethods.keySet()) {
             testClasses.add(testClass);
         }
@@ -873,16 +943,12 @@ public class MethodLevelStaticDepsBuilder {
      *
      * @return testMethods
      */
-    public static void filterVariables() {
+    public static void filterVariables(Map<String, Set<String>> mapToFilter) {
         // Filter out keys that are variables.
-        methodDependencyGraph.keySet().removeIf(method -> !method.matches(".*\\(.*\\)"));
+        mapToFilter.keySet().removeIf(method -> !method.matches(".*\\(.*\\)"));
 
         // Filter values of methodName2MethodNames
-        methodDependencyGraph.values()
-                .forEach(methodList -> methodList.removeIf(method -> !method.matches(".*\\(.*\\)")));
-
-        // Filter from test2methods
-        testClassesToMethods.values()
+        mapToFilter.values()
                 .forEach(methodList -> methodList.removeIf(method -> !method.matches(".*\\(.*\\)")));
     }
 

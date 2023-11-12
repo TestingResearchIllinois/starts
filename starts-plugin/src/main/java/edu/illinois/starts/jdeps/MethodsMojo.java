@@ -172,8 +172,8 @@ public class MethodsMojo extends DiffMojo {
             // Compute Methods Checksums and Build the method level dependencies graph
             try {
                 methodsCheckSum = MethodLevelStaticDepsBuilder.computeAllMethodsChecksums();
-                HashSet<String> classesPathsSet = MethodLevelStaticDepsBuilder.getAllClassesPaths();
-                methodsDependencyGraph = MethodLevelStaticDepsBuilder.buildMethodsDependencyGraph(classesPathsSet, includeVariables, computeAffectedTests);
+                methodsDependencyGraph = MethodLevelStaticDepsBuilder.buildMethodsDependencyGraph(
+                        includeVariables, computeAffectedTests);
             } catch (Exception exception) {
                 throw new RuntimeException(exception);
             }
@@ -186,7 +186,7 @@ public class MethodsMojo extends DiffMojo {
             nonAffectedMethods = new HashSet<>();
 
             if (computeAffectedTests) {
-                affectedTestClasses = MethodLevelStaticDepsBuilder.computeTestClasses();
+                affectedTestClasses = MethodLevelStaticDepsBuilder.computeTestClasses(includeVariables);
             }
 
             if (computeImpactedMethods) {
@@ -197,23 +197,32 @@ public class MethodsMojo extends DiffMojo {
             try {
                 ZLCHelperMethods.serializeMapping(methodsCheckSum, getArtifactsDir(),
                         METHODS_CHECKSUMS_SERIALIZED_FILE);
-                ZLCHelperMethods.serializeMapping(methodsDependencyGraph, getArtifactsDir(), METHODS_DEPENDENCIES_SERIALIZED_FILE);
+                ZLCHelperMethods.serializeMapping(methodsDependencyGraph, getArtifactsDir(),
+                        METHODS_DEPENDENCIES_SERIALIZED_FILE);
             } catch (IOException exception) {
                 exception.printStackTrace();
             }
 
         } else {
-            // Build method level static dependencies
+            // Compute Methods Checksums
             try {
-                MethodLevelStaticDepsBuilder.buildMethodsGraph(includeVariables);
-                methodToTestClasses = MethodLevelStaticDepsBuilder.computeMethodToTestClasses();
-                methodsCheckSum = MethodLevelStaticDepsBuilder.computeMethodsChecksum(loader);
+                methodsCheckSum = MethodLevelStaticDepsBuilder.computeAllMethodsChecksums();
             } catch (Exception exception) {
                 throw new RuntimeException(exception);
             }
 
             // First run has saved the old revision's checksums. Time to find changes.
+            // It finds Changed Methods, new Methods, old classes, changed classes, new
+            // classes.
             computeChangedMethods();
+
+            // Readind old method graph
+            Map<String, Set<String>> oldMethodsDependencyGraph = ZLCHelperMethods.deserializeMapping(getArtifactsDir(),
+                    METHODS_DEPENDENCIES_SERIALIZED_FILE);
+
+            methodsDependencyGraph = MethodLevelStaticDepsBuilder
+                    .buildMethodsDependencyGraphUsingOldGraphAndChangedClasses(oldMethodsDependencyGraph,
+                            changedClasses, newClasses, includeVariables, computeAffectedTests);
 
             if (computeImpactedMethods) {
                 computeImpactedMethods();
@@ -227,6 +236,8 @@ public class MethodsMojo extends DiffMojo {
                 try {
                     ZLCHelperMethods.serializeMapping(methodsCheckSum, getArtifactsDir(),
                             METHODS_CHECKSUMS_SERIALIZED_FILE);
+                    ZLCHelperMethods.serializeMapping(methodsDependencyGraph, getArtifactsDir(),
+                            METHODS_DEPENDENCIES_SERIALIZED_FILE);
                 } catch (IOException exception) {
                     exception.printStackTrace();
                 }
@@ -276,23 +287,14 @@ public class MethodsMojo extends DiffMojo {
     protected void computeChangedMethods() throws MojoExecutionException {
 
         List<Set<String>> dataList = ZLCHelperMethods.getChangedDataMethods(methodsCheckSum,
-                methodToTestClasses, getArtifactsDir(), METHODS_CHECKSUMS_SERIALIZED_FILE);
+                getArtifactsDir(), METHODS_CHECKSUMS_SERIALIZED_FILE);
 
         changedMethods = dataList == null ? new HashSet<String>() : dataList.get(0);
         newMethods = dataList == null ? new HashSet<String>() : dataList.get(1);
-
-        affectedTestClasses = dataList == null ? new HashSet<String>() : dataList.get(2);
-        for (String newMethod : newMethods) {
-            affectedTestClasses.addAll(methodToTestClasses.getOrDefault(newMethod, new HashSet<>()));
-        }
-
-        oldClasses = dataList == null ? new HashSet<String>() : dataList.get(3);
-        changedClasses = dataList == null ? new HashSet<String>() : dataList.get(4);
+        oldClasses = dataList == null ? new HashSet<String>() : dataList.get(2);
+        changedClasses = dataList == null ? new HashSet<String>() : dataList.get(3);
         newClasses = MethodLevelStaticDepsBuilder.getClasses();
         newClasses.removeAll(oldClasses);
-        // nonAffectedMethods = MethodLevelStaticDepsBuilder.computeMethods();
-        // nonAffectedMethods.removeAll(changedMethods);
-        // nonAffectedMethods.removeAll(newMethods);
     }
 
     /**
