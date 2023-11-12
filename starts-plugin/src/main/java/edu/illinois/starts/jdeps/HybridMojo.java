@@ -40,6 +40,7 @@ public class HybridMojo extends DiffMojo {
     private Set<String> oldClasses;
     private Set<String> affectedTestClasses;
     private Set<String> nonAffectedMethods;
+    private Set<String> nonAffectedClasses;
     private Map<String, String> methodsCheckSum;
     private Map<String, List<String>> classesChecksum;
     private Map<String, Set<String>> methodToTestClasses;
@@ -69,6 +70,12 @@ public class HybridMojo extends DiffMojo {
     @Parameter(property = "computeAffectedTests", defaultValue = FALSE)
     private boolean computeAffectedTests;
 
+    /*
+     * Set this to "true" to include non-affected classes as well.
+     */
+    @Parameter(property = "includeNonAffectedClasses", required = false, defaultValue = "false")
+    private boolean includeNonAffectedClasses;
+
     public void setComputeImpactedMethods(boolean computeImpactedMethods) {
         this.computeImpactedMethods = computeImpactedMethods;
     }
@@ -79,6 +86,10 @@ public class HybridMojo extends DiffMojo {
 
     public void setComputeAffectedTests(boolean computeAffectedTests) {
         this.computeAffectedTests = computeAffectedTests;
+    }
+
+    public void setIncludeNonAffectedClasses(boolean includeNonAffectedClasses) {
+        this.includeNonAffectedClasses = includeNonAffectedClasses;
     }
 
     public Set<String> getAffectedMethods() {
@@ -151,6 +162,10 @@ public class HybridMojo extends DiffMojo {
         return Collections.unmodifiableSet(nonAffectedMethods);
     }
 
+    public Set<String> getNonAffectedClasses() {
+        return Collections.unmodifiableSet(nonAffectedClasses);
+    }
+
     /**
      * This method first builds the method-level static dependencies by calling
      * MethodLevelStaticDepsBuilder.buildMethodsGraph().
@@ -215,6 +230,7 @@ public class HybridMojo extends DiffMojo {
             changedClassesWithChangedHeaders = new HashSet<>();
             changedClassesWithoutChangedHeaders = new HashSet<>();
             nonAffectedMethods = new HashSet<>();
+            nonAffectedClasses = new HashSet<>();
 
             if (computeAffectedTests) {
                 affectedTestClasses = MethodLevelStaticDepsBuilder.computeTestClasses();
@@ -302,6 +318,10 @@ public class HybridMojo extends DiffMojo {
             logger.log(Level.INFO, "ImpactedClasses: " + impactedClasses.size());
         }
 
+        if (includeNonAffectedClasses) {
+            logger.log(Level.INFO, "NonAffectedClasses: " + nonAffectedClasses.size());
+        }
+
         // DEBUG PRINTS
         if (debug) {
             logger.log(Level.INFO, "ImpactedMethods: " + impactedMethods);
@@ -312,6 +332,9 @@ public class HybridMojo extends DiffMojo {
             if (computeAffectedTests) {
                 logger.log(Level.INFO, "AffectedTestClasses: " + affectedTestClasses);
                 logger.log(Level.INFO, "ClassToTestClassGraph: " + classToTestClassGraph);
+            }
+            if (includeNonAffectedClasses) {
+                logger.log(Level.INFO, "NonAffectedClasses: " + nonAffectedClasses);
             }
         }
     }
@@ -359,6 +382,14 @@ public class HybridMojo extends DiffMojo {
                 affectedTestClasses
                         .addAll(classToTestClassGraph.getOrDefault(changedClassesWithChangedHeader, new HashSet<>()));
             }
+        }
+
+        if (includeNonAffectedClasses) {
+            nonAffectedClasses = MethodLevelStaticDepsBuilder.getClasses();
+            nonAffectedClasses.removeAll(newClasses);
+            nonAffectedClasses.removeAll(deletedClasses);
+            nonAffectedClasses.removeAll(changedClassesWithChangedHeaders);
+            nonAffectedClasses.removeAll(changedClassesWithoutChangedHeaders);
         }
     }
 
