@@ -112,6 +112,10 @@ public class MethodsMojo extends DiffMojo {
         this.computeAffectedTests = computeAffectedTests;
     }
 
+    public void setIncludeNonAffectedClasses(boolean includeNonAffectedClasses) {
+        this.includeNonAffectedClasses = includeNonAffectedClasses;
+    }
+
     public Set<String> getAffectedMethods() {
         Set<String> affectedMethods = new HashSet<>();
         affectedMethods.addAll(changedMethods);
@@ -146,7 +150,7 @@ public class MethodsMojo extends DiffMojo {
         return Collections.unmodifiableSet(nonAffectedMethods);
     }
 
-        public Set<String> getNonAffectedClasses() {
+    public Set<String> getNonAffectedClasses() {
         return Collections.unmodifiableSet(nonAffectedClasses);
     }
 
