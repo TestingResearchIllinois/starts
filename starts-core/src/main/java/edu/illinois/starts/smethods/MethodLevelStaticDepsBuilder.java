@@ -436,7 +436,6 @@ public class MethodLevelStaticDepsBuilder {
 
     /**
      * This function Computes and returns the methodToTestClasses map.
-     * 
      * @return methodToTestClasses method to test classes mapping
      */
     public static Map<String, Set<String>> computeMethodToTestClasses(boolean includeVariables) {
