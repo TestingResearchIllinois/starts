@@ -525,7 +525,8 @@ public class MethodLevelStaticDepsBuilder {
      */
     public static Map<String, List<String>> computeClassesChecksums(ClassLoader loader, boolean cleanBytes) {
         // Loopig over all the classes, and computing the checksum for each class
-        for (String className : classToContainedMethodNames.keySet()) {
+        Set<String> classesNames = getAllClassesNames();
+        for (String className : classesNames) {
             // Computing the checksum for the class file
             List<String> classPartsChecksums = new ArrayList<>();
             String klas = ChecksumUtil.toClassOrJavaName(className, false);
@@ -610,14 +611,37 @@ public class MethodLevelStaticDepsBuilder {
         }
         addReflexiveClosure(classToContainedMethodNames);
         classesDependencyGraph = invertMap(classesDependencyGraph);
-
         return classesDependencyGraph;
+    }
+
+    public static Map<String, Set<String>> getHierarchyParents() {
+        return hierarchyParents;
+    }
+
+    public static Map<String, Set<String>> getHierarchyChildren() {
+        return hierarchyChildren;
+    }
+
+    public static void updateHierarchyParents(Map<String, Set<String>> oldHierarchyParents) {
+        hierarchyParents
+                .forEach((key, value) -> oldHierarchyParents.merge(key, value, (oldValue, newValue) -> newValue));
+        hierarchyParents = oldHierarchyParents;
+    }
+
+    public static void updateHierarchyChildren(Map<String, Set<String>> oldHierarchyChildren) {
+        hierarchyChildren
+                .forEach((key, value) -> oldHierarchyChildren.merge(key, value, (oldValue, newValue) -> newValue));
+        hierarchyChildren = oldHierarchyChildren;
     }
 
     /*
      * This function computes the testClassesToClasses graph.
      */
-    public static Map<String, Set<String>> constuctTestClassesToClassesGraph() {
+    public static Map<String, Set<String>> constuctTestClassesToClassesGraph(boolean includeVariables) {
+        if (testClassesToMethods == null) {
+            computeTestClassesToMethod(includeVariables);
+        }
+
         for (String testClass : testClassesToMethods.keySet()) {
             Set<String> classes = new HashSet<>();
             for (String method : testClassesToMethods.get(testClass)) {
