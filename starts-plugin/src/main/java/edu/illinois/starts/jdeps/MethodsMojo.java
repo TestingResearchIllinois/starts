@@ -81,15 +81,9 @@ public class MethodsMojo extends DiffMojo {
     private boolean computeAffectedTests;
 
     /*
-     * Set this to "true" to include non-affected methods as well.
-     */
-    @Parameter(property = "includeNonAffectedMethods", required = false, defaultValue = "false")
-    private boolean includeNonAffectedMethods;
-
-    /*
      * Set this to "true" to include non-affected classes as well.
      */
-    @Parameter(property = "includeNonAffectedClasses", required = false, defaultValue = "false")
+    @Parameter(property = "includeNonAffectedClasses", required = false, defaultValue = "true")
     private boolean includeNonAffectedClasses;
 
     public void setDebug(boolean debug) {
@@ -276,10 +270,6 @@ public class MethodsMojo extends DiffMojo {
             logger.log(Level.INFO, "AffectedTestClasses: " + affectedTestClasses.size());
         }
 
-        if (includeNonAffectedMethods) {
-            logger.log(Level.INFO, "NonAffectedMethods: " + nonAffectedMethods.size());
-        }
-
         if (includeNonAffectedClasses) {
             logger.log(Level.INFO, "NonAffectedClasses: " + nonAffectedClasses.size());
         }
@@ -290,9 +280,6 @@ public class MethodsMojo extends DiffMojo {
             logger.log(Level.INFO, "ImpactedMethods: " + impactedMethods);
             if (computeAffectedTests) {
                 logger.log(Level.INFO, "AffectedTestClasses: " + affectedTestClasses);
-            }
-            if (includeNonAffectedMethods) {
-                logger.log(Level.INFO, "NonAffectedMethods: " + nonAffectedMethods);
             }
             if (includeNonAffectedClasses) {
                 logger.log(Level.INFO, "NonAffectedClasses: " + nonAffectedClasses);
@@ -322,12 +309,6 @@ public class MethodsMojo extends DiffMojo {
         changedClasses = dataList == null ? new HashSet<String>() : dataList.get(4);
         newClasses = MethodLevelStaticDepsBuilder.getClasses();
         newClasses.removeAll(oldClasses);
-
-        if (includeNonAffectedMethods) {
-            nonAffectedMethods = MethodLevelStaticDepsBuilder.computeMethods();
-            nonAffectedMethods.removeAll(changedMethods);
-            nonAffectedMethods.removeAll(newMethods);
-        }
 
         if (includeNonAffectedClasses) {
             nonAffectedClasses = MethodLevelStaticDepsBuilder.getClasses();

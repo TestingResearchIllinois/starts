@@ -73,7 +73,7 @@ public class HybridMojo extends DiffMojo {
     /*
      * Set this to "true" to include non-affected classes as well.
      */
-    @Parameter(property = "includeNonAffectedClasses", required = false, defaultValue = "false")
+    @Parameter(property = "includeNonAffectedClasses", required = false, defaultValue = "true")
     private boolean includeNonAffectedClasses;
 
     public void setComputeImpactedMethods(boolean computeImpactedMethods) {
