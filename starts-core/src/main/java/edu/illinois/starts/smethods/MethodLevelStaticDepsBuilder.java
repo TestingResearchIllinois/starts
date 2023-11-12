@@ -96,8 +96,8 @@ public class MethodLevelStaticDepsBuilder {
                     .filter(f -> (f.toString().endsWith(".class") && f.toString().contains("target")))
                     .map(f -> f.normalize().toAbsolutePath().toString())
                     .collect(Collectors.toList()));
-        } catch (Exception e) {
-            e.printStackTrace();
+        } catch (Exception exception) {
+            exception.printStackTrace();
         }
         return class_paths;
     }
@@ -447,7 +447,6 @@ public class MethodLevelStaticDepsBuilder {
 
     /**
      * This function Computes and returns the methodToTestClasses map.
-     * 
      * @return methodToTestClasses method to test classes mapping
      */
     public static Map<String, Set<String>> computeMethodToTestClasses(boolean includeVariables) {

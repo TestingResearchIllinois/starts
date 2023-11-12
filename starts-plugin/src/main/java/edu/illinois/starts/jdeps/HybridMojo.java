@@ -15,6 +15,11 @@ import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 
+import edu.illinois.starts.helpers.ZLCHelperMethods;
+import edu.illinois.starts.smethods.MethodLevelStaticDepsBuilder;
+import edu.illinois.starts.util.ChecksumUtil;
+import edu.illinois.starts.util.Logger;
+
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.Execute;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
@@ -22,11 +27,6 @@ import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.maven.surefire.booter.Classpath;
-
-import edu.illinois.starts.helpers.ZLCHelperMethods;
-import edu.illinois.starts.smethods.MethodLevelStaticDepsBuilder;
-import edu.illinois.starts.util.ChecksumUtil;
-import edu.illinois.starts.util.Logger;
 
 @Mojo(name = "hybrid", requiresDirectInvocation = true, requiresDependencyResolution = ResolutionScope.TEST)
 @Execute(phase = LifecyclePhase.TEST_COMPILE)
@@ -256,8 +256,6 @@ public class HybridMojo extends DiffMojo {
                 throw new RuntimeException(exception);
             }
             setChangedMethodsAndChangedClasses();
-
-            
 
             // Building Method Dependency Graph
             Map<String, Set<String>> oldMethodsDependencyGraph = ZLCHelperMethods.deserializeMapping(getArtifactsDir(),
