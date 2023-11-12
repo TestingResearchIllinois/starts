@@ -77,6 +77,191 @@ public class MethodLevelStaticDepsBuilder {
 
     private static final Logger LOGGER = Logger.getGlobal();
 
+    private static HashSet<String> class_paths = null;
+
+    private static Map<String, String> classNameToPathMap = null;
+
+    /*
+     * This function returns all the classes' paths in the project.
+     */
+    public static HashSet<String> getAllClassesPaths() {
+        if (class_paths != null) {
+            return class_paths;
+        }
+        try {
+            class_paths = new HashSet<>(Files.walk(Paths.get("."))
+                    .filter(Files::isRegularFile)
+                    .filter(f -> (f.toString().endsWith(".class") && f.toString().contains("target")))
+                    .map(f -> f.normalize().toAbsolutePath().toString())
+                    .collect(Collectors.toList()));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return class_paths;
+    }
+
+    /*
+     * This function returns a map from class name to class path.
+     * e.g., com/example/A ->
+     * /home/mopuser/earv-research/starts-example/target/classes/com/example/A.class
+     */
+    public static Map<String, String> getClassNameToPathMap() {
+        if (classNameToPathMap != null) {
+            return classNameToPathMap;
+        }
+        classNameToPathMap = new HashMap<>();
+        for (String classPath : getAllClassesPaths()) {
+            String className = getClassNameFromClassPath(classPath);
+            classNameToPathMap.put(className, classPath);
+        }
+        return classNameToPathMap;
+    }
+
+    /*
+     * This function returns all the classes' Names in the project.
+     */
+    public static HashSet<String> getAllClassesNames() {
+        HashSet<String> classPaths = getAllClassesPaths();
+        HashSet<String> classes = new HashSet<>();
+        for (String classPath : classPaths) {
+            String className = getClassNameFromClassPath(classPath);
+            classes.add(className);
+        }
+        return classes;
+    }
+
+    /*
+     * This function returns the class name from the class path.
+     * e.g.,
+     * /home/mopuser/earv-research/starts-example/target/classes/com/example/B.class
+     * -> com/example/B
+     */
+    public static String getClassNameFromClassPath(String classPath) {
+        String className = classPath.substring(classPath.indexOf("classes/") + "classes/".length(),
+                classPath.length() - ".class".length());
+        return className;
+    }
+
+    /*
+     * This function returns the classes' paths for set of classes' names.
+     */
+    public static Set<String> getClassPathsForSetOfClassNames(Set<String> classesNames) {
+        Set<String> classesPaths = new HashSet<>();
+        Map<String, String> classNameToPathMap = getClassNameToPathMap();
+        for (String className : classesNames) {
+            String classPath = classNameToPathMap.get(className);
+            classesPaths.add(classPath);
+        }
+        return classesPaths;
+    }
+
+    /*
+     * This function returns the class path for the given class name.
+     */
+    public static String getClassPathForClassName(String className) {
+        String classPath = null;
+        Map<String, String> classNameToPathMap = getClassNameToPathMap();
+        classPath = classNameToPathMap.get(className);
+        return classPath;
+    }
+
+    /*
+     * This function computes methods checksums for all the methods in the project.
+     * It returns a map containing them.
+     */
+    public static Map<String, String> computeAllMethodsChecksums() {
+        HashSet<String> classPaths = getAllClassesPaths();
+        Map<String, String> computedMethodsChecksums = new HashMap<>();
+        for (String classPath : classPaths) {
+
+            ClassNode node = new ClassNode(Opcodes.ASM5);
+            ClassReader reader = null;
+            try {
+                reader = new ClassReader(new FileInputStream(classPath));
+            } catch (IOException exception) {
+                LOGGER.log(Level.INFO, "[ERROR] reading class: " + classPaths);
+                continue;
+            }
+
+            String methodChecksum = null;
+            reader.accept(node, ClassReader.SKIP_DEBUG);
+            List<MethodNode> methods = node.methods;
+            String className = node.name;
+
+            // Looping over all the methods in the class, and computing the checksum for
+            // each method
+            for (MethodNode method : methods) {
+                String methodContent = ZLCHelperMethods.printMethodContent(method);
+                try {
+                    methodChecksum = ChecksumUtil.computeStringChecksum(methodContent);
+                } catch (IOException exception) {
+                    throw new RuntimeException(exception);
+                }
+                computedMethodsChecksums.put(
+                        className + "#" + method.name + method.desc.substring(0, method.desc.indexOf(")") + 1),
+                        methodChecksum);
+            }
+        }
+        return computedMethodsChecksums;
+    }
+
+    /*
+     * This function builds the method dependency graph for all the methods in the
+     * project.
+     */
+    public static Map<String, Set<String>> buildMethodsDependencyGraph(HashSet<String> classPathsSet,
+            boolean includeVariables,
+            boolean includeTestMethods) {
+        findMethodsinvoked(classPathsSet);
+        if (includeTestMethods) {
+            // Suppose that test classes have Test in their class name
+            // and are in src/test
+            Set<String> testClasses = new HashSet<>();
+            for (String method : methodNameToMethodNames.keySet()) {
+                String className = method.split("#|\\$")[0];
+                if (className.contains("Test")) {
+                    testClasses.add(className);
+                }
+            }
+
+            // Finding Test Classes to methods
+            testClassesToMethods = getDepsSingleThread(testClasses);
+        }
+
+        addReflexiveClosure(methodNameToMethodNames);
+        /*
+         * Adding reflexive closure to methodNameToMethodNames
+         * A -> B
+         * It will be:
+         * A -> A, B
+         */
+        addReflexiveClosure(methodNameToMethodNames);
+
+        // Inverting methodNameToMethodNames to have the dependency graph for each
+        // method
+        // methodNameToMethodNames = invertMap(methodNameToMethodNames);
+        methodDependencyGraph = invertMap(methodNameToMethodNames);
+
+        if (includeVariables) {
+            /*
+             * The original dependency graph is like this:
+             * (A, B, C) are classes
+             * (a) is a variable
+             * A -> A, B, C
+             * a -> A
+             * After this function call the dependency graph will be like this:
+             * A -> A, B, C, a
+             * a -> A
+             */
+            addVariableDepsToDependencyGraph();
+        } else {
+            // Remove any variables from keys or values i.e. pure method-level deps
+            filterVariables();
+        }
+
+        return null;
+    }
+
     /**
      * This function builds the method dependency graph for all the methods in the
      * project.

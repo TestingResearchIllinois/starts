@@ -44,6 +44,7 @@ public class MethodsMojo extends DiffMojo {
     private Map<String, String> methodsCheckSum;
     private Map<String, Set<String>> methodToTestClasses;
     private ClassLoader loader;
+    private Map<String, Set<String>> methodsDependencyGraph;
 
     /**
      * Set this to "true" to compute impacted methods as well. False indicates only
@@ -147,17 +148,7 @@ public class MethodsMojo extends DiffMojo {
         logger = Logger.getGlobal();
         Classpath sfClassPath = getSureFireClassPath();
         loader = createClassLoader(sfClassPath);
-
-        // Build method level static dependencies
-        try {
-            MethodLevelStaticDepsBuilder.buildMethodsGraph(includeVariables);
-            methodToTestClasses = MethodLevelStaticDepsBuilder.computeMethodToTestClasses();
-            methodsCheckSum = MethodLevelStaticDepsBuilder.computeMethodsChecksum(loader);
-        } catch (Exception exception) {
-            throw new RuntimeException(exception);
-        }
-
-        runMethods(computeImpactedMethods);
+        runMethods();
     }
 
     /**
@@ -172,27 +163,33 @@ public class MethodsMojo extends DiffMojo {
      * It also updates the methods checksums in the dependency file if
      * updateMethodsChecksums is true.
      *
-     * @param impacted a boolean value indicating whether to compute impacted
-     *                 methods and impacted test classes
      * @throws MojoExecutionException if an exception occurs while setting changed
      *                                methods
      */
-    protected void runMethods(boolean impacted) throws MojoExecutionException {
-
+    protected void runMethods() throws MojoExecutionException {
         // Checking if the file of depedencies exists (first run or not)
         if (!Files.exists(Paths.get(getArtifactsDir() + METHODS_CHECKSUMS_SERIALIZED_FILE))) {
+            // Compute Methods Checksums and Build the method level dependencies graph
+            try {
+                methodsCheckSum = MethodLevelStaticDepsBuilder.computeAllMethodsChecksums();
+                HashSet<String> classesPathsSet = MethodLevelStaticDepsBuilder.getAllClassesPaths();
+                methodsDependencyGraph = MethodLevelStaticDepsBuilder.buildMethodsDependencyGraph(classesPathsSet, includeVariables, computeAffectedTests);
+            } catch (Exception exception) {
+                throw new RuntimeException(exception);
+            }
+
             changedMethods = new HashSet<>();
-            newMethods = MethodLevelStaticDepsBuilder.computeMethods();
+            newMethods = methodsCheckSum.keySet();
             oldClasses = new HashSet<>();
             changedClasses = new HashSet<>();
-            newClasses = MethodLevelStaticDepsBuilder.getClasses();
+            newClasses = MethodLevelStaticDepsBuilder.getAllClassesNames();
             nonAffectedMethods = new HashSet<>();
 
             if (computeAffectedTests) {
                 affectedTestClasses = MethodLevelStaticDepsBuilder.computeTestClasses();
             }
 
-            if (impacted) {
+            if (computeImpactedMethods) {
                 impactedMethods = newMethods;
             }
 
@@ -200,15 +197,25 @@ public class MethodsMojo extends DiffMojo {
             try {
                 ZLCHelperMethods.serializeMapping(methodsCheckSum, getArtifactsDir(),
                         METHODS_CHECKSUMS_SERIALIZED_FILE);
+                ZLCHelperMethods.serializeMapping(methodsDependencyGraph, getArtifactsDir(), METHODS_DEPENDENCIES_SERIALIZED_FILE);
             } catch (IOException exception) {
                 exception.printStackTrace();
             }
 
         } else {
+            // Build method level static dependencies
+            try {
+                MethodLevelStaticDepsBuilder.buildMethodsGraph(includeVariables);
+                methodToTestClasses = MethodLevelStaticDepsBuilder.computeMethodToTestClasses();
+                methodsCheckSum = MethodLevelStaticDepsBuilder.computeMethodsChecksum(loader);
+            } catch (Exception exception) {
+                throw new RuntimeException(exception);
+            }
+
             // First run has saved the old revision's checksums. Time to find changes.
             computeChangedMethods();
 
-            if (impacted) {
+            if (computeImpactedMethods) {
                 computeImpactedMethods();
 
             }
@@ -226,7 +233,7 @@ public class MethodsMojo extends DiffMojo {
             }
         }
 
-        logInfoStatements(impacted);
+        logInfoStatements();
     }
 
     /**
@@ -234,14 +241,12 @@ public class MethodsMojo extends DiffMojo {
      * impacted test classes, new classes, old classes and changed classes.
      * If impacted is true, it also logs information about impacted methods.
      *
-     * @param impacted a boolean value indicating whether to log information about
-     *                 impacted methods
      */
-    private void logInfoStatements(boolean impacted) {
+    private void logInfoStatements() {
         logger.log(Level.INFO, "ChangedMethods: " + changedMethods.size());
         logger.log(Level.INFO, "NewMethods: " + newMethods.size());
 
-        if (impacted) {
+        if (computeImpactedMethods) {
             logger.log(Level.INFO, "ImpactedMethods: " + impactedMethods.size());
         }
 

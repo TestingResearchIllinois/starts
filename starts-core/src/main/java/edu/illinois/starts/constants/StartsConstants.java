@@ -67,6 +67,7 @@ public interface StartsConstants {
     String TARGET = "target";
     String METHODS_TEST_DEPS_ZLC_FILE = "methods-deps.zlc";
     String METHODS_CHECKSUMS_SERIALIZED_FILE = "methods-checksums.ser";
+    String METHODS_DEPENDENCIES_SERIALIZED_FILE = "methods-dependencies.ser";
     String CLASSES_ZLC_FILE = "classes-checksums.zlc";
     String CLASSES_CHECKSUM_SERIALIZED_FILE = "classes-checksums.ser";
 
