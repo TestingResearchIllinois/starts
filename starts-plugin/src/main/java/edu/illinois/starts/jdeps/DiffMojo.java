@@ -44,6 +44,17 @@ public class DiffMojo extends BaseMojo implements StartsConstants {
     @Parameter(property = "cleanBytes", defaultValue = TRUE)
     protected boolean cleanBytes;
 
+    @Parameter(property = "fineRTS", defaultValue = FALSE)
+    protected boolean fineRTSOn;
+
+    @Parameter(property = "mRTS", defaultValue = FALSE)
+    protected boolean mRTSOn;
+
+    @Parameter(property = "saveMRTS", defaultValue = FALSE)
+    protected boolean saveMRTSOn;
+
+    @Parameter(property = "mMultithread", defaultValue = TRUE)
+    protected boolean mMultithreadOn;
     /**
      * Format of the ZLC dependency file deps.zlc
      * Set to "INDEXED" to store indices of tests
@@ -84,7 +95,7 @@ public class DiffMojo extends BaseMojo implements StartsConstants {
         Pair<Set<String>, Set<String>> data = null;
         if (depFormat == DependencyFormat.ZLC) {
             ZLCHelper zlcHelper = new ZLCHelper();
-            data = zlcHelper.getChangedData(getArtifactsDir(), cleanBytes);
+            data = zlcHelper.getChangedData(getArtifactsDir(), cleanBytes, fineRTSOn, mRTSOn, saveMRTSOn, mMultithreadOn);
         } else if (depFormat == DependencyFormat.CLZ) {
             data = EkstaziHelper.getNonAffectedTests(getArtifactsDir());
         }
