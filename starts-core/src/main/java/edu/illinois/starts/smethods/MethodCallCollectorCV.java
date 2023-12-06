@@ -1,8 +1,8 @@
 package edu.illinois.starts.smethods;
 
-import org.ekstazi.asm.ClassVisitor;
-import org.ekstazi.asm.MethodVisitor;
-import org.ekstazi.asm.Opcodes;
+import org.objectweb.asm.ClassVisitor;
+import org.objectweb.asm.MethodVisitor;
+import org.objectweb.asm.Opcodes;
 
 import java.util.HashSet;
 import java.util.Map;
