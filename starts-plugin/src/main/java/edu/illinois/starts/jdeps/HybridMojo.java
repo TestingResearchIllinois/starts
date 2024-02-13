@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
+import java.util.stream.Collectors;
 
 import edu.illinois.starts.helpers.ZLCHelperMethods;
 import edu.illinois.starts.smethods.MethodLevelStaticDepsBuilder;
@@ -68,6 +69,24 @@ public class HybridMojo extends DiffMojo {
      */
     @Parameter(property = "computeAffectedTests", defaultValue = FALSE)
     private boolean computeAffectedTests;
+
+    /**
+     * Obtains the set of non-affected classes.
+     * Useful for configuring monitor exclusion.
+     * @return the set of non-affected classes.
+     */
+    public Set<String> getNonAffectedClasses() {
+        Set<String> nonAffectedClasses = new HashSet<>(getAllClasses());
+        Set<String> affectedClasses = getImpactedMethods().stream()
+                .map(methodName -> methodName.split("#")[0].replace('/', '.'))
+                .collect(Collectors.toSet());
+        nonAffectedClasses.removeAll(affectedClasses);
+        affectedClasses = getAffectedClasses().stream()
+                .map(className -> className.replace('/', '.'))
+                .collect(Collectors.toSet());
+        nonAffectedClasses.removeAll(affectedClasses);
+        return Collections.unmodifiableSet(nonAffectedClasses);
+    }
 
     public void setComputeImpactedMethods(boolean computeImpactedMethods) {
         this.computeImpactedMethods = computeImpactedMethods;
