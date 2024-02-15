@@ -4,7 +4,9 @@
 
 package edu.illinois.starts.jdeps;
 
+import java.io.File;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -242,6 +244,14 @@ public class MethodsMojo extends DiffMojo {
         }
 
         logInfoStatements(impacted);
+        // TODO: Have an option to toggle this behavior
+        try (PrintWriter writer = new PrintWriter(getArtifactsDir() + File.separator + "impactedMethods.txt")) {
+            for (String impactedMethod : impactedMethods) {
+                writer.println(impactedMethod);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     /**
