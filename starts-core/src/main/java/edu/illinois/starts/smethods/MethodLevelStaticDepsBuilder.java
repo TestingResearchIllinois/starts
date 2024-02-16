@@ -28,8 +28,8 @@ import edu.illinois.starts.helpers.ZLCHelperMethods;
 import edu.illinois.starts.util.ChecksumUtil;
 import edu.illinois.starts.util.Logger;
 
-import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.MethodNode;
 import org.objectweb.asm.util.Printer;
@@ -38,20 +38,25 @@ import org.objectweb.asm.util.TraceClassVisitor;
 
 public class MethodLevelStaticDepsBuilder {
 
-    // for every class, get the methods it implements
+    /** Map from every class to the methods it contains. */
     public static Map<String, Set<String>> classToContainedMethodNames = new HashMap<>();
 
-    // for every method, get the methods it invokes (direct invocation not
-    // transitive)
+    /**
+     * Map from method to the methods it directly invokes.
+     * {@code (dependant => dependee)}
+     */
     public static Map<String, Set<String>> methodNameToMethodNames = new HashMap<>();
 
-    // Contains method to method dependency graph
+    /**
+     * Contains method to method dependency graph.
+     * {@code (dependee => dependant)}
+     */
     public static Map<String, Set<String>> methodDependencyGraph = new HashMap<>();
 
-    // for every class, find its parents.
+    /** Map from every class to its parents, including base class and implemented interfaces. */
     public static Map<String, Set<String>> hierarchyParents = new HashMap<>();
 
-    // for every class, find its children.
+    /** Map from every class to its sub-classes. */
     public static Map<String, Set<String>> hierarchyChildren = new HashMap<>();
 
     public static Map<String, Set<String>> testClassesToMethods = new HashMap<>();
@@ -60,96 +65,89 @@ public class MethodLevelStaticDepsBuilder {
 
     public static Map<String, Set<String>> classesToTestClasses = new HashMap<>();
 
-    // Map from method to test classes
+    /** Map from method to test classes. */
     public static Map<String, Set<String>> methodToTestClasses = new HashMap<>();
 
-    // Map from method to test methods
+    /** Map from method to test methods. */
     public static Map<String, Set<String>> methodToTestMethods = new HashMap<>();
 
-    // Map from class to checksum
+    /** Map from every class to its checksum, where list is a tuple of (checksum for header, checksum for file). */
     public static Map<String, List<String>> classesChecksums = new HashMap<>();
 
-    // Map from method to checksum
+    /** Map from method to its checksum. */
     private static Map<String, String> methodsCheckSum = new HashMap<>();
 
-    // Map for classes dependency graph
+    /** Contains class to class dependency graph. */
     private static Map<String, Set<String>> classesDependencyGraph = new HashMap<>();
 
     private static final Logger LOGGER = Logger.getGlobal();
 
     /**
+     * Check whether a class is a test class based on its name.
+     * The specific way to check is up to the convention in use.
+     * (e.g.: "Test" at the end, or contains "Test")
+     *
+     * @param className The class name to check for
+     * @return Whether the class name represents a test class
+     */
+    private static boolean isTestClass(String className) {
+        // TODO: Examine whether this implementation is appropriate, by convention, "Test" only appears at the end.
+        return className.contains("Test");
+    }
+
+    /**
      * This function builds the method dependency graph for all the methods in the
      * project.
      *
+     * @param includeVariables Specifies whether the method dependency graph include variables
+     * @throws IOException When file walk fails
      */
     public static void buildMethodsGraph(boolean includeVariables) throws Exception {
-
-        // find all the classes' files
+        // find all .class files in project
         HashSet<String> classPaths = new HashSet<>(Files.walk(Paths.get("."))
                 .filter(Files::isRegularFile)
                 .filter(f -> (f.toString().endsWith(".class") && f.toString().contains("target")))
                 .map(f -> f.normalize().toAbsolutePath().toString())
                 .collect(Collectors.toList()));
 
-        // Finding classToContainedMethodNames, methodNameToMethodNames,
-        // hierarchy_parents, hierarchy_children
-        findMethodsinvoked(classPaths);
+        // Find classToContainedMethodNames, methodNameToMethodNames, hierarchyParents, hierarchyChildren
+        findMethodsInvoked(classPaths);
 
         // Suppose that test classes have Test in their class name
         // and are in src/test
         Set<String> testClasses = new HashSet<>();
         for (String method : methodNameToMethodNames.keySet()) {
             String className = method.split("#|\\$")[0];
-            if (className.contains("Test")) {
+            if (isTestClass(className)) {
                 testClasses.add(className);
             }
         }
 
         // Finding Test Classes to methods
         testClassesToMethods = getDepsSingleThread(testClasses);
-
-        /*
-         * Adding reflexive closure to methodNameToMethodNames
-         * A -> B
-         * It will be:
-         * A -> A, B
-         */
         addReflexiveClosure(methodNameToMethodNames);
-
-        // Inverting methodNameToMethodNames to have the dependency graph for each
-        // method
-        // methodNameToMethodNames = invertMap(methodNameToMethodNames);
+        // Inverting methodNameToMethodNames to have the dependency graph for each method
         methodDependencyGraph = invertMap(methodNameToMethodNames);
 
         if (includeVariables) {
-            /*
-             * The original dependency graph is like this:
-             * (A, B, C) are classes
-             * (a) is a variable
-             * A -> A, B, C
-             * a -> A
-             * After this function call the dependency graph will be like this:
-             * A -> A, B, C, a
-             * a -> A
-             */
             addVariableDepsToDependencyGraph();
         } else {
             // Remove any variables from keys or values i.e. pure method-level deps
             filterVariables();
         }
-
     }
 
     /**
-     * This function builds the classToContainedMethodNames,
-     * methodNameToMethodNames.
-     * methodNameToMethodNames, hierarchy_parents, hierarchy_children maps
+     * Compute the following maps: classToContainedMethodNames, methodNameToMethodNames, methodNameToMethodNames,
+     * hierarchyParents, hierarchyChildren.
+     *
+     * @param classPaths The classpath in which to compute maps under.
      */
-    public static void findMethodsinvoked(Set<String> classPaths) {
-        // Finding classToContainedMethodNames, hierarchy_parents, hierarchy_children,
+    public static void findMethodsInvoked(Set<String> classPaths) {
+        // Finding classToContainedMethodNames, hierarchyParents, hierarchyChildren
         for (String classPath : classPaths) {
             try {
-                ClassReader classReader = new ClassReader(new FileInputStream(new File(classPath)));
+                ClassReader classReader = new ClassReader(new FileInputStream(classPath));
                 ClassToMethodsCollectorCV classToMethodsVisitor = new ClassToMethodsCollectorCV(
                         classToContainedMethodNames, hierarchyParents, hierarchyChildren);
                 classReader.accept(classToMethodsVisitor, ClassReader.SKIP_DEBUG);
@@ -210,21 +208,22 @@ public class MethodLevelStaticDepsBuilder {
      * This function computes methods checksums for the given classes and returns a
      * map containing them.
      *
+     * @param classes The classes in which to compute method checksums for
+     * @param loader Java class loader
      * @return methodsCheckSum method to checksum mapping
      */
     public static Map<String, String> getMethodsChecksumsForClasses(Set<String> classes, ClassLoader loader) {
-        // Looping over all the classes, and computing the checksum for each method in
-        // each class
+        // Loop over all the classes, and compute checksums for each method in each class
         Map<String, String> computedMethodsChecksums = new HashMap<>();
 
         for (String className : classes) {
-            // Reading the class file and parsing it
+            // Parse class file
             String klas = ChecksumUtil.toClassOrJavaName(className, false);
             URL url = loader.getResource(klas);
 
             String path = url.getPath();
             ClassNode node = new ClassNode(Opcodes.ASM5);
-            ClassReader reader = null;
+            ClassReader reader;
             try {
                 reader = new ClassReader(new FileInputStream(path));
             } catch (IOException exception) {
@@ -232,7 +231,7 @@ public class MethodLevelStaticDepsBuilder {
                 continue;
             }
 
-            String methodChecksum = null;
+            String methodChecksum;
             reader.accept(node, ClassReader.SKIP_DEBUG);
             List<MethodNode> methods = node.methods;
             // Looping over all the methods in the class, and computing the checksum for
@@ -269,10 +268,12 @@ public class MethodLevelStaticDepsBuilder {
     /**
      * This function computes checksums for all classes in a project.
      *
+     * @param loader TODO
+     * @param cleanBytes TODO
      * @return classesChecksums mapping of classes to their checksums
      */
     public static Map<String, List<String>> computeClassesChecksums(ClassLoader loader, boolean cleanBytes) {
-        // Loopig over all the classes, and computing the checksum for each class
+        // Looping over all the classes, and computing the checksum for each method in each class
         for (String className : classToContainedMethodNames.keySet()) {
             // Computing the checksum for the class file
             List<String> classPartsChecksums = new ArrayList<>();
@@ -285,7 +286,7 @@ public class MethodLevelStaticDepsBuilder {
 
             // Computing the checksum for the class headers
             ClassNode node = new ClassNode(Opcodes.ASM5);
-            ClassReader reader = null;
+            ClassReader reader;
             try {
                 reader = new ClassReader(new FileInputStream(path));
             } catch (IOException exception) {
@@ -295,7 +296,7 @@ public class MethodLevelStaticDepsBuilder {
             reader.accept(node, ClassReader.SKIP_DEBUG);
 
             String classHeaders = getClassHeaders(node);
-            String headersCheckSum = null;
+            String headersCheckSum;
             try {
                 headersCheckSum = ChecksumUtil.computeStringChecksum(classHeaders);
             } catch (IOException exception) {
@@ -387,6 +388,9 @@ public class MethodLevelStaticDepsBuilder {
 
     /**
      * This function computes checksums for all methods in a project.
+     *
+     * @param loader TODO
+     * @return TODO
      */
     public static Map<String, String> computeMethodsChecksum(ClassLoader loader) {
         // Looping over all the classes, and computing the checksum for each method in
@@ -428,6 +432,8 @@ public class MethodLevelStaticDepsBuilder {
     /**
      * This function computes the methodToTestMethods map.
      * For each method it computes all test methods that cover it.
+     *
+     * @return TODO
      */
     public static Map<String, Set<String>> computeMethodToTestMethods() {
         // Looping over all the methods, and computing the test methods that cover each
@@ -466,20 +472,19 @@ public class MethodLevelStaticDepsBuilder {
 
     /**
      * This function add variable dependencies to the dependency graph.
+     * Below is an example demonstrating this functionality:
+     * Before operation:
+     * (A, B, C) are classes
+     * (a) is a variable
+     * A -> A, B, C
+     * a -> A
+     * After operation:
+     * A -> A, B, C, a
+     * a -> A
      */
     private static void addVariableDepsToDependencyGraph() {
-        /*
-         * The original dependency graph is like this:
-         * (A, B, C) are classes
-         * (a) is a variable
-         * A -> A, B, C
-         * a -> A
-         * After this function call the dependency graph will be like this:
-         * A -> A, B, C, a
-         * a -> A
-         */
         for (String key : methodDependencyGraph.keySet()) {
-            if (key.endsWith(")")) {
+            if (key.endsWith(")")) { // Because methods end with ")"
                 continue;
             }
 
@@ -626,14 +631,16 @@ public class MethodLevelStaticDepsBuilder {
     }
 
     /**
-     * This function inverts the given map.
+     * Inverts a given map.
+     *
+     * @param mapToInvert the map to invert
+     * @return the inverted map
      */
     public static Map<String, Set<String>> invertMap(Map<String, Set<String>> mapToInvert) {
-        // Think of a map as a graph represented as an adjacency list. This funcition
-        // inverts the graph by inverting all edges.
-        Map<String, Set<String>> map = mapToInvert;
+        // Think of a map as a graph represented as an adjacency list.
+        // This method inverts the graph by inverting all edges.
         Map<String, Set<String>> invertedMap = new HashMap<>();
-        for (Map.Entry<String, Set<String>> entry : map.entrySet()) {
+        for (Map.Entry<String, Set<String>> entry : mapToInvert.entrySet()) {
             String key = entry.getKey();
             Set<String> values = entry.getValue();
             for (String value : values) {
@@ -648,6 +655,9 @@ public class MethodLevelStaticDepsBuilder {
 
     /**
      * This function adds reflexive closure to the given map.
+     * Here is a simple demonstration of the effect:
+     * Before operation: {@code A -> B}
+     * After operation: {@code A -> A, B}
      *
      * @param mapToAddReflexiveClosure the passed mapping
      */
@@ -683,11 +693,7 @@ public class MethodLevelStaticDepsBuilder {
         return methodSigs;
     }
 
-    /**
-     * This function removes any variables from dependency graphs.
-     *
-     * @return testMethods
-     */
+    /** Removes any variables from dependency graphs. */
     public static void filterVariables() {
         // Filter out keys that are variables.
         methodDependencyGraph.keySet().removeIf(method -> !method.matches(".*\\(.*\\)"));
@@ -702,8 +708,8 @@ public class MethodLevelStaticDepsBuilder {
     }
 
     /**
-     * Experimental method to see if we can have a transitive closure of methods
-     * here. Currently not used anywhere.
+     * Experimental method to see if we can have a transitive closure of methods here.
+     * Currently, this method is not used anywhere.
      *
      * @param changedMethod the method path that changed
      * @return methods

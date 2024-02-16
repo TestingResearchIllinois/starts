@@ -68,6 +68,13 @@ public class RunMojo extends DiffMojo implements StartsConstants {
     @Parameter(property = "writeChangedClasses", defaultValue = "false")
     protected boolean writeChangedClasses;
 
+    /**
+     * Set this to "true" to avoid running all tests when the version of dependency in pom.xml changes.
+     * This is used to compare with Ekstazi which does not take the change of classpath into consideration.
+     */
+    @Parameter(property = "ignoreClassPath", defaultValue = "true")
+    protected boolean ignoreClassPath;
+
     protected Set<String> nonAffectedTests;
     protected Set<String> changedClasses;
     protected List<Pair> jarCheckSums = null;
@@ -96,7 +103,8 @@ public class RunMojo extends DiffMojo implements StartsConstants {
     protected void run() throws MojoExecutionException {
         String cpString = Writer.pathToString(getSureFireClassPath().getClassPath());
         List<String> sfPathElements = getCleanClassPath(cpString);
-        if (!isSameClassPath(sfPathElements) || !hasSameJarChecksum(sfPathElements)) {
+
+        if (!ignoreClassPath && (!isSameClassPath(sfPathElements) || !hasSameJarChecksum(sfPathElements))) {
             // Force retestAll because classpath changed since last run
             // don't compute changed and non-affected classes
             dynamicallyUpdateExcludes(new ArrayList<String>());

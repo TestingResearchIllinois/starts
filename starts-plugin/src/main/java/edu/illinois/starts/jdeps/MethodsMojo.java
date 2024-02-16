@@ -4,7 +4,9 @@
 
 package edu.illinois.starts.jdeps;
 
+import java.io.File;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -14,6 +16,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
+import java.util.stream.Collectors;
 
 import edu.illinois.starts.helpers.ZLCHelperMethods;
 import edu.illinois.starts.smethods.MethodLevelStaticDepsBuilder;
@@ -77,6 +80,20 @@ public class MethodsMojo extends DiffMojo {
      */
     @Parameter(property = "computeAffectedTests", defaultValue = FALSE)
     private boolean computeAffectedTests;
+
+    /**
+     * Obtains the set of non-affected classes.
+     * Useful for configuring monitor exclusion.
+     * @return the set of non-affected classes.
+     */
+    public Set<String> getNonAffectedClasses() {
+        Set<String> nonAffectedClasses = new HashSet<>(getAllClasses());
+        Set<String> affectedClasses = getImpactedMethods().stream()
+                .map(method -> method.split("#")[0].replace('/', '.'))
+                .collect(Collectors.toSet());
+        nonAffectedClasses.removeAll(affectedClasses);
+        return Collections.unmodifiableSet(nonAffectedClasses);
+    }
 
     public void setDebug(boolean debug) {
         this.debug = debug;
@@ -179,7 +196,7 @@ public class MethodsMojo extends DiffMojo {
      */
     protected void runMethods(boolean impacted) throws MojoExecutionException {
 
-        // Checking if the file of depedencies exists (first run or not)
+        // Checking if the file of dependencies exists (first run or not)
         if (!Files.exists(Paths.get(getArtifactsDir() + METHODS_CHECKSUMS_SERIALIZED_FILE))) {
             changedMethods = new HashSet<>();
             newMethods = MethodLevelStaticDepsBuilder.computeMethods();

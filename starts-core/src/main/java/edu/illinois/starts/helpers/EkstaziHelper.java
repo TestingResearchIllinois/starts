@@ -49,7 +49,7 @@ public class EkstaziHelper implements StartsConstants {
         Set<String> changed = processEkstaziDebugInfo(baosErr, artifactsDir);
         Set<String> nonAffected = new HashSet<>(Arrays.asList(baosOut.toString().split(lineSeparator)));
         long end = System.currentTimeMillis();
-        LOGGER.log(Level.FINEST, TIME_COMPUTING_NON_AFFECTED + (end - start) + MILLISECOND);
+        LOGGER.log(Level.FINEST, TIME_COMPUTING_NON_AFFECTED + (end - start));
         return new Pair<>(nonAffected, changed);
     }
 
