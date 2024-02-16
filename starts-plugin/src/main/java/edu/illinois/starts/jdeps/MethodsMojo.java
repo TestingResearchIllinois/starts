@@ -244,14 +244,6 @@ public class MethodsMojo extends DiffMojo {
         }
 
         logInfoStatements(impacted);
-        // TODO: Have an option to toggle this behavior
-        try (PrintWriter writer = new PrintWriter(getArtifactsDir() + File.separator + "impactedMethods.txt")) {
-            for (String impactedMethod : impactedMethods) {
-                writer.println(impactedMethod);
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
     }
 
     /**
