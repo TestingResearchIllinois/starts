@@ -243,22 +243,7 @@ public class HybridMojo extends DiffMojo {
                 impactedMethods = newMethods;
                 impactedClasses = newClasses;
             }
-
-            if (updateMethodsChecksums) {
-                try {
-                    // Save class-to-checksums mapping
-                    ZLCHelperMethods.serializeMapping(classesChecksum, getArtifactsDir(),
-                            CLASSES_CHECKSUM_SERIALIZED_FILE);
-                    // The method-to-checksum mapping has been updated in
-                    // ZLCHelperMethods.getChangedDataHybrid()
-                    ZLCHelperMethods.serializeMapping(methodsCheckSum, getArtifactsDir(),
-                            METHODS_CHECKSUMS_SERIALIZED_FILE);
-                } catch (IOException exception) {
-                    exception.printStackTrace();
-                }
-            }
         } else {
-
             classDependencyGraph = MethodLevelStaticDepsBuilder.constructClassesDependencyGraph();
             MethodLevelStaticDepsBuilder.constuctTestClassesToClassesGraph();
             if (computeAffectedTests) {
@@ -267,26 +252,27 @@ public class HybridMojo extends DiffMojo {
                 affectedTestClasses = new HashSet<>();
             }
 
-            setChangedAndNonaffectedMethods();
+            setChangedAndNonAffectedMethods();
 
             if (impacted) {
                 computeImpactedMethods();
                 computeImpactedClasses();
             }
+        }
 
-            if (updateMethodsChecksums) {
-                try {
-                    // Save class-to-checksums mapping
-                    ZLCHelperMethods.serializeMapping(classesChecksum, getArtifactsDir(),
-                            CLASSES_CHECKSUM_SERIALIZED_FILE);
-                    // Save method-to-checksum mapping
-                    ZLCHelperMethods.serializeMapping(methodsCheckSum, getArtifactsDir(),
-                            METHODS_CHECKSUMS_SERIALIZED_FILE);
-                } catch (IOException exception) {
-                    exception.printStackTrace();
-                }
+        if (updateMethodsChecksums) {
+            try {
+                // Save class-to-checksums mapping
+                ZLCHelperMethods.serializeMapping(classesChecksum, getArtifactsDir(),
+                        CLASSES_CHECKSUM_SERIALIZED_FILE);
+                // Save method-to-checksum mapping
+                // The method-to-checksum mapping has been updated in
+                // ZLCHelperMethods.getChangedDataHybrid()
+                ZLCHelperMethods.serializeMapping(methodsCheckSum, getArtifactsDir(),
+                        METHODS_CHECKSUMS_SERIALIZED_FILE);
+            } catch (IOException exception) {
+                exception.printStackTrace();
             }
-
         }
 
         logInfo(impacted);
@@ -341,7 +327,7 @@ public class HybridMojo extends DiffMojo {
      * This method also updates the impacted test classes by adding test classes
      * associated with new methods.
      */
-    protected void setChangedAndNonaffectedMethods() throws MojoExecutionException {
+    protected void setChangedAndNonAffectedMethods() throws MojoExecutionException {
         List<Set<String>> classesData = ZLCHelperMethods.getChangedDataHybridClassLevel(classesChecksum,
                 getArtifactsDir(), CLASSES_CHECKSUM_SERIALIZED_FILE);
 
@@ -436,7 +422,6 @@ public class HybridMojo extends DiffMojo {
         Set<String> methods = new HashSet<>(affectedMethods);
         for (String method : affectedMethods) {
             methods.addAll(MethodLevelStaticDepsBuilder.getMethodDeps(method));
-
         }
         return methods;
     }

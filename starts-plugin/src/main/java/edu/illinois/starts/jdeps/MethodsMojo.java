@@ -196,7 +196,7 @@ public class MethodsMojo extends DiffMojo {
      */
     protected void runMethods(boolean impacted) throws MojoExecutionException {
 
-        // Checking if the file of depedencies exists (first run or not)
+        // Checking if the file of dependencies exists (first run or not)
         if (!Files.exists(Paths.get(getArtifactsDir() + METHODS_CHECKSUMS_SERIALIZED_FILE))) {
             changedMethods = new HashSet<>();
             newMethods = MethodLevelStaticDepsBuilder.computeMethods();

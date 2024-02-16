@@ -321,7 +321,7 @@ public class ZLCHelper implements StartsConstants {
                                         long buildGraphStart = System.currentTimeMillis();
                                         // find the methods that each method calls
                                         // read previous dependency graph
-                                        findMethodsinvoked(newClassesPaths);
+                                        findMethodsInvoked(newClassesPaths);
                                         long buildGraphEnd = System.currentTimeMillis();
                                         LOGGER.log(Level.FINEST, "FineSTARTSBuildGraph: " + (buildGraphEnd - buildGraphStart));                                       
                                         initGraph = true;
