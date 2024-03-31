@@ -4,9 +4,7 @@
 
 package edu.illinois.starts.jdeps;
 
-import java.io.File;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -116,6 +114,7 @@ public class MethodsMojo extends DiffMojo {
     }
 
     public Set<String> getAffectedMethods() {
+        // TODO: Is this a bug? Where is the graph traversal?
         Set<String> affectedMethods = new HashSet<>();
         affectedMethods.addAll(changedMethods);
         affectedMethods.addAll(newMethods);
@@ -162,9 +161,7 @@ public class MethodsMojo extends DiffMojo {
     public void execute() throws MojoExecutionException {
         Logger.getGlobal().setLoggingLevel(Level.parse(loggingLevel));
         logger = Logger.getGlobal();
-        Classpath sfClassPath = getSureFireClassPath();
-        loader = createClassLoader(sfClassPath);
-
+        loader = createClassLoader(getSureFireClassPath());
         // Build method level static dependencies
         try {
             MethodLevelStaticDepsBuilder.buildMethodsGraph(includeVariables);

@@ -69,7 +69,7 @@ public class ImpactedMojo extends DiffMojo implements StartsConstants {
      * changed classes?
      * Set to true if "yes", false if "no.
      */
-    @Parameter(property = "closureOption", defaultValue = "TRANSITIVE")
+    @Parameter(property = "closureOption", defaultValue = "PS3")
     private TransitiveClosureOptions closureOption;
 
     private Logger logger;
