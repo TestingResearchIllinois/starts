@@ -20,9 +20,7 @@ import org.codehaus.plexus.util.xml.Xpp3Dom;
 /**
  * Utility methods for manipulating pom.xml files.
  */
-public class PomUtil {
-    static final String MIN_SUREFIRE_VERSION = "2.13";
-
+public class PomUtil implements StartsConstants {
     public static String extractParamValue(Plugin plugin, String elem) throws MojoExecutionException {
         String value = null;
         Xpp3Dom dom = (Xpp3Dom) plugin.getConfiguration();
@@ -54,20 +52,19 @@ public class PomUtil {
 
     public static Plugin getSfPlugin(MavenProject project) throws MojoExecutionException {
         Plugin sfPlugin = lookupPlugin("org.apache.maven.plugins:maven-surefire-plugin", project);
-        checkSFVersion(sfPlugin);
-        return sfPlugin;
-    }
-
-    public static void checkSFVersion(Plugin sfPlugin) throws MojoExecutionException {
         if (sfPlugin == null) {
             throw new MojoExecutionException("Surefire plugin not available");
         }
+        return sfPlugin;
+    }
 
-        String version = sfPlugin.getVersion();
-        if (MIN_SUREFIRE_VERSION.compareTo(version) > 0) {
-            throw new MojoExecutionException("Unsupported Surefire version: " + version
-                    + ". Use version " + MIN_SUREFIRE_VERSION + " and above.");
-        }
+    public static String getSfVersion(MavenProject project) throws MojoExecutionException {
+        return getSfPlugin(project).getVersion();
+    }
+
+    public static boolean invalidSfVersion(MavenProject project) throws MojoExecutionException {
+        String version = getSfVersion(project);
+        return MIN_SUREFIRE_VERSION.compareTo(version) > 0;
     }
 
     public static Plugin lookupPlugin(String name, MavenProject project) {

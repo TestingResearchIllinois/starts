@@ -4,6 +4,9 @@
 
 package edu.illinois.starts.jdeps;
 
+import static edu.illinois.starts.helpers.PomUtil.getSfVersion;
+import static edu.illinois.starts.helpers.PomUtil.invalidSfVersion;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -96,14 +99,20 @@ public class RunMojo extends DiffMojo implements StartsConstants {
     protected void run() throws MojoExecutionException {
         String cpString = Writer.pathToString(getSureFireClassPath().getClassPath());
         List<String> sfPathElements = getCleanClassPath(cpString);
-        if (!isSameClassPath(sfPathElements) || !hasSameJarChecksum(sfPathElements)) {
+        if (invalidSfVersion(getProject())) {
+            logger.log(Level.WARNING, "Unsupported Surefire version: " + getSfVersion(getProject())
+                    + ". Use version " + MIN_SUREFIRE_VERSION + " and above. Running all tests.");
+            // Run all tests
+            dynamicallyUpdateExcludes(new ArrayList<String>());
+            nonAffectedTests = new HashSet<>();
+        } else if (!isSameClassPath(sfPathElements) || !hasSameJarChecksum(sfPathElements)) {
             // Force retestAll because classpath changed since last run
             // don't compute changed and non-affected classes
             dynamicallyUpdateExcludes(new ArrayList<String>());
             // Make nonAffected empty so dependencies can be updated
             nonAffectedTests = new HashSet<>();
-            Writer.writeClassPath(cpString, artifactsDir);
-            Writer.writeJarChecksums(sfPathElements, artifactsDir, jarCheckSums);
+            Writer.writeClassPath(cpString, getArtifactsDir());
+            Writer.writeJarChecksums(sfPathElements, getArtifactsDir(), jarCheckSums);
         } else if (retestAll) {
             // Force retestAll but compute changes and affected tests
             setChangedAndNonaffected();
